@@ -8,7 +8,7 @@ set(PROJ_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 ############################################################################
 #Include and Headers
 ############################################################################
-include_directories ($PROJECT_INC_DIR)
+include_directories (${PROJ_INC_DIR})
 
 
 ############################################################################
@@ -23,10 +23,10 @@ file (GLOB UTIL_LIB_SRC ./*.cpp)
 
 if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
-    file(GLOB TEST_QUEUE ../test/queue/*.cpp)
+    #file(GLOB TEST_QUEUE ./test/*.cpp)
 
-    add_executable(utillib_test ../test/TestMain.cpp
-                            ${TEST_QUEUE})
+    add_executable(utillib_test ./test/TestMain.cpp
+                            ./test/queue/SPSCQueueTest.cpp)
     target_link_libraries(utillib_test -static-libgcc
                             libgtest.a)
 

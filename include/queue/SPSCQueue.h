@@ -3,7 +3,9 @@
 #include <utility>
 #include <memory>
 #include <condition_variable>
-#include<atomic>
+#include <atomic>
+#include <cassert>
+#include <iostream>
 
 namespace queue{
 
@@ -12,7 +14,7 @@ namespace queue{
     {
         struct Queue{
             std::atomic<void*> m_buffer[N];
-            std::atomic<Queue*> m_next = nullptr;
+            Queue* m_next = nullptr;
         };
 
     public:
@@ -23,7 +25,7 @@ namespace queue{
         SPSCQueue(): m_currentHeadQueue(new Queue()),
                      m_currentTailQueue(this->m_currentHeadQueue),
                      m_freeSlotsHead(new Queue()),
-                     m_lastIndex(N - 1)
+                     m_lastIndex(N)
         {
         }
 
@@ -31,10 +33,10 @@ namespace queue{
         {
             auto freeQueue = [](Queue *queue)
             {
-                for (; queue != nullptr;)
+               // for (; queue != nullptr;)
                 {
-                    auto temp = std::exchange(queue, queue->m_next);
-                    delete temp;
+                    // auto temp = std::exchange(queue, queue->m_next);
+                    //delete temp;
                 }
             };
 
@@ -44,7 +46,10 @@ namespace queue{
 
         void push_back(void* ptr)
         {
-            if (m_lastIndex == N)
+            m_currentTailQueue->m_buffer[m_tail].store(ptr, std::memory_order_relaxed);
+            m_tail++;
+
+            if (m_tail == m_lastIndex)
             {
 
                 Queue *newQueue = m_freeSlotsHead.load();
@@ -60,20 +65,18 @@ namespace queue{
                     }
                 }
 
-                m_currentHeadQueue->m_next = newQueue;
-                newQueue[0] = ptr;
+                m_currentTailQueue->m_next = newQueue;
+                m_currentTailQueue = newQueue;
                 m_tail = 0;
-            }
-            else
-            {
-                m_currentTailQueue[++m_tail] = ptr;
+                assert(m_currentTailQueue != nullptr);
             }
 
-            if (m_dateInQueue == false)
+            auto count = m_dataInQueue.fetch_add(1, std::memory_order_seq_cst);
+            if (count == 1)
             {
+                //std::cout << "NOTFIY " << (unsigned int) *(unsigned int*) ptr << std::endl;
                 {
                     std::unique_lock<std::mutex> lock(m_mutex);
-                    m_dateInQueue = true;
                 }
                 m_cv.notify_one();
             }
@@ -81,29 +84,44 @@ namespace queue{
 
         void *pop()
         {
-            if (m_head = m_lastIndex)
+            if (m_head == m_lastIndex)
             {
                 auto consumedQueue = m_currentHeadQueue;
                 m_currentHeadQueue = m_currentHeadQueue->m_next;
+
+                if (m_currentHeadQueue == nullptr){
+                    assert(false);
+                    // race need to handle
+                }
+
                 consumedQueue->m_next = m_freeSlotsHead;
+
                 while (!m_freeSlotsHead.compare_exchange_weak(consumedQueue->m_next, consumedQueue))
                 {
                 }
 
-                m_head = -1;
+                m_head = 0;
             }
 
-            auto retVal = m_currentHeadQueue[++m_head];
+            auto retVal = m_currentHeadQueue->m_buffer[m_head].load();
 
             while (retVal == nullptr)
             {
-                std::unique_lock<std::mutex> lock(m_mutex);
-                m_dateInQueue = false;
-                m_cv.wait(lock, [&] {return m_dateInQueue;});
-                retVal = m_currentHeadQueue[m_head];
+                if (m_dataInQueue.load() == 0)
+                {
+                   //std::cout << "Wait " << std::endl;
+                    std::unique_lock<std::mutex> lock(m_mutex);
+                    m_cv.wait(lock, [&] {return m_dataInQueue.load() != 0;});
+                }
+                retVal = m_currentHeadQueue->m_buffer[m_head].load();
+                //std::cout << "RESUME " << (unsigned int) * (unsigned int*)retVal <<std::endl;
             }
 
-            m_currentHeadQueue[m_head] = nullptr;
+            m_currentHeadQueue->m_buffer[m_head] = nullptr;
+            m_head++;
+            m_dataInQueue.fetch_sub(1, std::memory_order_relaxed);
+            assert (expected == (unsigned int) * (unsigned int*) retVal);
+            expected++;
             return retVal;
         }
 
@@ -113,9 +131,10 @@ namespace queue{
         std::atomic<Queue*> m_freeSlotsHead{};
         std::condition_variable m_cv{};
         std::mutex m_mutex{};
-        std::atomic<bool> m_dateInQueue = false;
+        std::atomic<unsigned int> m_dataInQueue{0};
         const unsigned int m_lastIndex{};
-        int m_head{-1};
-        int m_tail{-1};
+        unsigned int m_head{0};
+        unsigned int m_tail{0};
+        unsigned int expected = 0;
     };
 }
