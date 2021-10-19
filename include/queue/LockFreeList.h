@@ -19,7 +19,14 @@ namespace queue{
     class LockFreeList{
         public:
             LockFreeList() = default;
-            ~LockFreeList() = default;
+            ~LockFreeList()
+            {
+                auto p = m_head.load();
+                for (;p != nullptr; p = p->next)
+                {
+                    delete p;
+                }
+            }
 
             void push_front(Node* n)
             {

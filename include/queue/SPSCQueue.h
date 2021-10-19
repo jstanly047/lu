@@ -11,7 +11,7 @@ using namespace std::chrono_literals;
 
 namespace queue{
 
-    template <unsigned int N = 1032>
+    template <unsigned int N = 508>
     class SPSCQueue
     {
         struct Queue{
@@ -32,7 +32,10 @@ namespace queue{
 
         ~SPSCQueue()
         {
-            delete m_currentHeadQueue;
+            for (; m_currentHeadQueue != nullptr; m_currentHeadQueue = m_currentHeadQueue->next)
+            {
+                delete m_currentHeadQueue;
+            }
         }
 
         void push_back(void* ptr)
