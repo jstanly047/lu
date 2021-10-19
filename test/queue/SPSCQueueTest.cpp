@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <functional>
 #include <iostream>
+#include <chrono>
 
 class SPSCQueueTest : public ::testing::Test
 {
@@ -11,28 +12,63 @@ public:
     ~SPSCQueueTest(){}
 };
 
-TEST_F(SPSCQueueTest, consumerProducerSequenceCheck){
-    queue::SPSCQueue<2> testQueue{};
-    constexpr unsigned int itemsCount = 200;
-    auto producer = [&](){
-        for (unsigned int i = 0 ; i < itemsCount; i++)
-        {
-            testQueue.push_back(new unsigned int(i));
-        }
+TEST_F(SPSCQueueTest, queueIsInitializedToNull)
+{
+    struct Queue{
+            std::atomic<void*> m_buffer[100]{nullptr};
+            Queue* next{nullptr};
     };
+    
+    Queue* queue = new Queue();
 
-    auto consumer = [&]() {
-        for (unsigned int expectedItem = 0; expectedItem < itemsCount; expectedItem++)
+    for (int i = 0; i < 100;i++)
+    {
+        ASSERT_TRUE(queue->m_buffer[i] == nullptr);
+    }
+
+    ASSERT_TRUE(queue->next == nullptr);
+
+}
+
+
+TEST_F(SPSCQueueTest, consumerProducerSequenceCheck)
+{
+    //long long int totalCTimeMs = 0;
+    //long long int totalPTimeMs = 0;
+    for (int numberExec = 0; numberExec < 15 ; numberExec++)
+    {
+        queue::SPSCQueue<2> testQueue{};
+        unsigned int itemsCount = 10'000'000;
+        auto producer = [&]()
         {
-            unsigned int* p = (unsigned int*) testQueue.pop();
-            unsigned int item = *p;
-            delete p;
-            ASSERT_TRUE(expectedItem == item);
-        }
-    };
+            //auto start = std::chrono::high_resolution_clock::now();
+            for (unsigned int i = 0; i < itemsCount; i++)
+            {
+                testQueue.push_back(new unsigned int(i));
+            }
 
-    std::thread ct(consumer);
-    std::thread pt(producer);
-    pt.join();
-    ct.join();
+            //auto end = std::chrono::high_resolution_clock::now();
+            //totalPTimeMs += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        };
+
+        auto consumer = [&]()
+        {
+            //auto start = std::chrono::high_resolution_clock::now();
+            for (unsigned int expectedItem = 0; expectedItem < itemsCount; expectedItem++)
+            {
+                unsigned int *p = (unsigned int *)testQueue.pop();
+                ASSERT_TRUE(expectedItem == *p);
+                delete p;
+            }
+            //auto end = std::chrono::high_resolution_clock::now();
+            //totalCTimeMs += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        };
+
+        std::thread pt(producer);
+        std::thread ct(consumer);
+        pt.join();
+        ct.join();
+    }
+    
+    //std::cout << totalCTimeMs + totalCTimeMs << std::endl;
 }

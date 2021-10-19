@@ -6,7 +6,31 @@ SC Acq/Rel
 ↑↑↑ Release ↑↑↑ // non atomic code can be reordered above
 
 
+memory_order_release
+memory_order_acquire
+memory_order_acq_rel
+above stick to the ordering guaranties when two or more thread use same atomic variable
+
+memory_order_seq_cst
+This will work event if you use different atomic variable in two or more thread
+
+CAS has two different memory order reason is has read and write (double check)
+sudo for CAS
+
+bool compare_exchange_strong/weak(T& old_v, T new_V, memory_order on_success, memory_order on_failure)
+{
+    T tmp = value.load(on_failure);
+    if (tmp != old_val){ old_v = temp; return false; }
+    Lock L; //Get exclusive access
+    tmp = value; // value could have changed
+    if (tmp != old_val) { old_v = tmp; return false}
+    value.store(new_v, on_success)
+    return true;
+}
+
+
 */
+
 
 std::mutex cMutex;
 std::mutex dMutex;
