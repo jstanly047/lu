@@ -1,11 +1,8 @@
 #pragma once
-#include <list>
 #include <utility>
 #include <memory>
 #include <condition_variable>
 #include <atomic>
-#include <cassert>
-#include <iostream>
 
 /*
 This has ABA problem to solve it...need to use share_ptr

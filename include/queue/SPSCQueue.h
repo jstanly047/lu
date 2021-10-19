@@ -1,12 +1,9 @@
 #pragma once
-#include <list>
 #include <utility>
 #include <memory>
 #include <condition_variable>
 #include <atomic>
 #include <cassert>
-#include <iostream>
-#include <chrono>
 #include <queue/LockFreeList.h>
 
 

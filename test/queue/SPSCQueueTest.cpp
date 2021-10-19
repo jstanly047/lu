@@ -7,61 +7,30 @@
 
 class SPSCQueueTest : public ::testing::Test
 {
-public:
-    SPSCQueueTest(){}
-    ~SPSCQueueTest(){}
 };
-
-TEST_F(SPSCQueueTest, queueIsInitializedToNull)
-{
-    struct Queue{
-            std::atomic<void*> m_buffer[100]{nullptr};
-            Queue* next{nullptr};
-    };
-    
-    Queue* queue = new Queue();
-
-    for (int i = 0; i < 100;i++)
-    {
-        ASSERT_TRUE(queue->m_buffer[i] == nullptr);
-    }
-
-    ASSERT_TRUE(queue->next == nullptr);
-
-}
-
 
 TEST_F(SPSCQueueTest, consumerProducerSequenceCheck)
 {
-    //long long int totalCTimeMs = 0;
-    //long long int totalPTimeMs = 0;
     for (int numberExec = 0; numberExec < 15 ; numberExec++)
     {
         queue::SPSCQueue<2> testQueue{};
-        unsigned int itemsCount = 10'000'000;
+        unsigned int itemsCount = 1'000'000;
         auto producer = [&]()
         {
-            //auto start = std::chrono::high_resolution_clock::now();
             for (unsigned int i = 0; i < itemsCount; i++)
             {
                 testQueue.push_back(new unsigned int(i));
             }
-
-            //auto end = std::chrono::high_resolution_clock::now();
-            //totalPTimeMs += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         };
 
         auto consumer = [&]()
         {
-            //auto start = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < itemsCount; expectedItem++)
             {
                 unsigned int *p = (unsigned int *)testQueue.pop();
                 ASSERT_TRUE(expectedItem == *p);
                 delete p;
             }
-            //auto end = std::chrono::high_resolution_clock::now();
-            //totalCTimeMs += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         };
 
         std::thread pt(producer);
@@ -69,6 +38,41 @@ TEST_F(SPSCQueueTest, consumerProducerSequenceCheck)
         pt.join();
         ct.join();
     }
-    
-    //std::cout << totalCTimeMs + totalCTimeMs << std::endl;
+}
+
+
+TEST_F(SPSCQueueTest, checkWaitAndNotify)
+{
+    queue::SPSCQueue<2> testQueue{};
+    std::atomic<unsigned int> readValue{}; 
+
+    auto consumer = [&]()
+    {
+        for (unsigned int expectedItem = 1; expectedItem < 10; expectedItem++)
+        {
+            unsigned int *p = (unsigned int *)testQueue.pop();
+            ASSERT_TRUE(expectedItem == *p);
+            readValue = *p;
+            delete p;
+        }
+    };
+
+    std::thread ct(consumer);
+    testQueue.push_back(new unsigned int(1));
+    std::this_thread::sleep_for(std::chrono::microseconds(200));
+    ASSERT_TRUE(readValue.load() == 1);
+    testQueue.push_back(new unsigned int(2));
+    std::this_thread::sleep_for(std::chrono::microseconds(200));
+    ASSERT_TRUE(readValue.load() == 2);
+    testQueue.push_back(new unsigned int(3));
+    testQueue.push_back(new unsigned int(4));
+    std::this_thread::sleep_for(std::chrono::microseconds(200));
+    ASSERT_TRUE(readValue.load() == 4);
+    testQueue.push_back(new unsigned int(5));
+    testQueue.push_back(new unsigned int(6));
+    testQueue.push_back(new unsigned int(7));
+    testQueue.push_back(new unsigned int(8));
+    testQueue.push_back(new unsigned int(9));
+    ct.join();
+    ASSERT_TRUE(readValue.load() == 9);
 }
