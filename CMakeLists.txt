@@ -25,13 +25,13 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-file (GLOB UTIL_LIB_SRC ./*.cpp)
+file (GLOB UTIL_LIB_SRC ./*.cpp thread/*.cpp)
 
 if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
-    file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
+    file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp ./test/thread/*.cpp)
 
-    add_executable(utillib_test ./test/TestMain.cpp ${TEST_QUEUE_SRC})
+    add_executable(utillib_test ./test/*.cpp test/thread/*.cpp ${TEST_QUEUE_SRC})
     target_link_libraries(utillib_test -static-libgcc
                             libgtest.a)
 
