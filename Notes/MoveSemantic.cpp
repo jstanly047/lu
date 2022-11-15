@@ -45,6 +45,11 @@ private:
     int i{0};
     std::string s{};
     std::unique_ptr<int> ptr{};
+    /*
+     When you have a unique_ptr as memebr then this class isn't copyable. Since ‘Widget::Widget(const Widget&)’ is implicitly deleted because the default definition would be ill-formed
+     unique_ptr(const unique_ptr&) = delete; // in the standed libarary
+    */
+    
 };
 
 class WidgetPtr
