@@ -2,13 +2,15 @@
 #include <string>
 #include <vector>
 #include <ctime>
-#include <cassert>
+
+struct sockaddr;
+
 
 namespace
 {
     constexpr size_t getDelimiterSize(char c)
     {
-        return 1;
+        return sizeof(c);
     }
 
     inline size_t getDelimiterSize(const std::string& str)
@@ -35,6 +37,9 @@ namespace
     }
 }
 
+
+namespace lu::utils
+{
 
     class Utils
     {
@@ -68,6 +73,10 @@ namespace
         static std::time_t getDateTime(const std::string& dateTimeStr, const std::string& format="%Y%m%d%H%M%S");
         static std::string getDateTimeStr(std::time_t time, const std::string& fromat="%Y%m%d%H%M%S");
 
-    private: 
-        static util::CLog* m_logger;
+        static  void DieWithUserMessage(const char *msg, const char *detail);
+        static void DieWithSystemMessage(const char *msg);
+        static void PrintSocketAddress(const struct sockaddr &address, FILE *stream);
+
+        
     };
+}

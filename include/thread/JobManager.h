@@ -8,7 +8,7 @@
 #include <thread>
 #include <condition_variable>
 
-namespace thread
+namespace lu::thread
 {
     class JobManager;
 

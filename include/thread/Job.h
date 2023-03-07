@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace thread
+namespace lu::thread
 {
     class Job;
 

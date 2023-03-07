@@ -12,7 +12,7 @@ struct Flags
   std::atomic<bool> wasCanceled{false};
 };
 
-class DummyJob : public Job
+class DummyJob : public lu::thread::Job
 {
   Flags* m_flags;
 public:
@@ -44,7 +44,7 @@ public:
   }
 };
 
-class ReallyDumbJob : public Job
+class ReallyDumbJob : public lu::thread::Job
 {
   Flags* m_flags;
 public:
@@ -78,7 +78,7 @@ protected:
     m_jobManger.restart();
   }
 
-  JobManager m_jobManger;
+  lu::thread::JobManager m_jobManger;
 };
 
 TEST_F(TestJobManager, addJob)
@@ -131,7 +131,7 @@ struct JobControlPackage
 };
 
 class BroadcastingJob :
-  public Job
+  public lu::thread::Job
 {
 public:
 
@@ -186,7 +186,7 @@ private:
 };
 
 BroadcastingJob *
-WaitForJobToStartProcessing(Job::PRIORITY priority, JobControlPackage &package, JobManager &jobManger)
+WaitForJobToStartProcessing(lu::thread::Job::PRIORITY priority, JobControlPackage &package, lu::thread::JobManager &jobManger)
 {
   BroadcastingJob* job = new BroadcastingJob(package);
   jobManger.addJob(job, nullptr, priority);
@@ -202,13 +202,13 @@ WaitForJobToStartProcessing(Job::PRIORITY priority, JobControlPackage &package, 
 TEST_F(TestJobManager, PauseLowPriorityJob)
 {
   JobControlPackage package;
-  BroadcastingJob *job (WaitForJobToStartProcessing(Job::PRIORITY_LOW_PAUSABLE, package, m_jobManger));
+  BroadcastingJob *job (WaitForJobToStartProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE, package, m_jobManger));
 
-  EXPECT_TRUE(m_jobManger.isProcessing(Job::PRIORITY_LOW_PAUSABLE));
+  EXPECT_TRUE(m_jobManger.isProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE));
   m_jobManger.pauseJobs();
-  EXPECT_FALSE(m_jobManger.isProcessing(Job::PRIORITY_LOW_PAUSABLE));
+  EXPECT_FALSE(m_jobManger.isProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE));
   m_jobManger.unPauseJobs();
-  EXPECT_TRUE(m_jobManger.isProcessing(Job::PRIORITY_LOW_PAUSABLE));
+  EXPECT_TRUE(m_jobManger.isProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE));
 
   job->finishAndStopBlocking();
 }
@@ -216,7 +216,7 @@ TEST_F(TestJobManager, PauseLowPriorityJob)
 TEST_F(TestJobManager, isProcessing)
 {
   JobControlPackage package;
-  BroadcastingJob *job (WaitForJobToStartProcessing(Job::PRIORITY_LOW_PAUSABLE, package, m_jobManger));
+  BroadcastingJob *job (WaitForJobToStartProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE, package, m_jobManger));
 
   EXPECT_EQ(0, m_jobManger.isProcessing(""));
 

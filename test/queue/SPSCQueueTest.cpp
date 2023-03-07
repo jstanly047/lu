@@ -13,7 +13,7 @@ TEST_F(SPSCQueueTest, consumerProducerSequenceCheck)
 {
     for (int numberExec = 0; numberExec < 15 ; numberExec++)
     {
-        queue::SPSCQueue<2> testQueue{};
+        lu::queue::SPSCQueue<2> testQueue{};
         unsigned int itemsCount = 1'000'000;
         auto producer = [&]()
         {
@@ -43,7 +43,7 @@ TEST_F(SPSCQueueTest, consumerProducerSequenceCheck)
 
 TEST_F(SPSCQueueTest, checkWaitAndNotify)
 {
-    queue::SPSCQueue<2> testQueue{};
+    lu::queue::SPSCQueue<2> testQueue{};
     std::atomic<unsigned int> readValue{}; 
 
     auto consumer = [&]()

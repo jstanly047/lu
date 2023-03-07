@@ -14,7 +14,7 @@ auto p = a.load() == auto p = atomic_load(&a)
 a.compare_exchange_week(e,d) == automic_compare_exchange_weak(&a, &e, d)
 */
 
-namespace queue{
+namespace lu::queue{
     template<typename Node>
     class LockFreeList{
         public:

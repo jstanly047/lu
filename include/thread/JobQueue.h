@@ -5,7 +5,7 @@
 #include <vector>
 #include <queue>
 
-namespace thread
+namespace lu::thread
 {
     class JobQueue : public IJobCallback
     {

@@ -9,7 +9,7 @@
 
 using namespace std::chrono_literals;
 
-namespace queue{
+namespace lu::queue{
 
     template <unsigned int N = 508>
     class SPSCQueue

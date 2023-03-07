@@ -1,8 +1,8 @@
 #include <thread/JobQueue.h>
 #include <algorithm>
-#include <bpms/Log.h>
+#include <iostream>
 
-using namespace thread;
+using namespace lu::thread;
 
 JobQueue::JobPointer::JobPointer(JobManager &jobManager, Job *job) : 
   m_jobManager(jobManager),

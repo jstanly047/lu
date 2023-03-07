@@ -2,9 +2,9 @@
 #include <thread/JobManager.h>
 #include <thread>
 #include <algorithm>
-#include <bpms/Log.h>
+#include <iostream>
 
-using namespace thread;
+using namespace lu::thread;
 
 JobWorker::JobWorker(JobManager *manager)
 {
