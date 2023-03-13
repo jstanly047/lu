@@ -208,6 +208,13 @@ widget* widget::get_instance()
 }
 
 
+// Wen you initilize the singleton by static then non need to worry about locking, with C+11 standard gurantee to create this without race
+Singleton& Singleton::getInstance() {
+    static Singleton instance;
+    return instance;
+}
+
+
 
 
 
