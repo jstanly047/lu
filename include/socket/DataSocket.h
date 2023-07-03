@@ -3,7 +3,7 @@
 #include "BaseSocket.h"
 #include <string>
 class Person;
-
+struct sockaddr;
 
 namespace lu::socket
 {
@@ -12,6 +12,7 @@ namespace lu::socket
         constexpr static int RECEIVE_BUFF_SIZE = 128 * 1024;
     public:
         DataSocket(int socketID);
+        DataSocket(int socketID, const struct sockaddr& );
 
         bool sendMsg(uint8_t* buffer, uint32_t size);
         bool sendFile(int fileDescriptor, uint32_t size);

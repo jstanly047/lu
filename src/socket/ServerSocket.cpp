@@ -4,11 +4,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <utils/Utils.h>
+#include <glog/logging.h>
 
 using namespace lu::socket;
 
-ServerSocket::ServerSocket(const std::string& service): BaseSocket(NULL_SOCKET), m_service(service)
+ServerSocket::ServerSocket(const std::string& service, int numberOfConnectionQueued): 
+    BaseSocket(NULL_SOCKET), 
+    m_service(service),
+    m_numberOfConnectionQueued(numberOfConnectionQueued)
 {
 
 }
@@ -26,7 +29,8 @@ bool ServerSocket::setUpTCP()
 
     if (rtnVal != 0)
     {
-        lu::utils::Utils::DieWithUserMessage("getaddrinfo() failed", gai_strerror(rtnVal));
+        LOG(ERROR) << "Cannot start service " << m_service;
+        return false;
     }
 
     for (struct addrinfo *addr = servAddr; addr != NULL; addr = addr->ai_next)
@@ -43,20 +47,21 @@ bool ServerSocket::setUpTCP()
             setReuseAddAndPort();
         }
 
-        if ((bind(m_socketId, servAddr->ai_addr, servAddr->ai_addrlen) == 0) && (listen(m_socketId, MAX_PENDING) == 0)) 
+        if ((bind(m_socketId, servAddr->ai_addr, servAddr->ai_addrlen) == 0) && 
+                (listen(m_socketId, m_numberOfConnectionQueued) == 0)) 
         {
             struct sockaddr_storage localAddr;
             socklen_t addrSize = sizeof(localAddr);
             
             if (getsockname(m_socketId, (struct sockaddr *) &localAddr, &addrSize) < 0)
             {
-                lu::utils::Utils::DieWithSystemMessage("getsockname() failed");
+                LOG(ERROR) << "getsockname failed";
+                return false;
             }
 
-            fputs("Binding to ", stdout);
-            lu::utils::Utils::PrintSocketAddress((struct sockaddr &) localAddr, stdout);
-            fputc('\n', stdout);
+            getIPAndPort((struct sockaddr&) localAddr);
             setSocketDescriptorFlags();
+            LOG(INFO) << "Service started " << m_ip << ":" << m_port;
             break;
         }
 
@@ -81,11 +86,9 @@ DataSocket* ServerSocket::acceptDataSocket()
 
     if (clntSock < 0)
     {
-        lu::utils::Utils::DieWithSystemMessage("accept() failed");
+        LOG(WARNING) << "Accept failed!!";
+        return nullptr;
     }
 
-    fputs("Handling client ", stdout);
-    lu::utils::Utils::PrintSocketAddress((struct sockaddr &) clntAddr, stdout);
-    fputc('\n', stdout);
-    return new DataSocket(clntSock);
+    return new DataSocket(clntSock, (struct sockaddr &) clntAddr);
 }

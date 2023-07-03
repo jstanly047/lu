@@ -42,6 +42,11 @@ DataSocket::DataSocket(int socketID) : BaseSocket(socketID)
 {
 }
 
+DataSocket::DataSocket(int socketID, const struct sockaddr& address): BaseSocket(socketID)
+{
+    getIPAndPort(address);
+}
+
 bool DataSocket::sendMsg(uint8_t* buffer, uint32_t size)
 {
     if (m_socketId == NULL_SOCKET)

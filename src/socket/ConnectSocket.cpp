@@ -4,8 +4,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdlib.h>
-#include <utils/Utils.h>
 #include <cstring>
+#include <glog/logging.h>
 
 using namespace lu::socket;
 
@@ -21,19 +21,20 @@ bool ConnectSocket::connectToTCP()
     addrCriteria.ai_family = AF_UNSPEC;
     addrCriteria.ai_socktype = SOCK_STREAM;
     addrCriteria.ai_protocol = IPPROTO_TCP;
-
     struct addrinfo *servAddr;
     int rtnVal = getaddrinfo(m_host.c_str(), m_service.c_str(), &addrCriteria, &servAddr);
 
     if (rtnVal != 0)
     {
-        lu::utils::Utils::DieWithUserMessage("getaddrinfo() failed", gai_strerror(rtnVal));
+        LOG(ERROR) << "Can not connect to " << m_host << ":" << m_service;
         return false;
     }
 
     for (struct addrinfo *addr = servAddr; addr != NULL; addr = addr->ai_next) 
     {
         m_socketId = ::socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+        DLOG(INFO) << "Try connection to protocolFamily:" << addr->ai_family 
+            << ", socketType:" << addr->ai_socktype << ", protocol:" << addr->ai_protocol;
 
         if (m_socketId < 0)
         {
@@ -41,7 +42,11 @@ bool ConnectSocket::connectToTCP()
         }
 
         if (connect(m_socketId, addr->ai_addr, addr->ai_addrlen) == 0)
+        {
+            getIPAndPort(*addr->ai_addr);
+            DLOG(INFO) << "Connecting to " << m_ip << ":" << m_port; 
             break;
+        }
         
         close(m_socketId);
         m_socketId = NULL_SOCKET;

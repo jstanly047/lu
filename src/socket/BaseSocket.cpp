@@ -6,9 +6,40 @@
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <assert.h>
+#include <glog/logging.h>
 
 using namespace lu::socket;
+
+namespace
+{
+    template<typename T>
+    bool setSocketOption(int socketId, int level, int option, const T& value)
+    {
+        assert(socketId != NULL_SOCKET);
+        if (setsockopt(socketId, level, option, &value, sizeof(value)) == -1) 
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    template<typename T>
+    T getSocketOption(int socketId, int level, int option)
+    {
+        assert(socketId != NULL_SOCKET);
+        T value;
+        socklen_t len = sizeof(value);
+        if (getsockopt(socketId, level, option, &value, &len) == -1)
+        {
+            return T{};
+        }
+
+        return value;
+    }
+}
 
 BaseSocket::BaseSocket(int socketId) : m_socketId(socketId)
 {
@@ -25,7 +56,7 @@ BaseSocket::~BaseSocket()
 BaseSocket::BaseSocket(BaseSocket&& move) noexcept
 {
     m_socketId = move.m_socketId;
-    move.m_socketId = -1;
+    move.m_socketId = NULL_SOCKET;
 }
 
 BaseSocket& BaseSocket::operator=(BaseSocket&& move) noexcept
@@ -51,192 +82,75 @@ bool BaseSocket::registerEpoll(int epollFd)
 
 bool BaseSocket::setReuseAddAndPort()
 {
-    assert(m_socketId != NULL_SOCKET);
-    int flag = 1;
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1) 
-    {
-        return false;
-    }
-    
-    return true;
+    return setSocketOption<int>(m_socketId, SOL_SOCKET, SO_REUSEADDR, 1);
 }
 
 bool BaseSocket::setTCPMaxSendRate(unsigned long long int rateInBitPerSec)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_MAX_PACING_RATE, &rateInBitPerSec, sizeof(rateInBitPerSec)) == -1) 
-    {
-        return false;
-    }
-    
-    return true;
+    return setSocketOption(m_socketId, SOL_SOCKET, SO_MAX_PACING_RATE, rateInBitPerSec);
 }
 
 bool BaseSocket::setTCPNoDelay()
 {
-    assert(m_socketId != NULL_SOCKET);
-    int flag = 1;
-    if (setsockopt(m_socketId, SOL_SOCKET, TCP_NODELAY, &flag, sizeof(flag)) == -1) 
-    {
-        return false;
-    }
-    
-    return true  ;
+    return setSocketOption<int>(m_socketId, SOL_SOCKET, TCP_NODELAY, 1);
 }
 
 bool BaseSocket::setRecvBufferSize(int size)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_RCVBUF, size);
 }
 
 bool BaseSocket::setSendBufferSize(int size)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
-}
-
-int BaseSocket::getRcvBufferSize() const
-{
-    assert(m_socketId != NULL_SOCKET);
-    int size;
-    socklen_t len = sizeof(size);
-    if (getsockopt(m_socketId, SOL_SOCKET, SO_RCVBUF, &size, &len) == -1)
-    {
-        return -1;
-    }
-
-    return size;
-}
-
-int BaseSocket::getSendBufferSize() const
-{
-    assert(m_socketId != NULL_SOCKET);
-    int size;
-    socklen_t len = sizeof(size);
-    if (getsockopt(m_socketId, SOL_SOCKET, SO_SNDBUF, &size, &len) == -1)
-    {
-        return -1;
-    }
-
-    return size;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_SNDBUF, size);
 }
 
 bool BaseSocket::setKeepAlive()
 {
-    assert(m_socketId != NULL_SOCKET);
-    int keepAlive = 1;
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption<int>(m_socketId,  SOL_SOCKET, SO_KEEPALIVE, 1);
 }
 
 // No impact when MSG_DONTWAIT or socket is non-blocking
 bool BaseSocket::setReceiveTimeOut(const struct timeval &timeout)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) == -1)
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_RCVTIMEO, timeout);
 }
 
 // No impact when MSG_DONTWAIT or socket is non-blocking
 bool BaseSocket::setSendTimeOut(const struct timeval &timeout)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_SNDTIMEO, timeout);
 }
 
 // No impact when MSG_DONTWAIT pass to recv
 bool BaseSocket::setMinimumDataToReturnRecv(int numberOfBytes)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_RCVLOWAT, &numberOfBytes, sizeof(numberOfBytes)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_RCVLOWAT, numberOfBytes);
 }
 
 // No impact when MSG_DONTWAIT pass to recv
 bool BaseSocket::setMinimumDataToReturnSend(int numberOfBytes)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_SNDLOWAT, &numberOfBytes, sizeof(numberOfBytes)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_SNDLOWAT, numberOfBytes);
 }
 
 // Wait for unsent data to be sent on close
 bool BaseSocket::setDataFlushTimeoutOnClose(int waitTimeInSec)
 {
-    assert(m_socketId != NULL_SOCKET);
     struct linger soLinger;
     soLinger.l_onoff = 1;
     soLinger.l_linger = waitTimeInSec;
-
-    if (setsockopt(m_socketId, SOL_SOCKET, SO_LINGER, &soLinger, sizeof(soLinger)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, SO_LINGER, soLinger);
 }
 
 bool BaseSocket::setBufferTCPSendData()
 {
-    assert(m_socketId != NULL_SOCKET);
-    /*int bufferSendData = 1;
-    if (setsockopt(m_socketId, SOL_SOCKET, TCP_CORK, &bufferSendData, sizeof(bufferSendData)) == -1) 
-    {
-        return false;
-    }
-
-    return true;*/
-
-    int flag = 0;
-    if (setsockopt(m_socketId, SOL_SOCKET, TCP_NODELAY, &flag, sizeof(flag)) == -1) 
-    {
-        return false;
-    }
-    
-    return true  ;
+    return setSocketOption<int>(m_socketId,  SOL_SOCKET, TCP_NODELAY, 0);
 }
 
 bool BaseSocket::setMaxSendDataWaitThreshold(int numberOfBytes)
 {
-    assert(m_socketId != NULL_SOCKET);
-    if (setsockopt(m_socketId, SOL_SOCKET, TCP_NOTSENT_LOWAT, &numberOfBytes, sizeof(numberOfBytes)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return setSocketOption(m_socketId,  SOL_SOCKET, TCP_NOTSENT_LOWAT, numberOfBytes);
 }
 
 bool  BaseSocket::setTCPKeepAlive(int maxIdleTime, int interval, int numberOfTry)
@@ -289,4 +203,38 @@ bool BaseSocket::setSocketDescriptorFlags()
     }
 
     return true;
+}
+
+int BaseSocket::getRcvBufferSize() const
+{
+    return getSocketOption<int>(m_socketId, SOL_SOCKET, SO_RCVBUF);
+}
+
+int BaseSocket::getSendBufferSize() const
+{
+    return getSocketOption<int>(m_socketId, SOL_SOCKET, SO_SNDBUF);
+}
+
+void BaseSocket::getIPAndPort(const struct sockaddr &address)
+{
+    char ip[INET6_ADDRSTRLEN];
+    if (address.sa_family == AF_INET) 
+    {
+        struct sockaddr_in& ipv4 = (struct sockaddr_in &)address;
+        inet_ntop(AF_INET, &(ipv4.sin_addr), ip, INET6_ADDRSTRLEN);
+        m_port = ntohs(ipv4.sin_port);
+    } 
+    else if (address.sa_family == AF_INET6) 
+    {
+        struct sockaddr_in6 &ipv6 = (struct sockaddr_in6 &)address;
+        inet_ntop(AF_INET6, &(ipv6.sin6_addr), ip, INET6_ADDRSTRLEN);
+        m_port = ntohs(ipv6.sin6_port);
+    } 
+    else 
+    {
+        LOG(WARNING) << "Unknown address family";
+        return;
+    }
+
+    m_ip = ip;
 }

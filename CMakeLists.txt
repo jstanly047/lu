@@ -27,7 +27,8 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-add_definitions(-std=c++2a -DPROJECT_BASE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+set(CMAKE_CXX_STANDARD 20)
+add_definitions(-DPROJECT_BASE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
@@ -38,6 +39,10 @@ add_compile_options(-static-libstdc++)
 ############################################################################
 #Build Libraries
 ############################################################################
+file(GLOB UTILS_SRC  ./src/common/*.cpp)
+add_library(lucommon STATIC ${UTILS_SRC})
+target_include_directories(lucommon PUBLIC ${PROJ_INC_DIR}/common)
+
 file(GLOB UTILS_SRC  ./src/utility/*.cpp)
 add_library(utils STATIC ${UTILS_SRC})
 target_include_directories(utils PUBLIC ${PROJ_INC_DIR})

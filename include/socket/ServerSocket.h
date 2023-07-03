@@ -4,18 +4,17 @@
 
 namespace lu::socket
 {
-    constexpr int MAX_PENDING = 10;
-
     class ServerSocket : public BaseSocket
     {
     public:
-        ServerSocket(const std::string& service);
+        ServerSocket(const std::string& service, int numberOfConnectionQueued = 10);
         bool setUpTCP();
         
         DataSocket* acceptDataSocket();
         const std::string& getService() const { return m_service; }
             
     private:
-        std::string m_service;
+        std::string m_service{};
+        int m_numberOfConnectionQueued{};
     };
 }

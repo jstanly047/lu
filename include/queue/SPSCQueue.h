@@ -14,7 +14,8 @@ namespace lu::queue{
     template <unsigned int N = 508>
     class SPSCQueue
     {
-        struct Queue{
+        struct Queue
+        {
             std::atomic<void*> m_buffer[N]{nullptr};
             Queue* next{nullptr};
         };

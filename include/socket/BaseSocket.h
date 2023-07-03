@@ -1,6 +1,9 @@
 #pragma once
 
+#include<string>
+
 struct timeval;
+struct sockaddr;
 
 namespace lu::socket
 {
@@ -35,14 +38,20 @@ namespace lu::socket
         int getRcvBufferSize() const;
         int getSendBufferSize() const;
 
+        const std::string& getIP() const { return m_ip; }
+        int getPort() const { return m_port; }
+
     protected:
         BaseSocket(int socketId);
         bool setReuseAddAndPort();
         bool setSocketDescriptorFlags();
+        void getIPAndPort(const struct sockaddr &address);
 
-        int m_socketId;
+        int m_socketId = NULL_SOCKET;
         int m_socketFlags = 0;
         int m_socketDescriptorFlags = 0;
         bool m_reuseAddAndPort = true;
+        std::string m_ip{};
+        int m_port{};
     };
 }
