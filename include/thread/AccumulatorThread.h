@@ -22,7 +22,7 @@ namespace lu::thread
         void addInputQueue(lu::queue::SPSCQueue<1024> *inputMsgQueue) { m_inputMsgQueues.push_back(inputMsgQueue); }
         void start();
         void join() { m_thread.join(); }
-        static void handleConnectionBreak(int signal);
+        static void handleConnectionBreak();
 
     private:
         void run();

@@ -31,7 +31,7 @@ void AccumulatorThread::start()
 
 void AccumulatorThread::run()
 {
-    signal(SIGPIPE, AccumulatorThread::handleConnectionBreak);
+    //signal(SIGPIPE, AccumulatorThread::handleConnectionBreak);
 
     m_epollFd = epoll_create1(0);
 
@@ -94,7 +94,7 @@ void AccumulatorThread::handleEpollEvent()
     }
 }
 
-void AccumulatorThread::handleConnectionBreak(int signal)
+void AccumulatorThread::handleConnectionBreak()
 {
     handleEpollEvent();
 }

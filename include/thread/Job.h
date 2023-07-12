@@ -12,13 +12,11 @@ namespace lu::thread
         virtual ~IJobCallback() = default;
 
         virtual void onJobComplete(unsigned int jobID, bool success, Job *job) = 0;
-        virtual void onJobAbort(unsigned int jobID, Job *job) {}
+        virtual void onJobAbort(unsigned int jobID, Job *job) = 0;
         virtual void onJobProgress(unsigned int jobID,
                                    unsigned int progress,
                                    unsigned int total,
-                                   const Job *job)
-        {
-        }
+                                   const Job *job) = 0;
     };
 
     class JobManager;
