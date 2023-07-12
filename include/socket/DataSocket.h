@@ -1,31 +1,34 @@
 #pragma once
 
-#include "BaseSocket.h"
+#include <socket/BaseSocket.h>
+#include <socket/defs.h>
 #include <string>
 class Person;
 struct sockaddr;
 
 namespace lu::socket
 {
+    template<typename DataHandler>
     class DataSocket : public BaseSocket
     {
-        constexpr static int RECEIVE_BUFF_SIZE = 128 * 1024;
+        constexpr static unsigned int RECEIVE_BUFF_SIZE = TCP_MTU;
     public:
         DataSocket(int socketID);
         DataSocket(int socketID, const struct sockaddr& );
-
-        bool sendMsg(uint8_t* buffer, uint32_t size);
-        bool sendFile(int fileDescriptor, uint32_t size);
-        std::pair<uint8_t*, uint32_t> getNextMessage();
+        bool Receive();
+        int sendMsg(void* buffer, int size);
+        int sendFile(int fileDescriptor, int size);
 
     private:
+        inline void readMessages();
         inline void updateForDataRead(uint32_t size);
-        
-        uint32_t m_expectedMsgSize = 0;
-        uint32_t m_numberOfBytesInBuffer = 0;
-        uint32_t m_readOffset = 0;
-        uint32_t m_numberOfBytesLeftToRead = 0;
-        uint32_t m_numberOfBytesLeftToRecv = RECEIVE_BUFF_SIZE;
-        uint8_t m_recvBuffer[RECEIVE_BUFF_SIZE];
+
+        DataHandler m_dataHandler;
+        unsigned int m_headerSize{};
+        unsigned int m_receiveBufferShiftSize{};
+        unsigned int m_numberOfBytesInBuffer{};
+        unsigned int m_readOffset{};
+        unsigned int m_numberOfBytesLeftToRead{};
+        unsigned int m_numberOfBytesLeftToRecv{};
     };
 }

@@ -38,56 +38,130 @@ namespace
     }
 }
 
-DataSocket::DataSocket(int socketID) : BaseSocket(socketID)
+template<typename DataHandler>
+DataSocket<DataHandler>::DataSocket(int socketID) : BaseSocket(socketID)
 {
+    m_headerSize = m_dataHandler.getHeaderSize();
+    m_receiveBufferShiftSize = m_dataHandler.getReceiveBufferSize() / 4;
+    m_numberOfBytesLeftToRecv = m_dataHandler.getReceiveBufferSize();
 }
 
-DataSocket::DataSocket(int socketID, const struct sockaddr& address): BaseSocket(socketID)
+template<typename DataHandler>
+DataSocket<DataHandler>::DataSocket(int socketID, const struct sockaddr& address): BaseSocket(socketID)
 {
     getIPAndPort(address);
 }
 
-bool DataSocket::sendMsg(uint8_t* buffer, uint32_t size)
+template<typename DataHandler>
+void DataSocket<DataHandler>::updateForDataRead(uint32_t size)
+{
+    m_readOffset += size;
+    m_numberOfBytesLeftToRead -= size;
+}
+
+template<typename DataHandler>
+bool DataSocket<DataHandler>::Receive()
+{
+    int numberOfBytesRead = 0;
+
+    if (receiveMsg(m_socketId, m_dataHandler.getReceiveBufferToFill() + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+    {
+        return false;
+    }
+
+    m_numberOfBytesLeftToRead += (uint32_t) numberOfBytesRead;
+    readMessages();
+
+    if (m_numberOfBytesLeftToRead == 0)
+    {
+        m_readOffset = 0;
+        m_numberOfBytesLeftToRecv = m_dataHandler.getReceiveBufferSize();
+    }
+    else if (m_numberOfBytesLeftToRead <= m_receiveBufferShiftSize)
+    {
+        std::memcpy(m_dataHandler.getReceiveBufferToFill(), m_dataHandler.getReceiveBufferToFill() + m_readOffset, m_numberOfBytesLeftToRead);
+        m_readOffset = 0;
+        m_numberOfBytesLeftToRecv =  m_dataHandler.getReceiveBufferSize() - m_numberOfBytesLeftToRead;
+        assert(m_numberOfBytesLeftToRecv > 0u);
+    }
+
+    return true;
+}
+
+template<typename DataHandler>
+void DataSocket<DataHandler>::readMessages()
+{
+    unsigned int expectedMsgSize = 0;
+
+    for(;;)
+    {
+        if (m_numberOfBytesLeftToRead >= m_headerSize)
+        {
+            // TODO the reader function must handle the alignment and endianess 
+            auto header = m_dataHandler.readHeader(m_readOffset);
+            expectedMsgSize = header.getMessageSize();
+            updateForDataRead(sizeof(uint32_t));
+        }
+        else
+        {
+            return;
+        }
+
+        if (m_numberOfBytesLeftToRead >= expectedMsgSize)
+        {
+            m_dataHandler.readMessage(m_readOffset, expectedMsgSize);
+            updateForDataRead(expectedMsgSize);
+            continue;
+        }
+
+        return;
+    }
+}
+
+template<typename DataHandler>
+int DataSocket<DataHandler>::sendMsg(void* buffer, int size)
 {
     if (m_socketId == NULL_SOCKET)
     {
         return false;
     }
 
-    auto sendMessage = [&](const void* buf, size_t size)
+    int totalSent = 0;
+
+    while (totalSent < size)
     {
-        ssize_t numBytesSend = send(m_socketId, buf, size, MSG_DONTWAIT);
-    
+        ssize_t numBytesSend = send(m_socketId, buffer, size, MSG_DONTWAIT);
+
         if (numBytesSend < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                return false;
+                continue;
             }
             
-            lu::utils::Utils::DieWithSystemMessage("send() failed");
+            return totalSent;
         }
         else if (numBytesSend != (ssize_t) size)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR 
                     || errno == ENOBUFS)
             {
-                return false;
+                totalSent += numBytesSend;
+                size -= numBytesSend;
+                continue;
             }
 
-            lu::utils::Utils::DieWithUserMessage("send()", "sent unexpected number of bytes");
+            return totalSent;
         }
 
-        return true;
-    };
-    
-    uint32_t networkByteOrderMsgBytesSize = htonl(size);
-    sendMessage(&networkByteOrderMsgBytesSize, sizeof(uint32_t));
-    sendMessage(buffer, size);
-    return true;
+        totalSent += numBytesSend;
+    }
+
+    return totalSent;
 }
 
-bool DataSocket::sendFile(int fileDescriptor, uint32_t size)
+template<typename DataHandler>
+int DataSocket<DataHandler>::sendFile(int fileDescriptor, int size)
 {
     off_t offset = 0;
     ssize_t sendBytes = sendfile(m_socketId, fileDescriptor, &offset, size);
@@ -95,80 +169,38 @@ bool DataSocket::sendFile(int fileDescriptor, uint32_t size)
     if (sendBytes == -1) 
     {
         return false;
-    }
+    },
 
-    return true;
-}
+    int totalSent = 0;
 
-void DataSocket::updateForDataRead(uint32_t size)
-{
-    m_readOffset += size;
-    m_numberOfBytesLeftToRead -= size;
-}
-
-std::pair<uint8_t*, uint32_t>  DataSocket::getNextMessage()
-{
-    auto readMessageFromRcvBuffer = [&]()->std::pair<uint8_t*, uint32_t>
+    while (totalSent < size)
     {
-        if (m_expectedMsgSize == 0)
+        ssize_t numBytesSend = sendfile(m_socketId, fileDescriptor, &offset, size);
+
+        if (numBytesSend < 0)
         {
-            if (m_numberOfBytesLeftToRead >= sizeof(uint32_t))
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                //std::cout << "Before size read numberOfBytesLeftToRead : " << m_numberOfBytesLeftToRead  << " m_readOffset : " << m_readOffset   << " m_expectedMsgSize : " << m_expectedMsgSize << std::endl;
-                m_expectedMsgSize = ntohl(*(reinterpret_cast<uint32_t*>(m_recvBuffer + m_readOffset)));
-                updateForDataRead(sizeof(uint32_t));
-                //std::cout << "After size read numberOfBytesLeftToRead : " << m_numberOfBytesLeftToRead << " m_readOffset : " << m_readOffset   << " m_expectedMsgSize : " << m_expectedMsgSize << std::endl;
+                continue;
             }
-            else
+            
+            return totalSent;
+        }
+        else if (numBytesSend != (ssize_t) size)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR 
+                    || errno == ENOBUFS)
             {
-                return {nullptr, 0};
+                totalSent += numBytesSend;
+                size -= numBytesSend;
+                continue;
             }
+
+            return totalSent;
         }
 
-        if (m_numberOfBytesLeftToRead >= m_expectedMsgSize)
-        {
-            //std::cout << "Before size msg numberOfBytesLeftToRead : " << m_numberOfBytesLeftToRead << " m_readOffset : " << m_readOffset  << " m_expectedMsgSize : " << m_expectedMsgSize << std::endl;
-            auto currentOffset = m_readOffset;
-            updateForDataRead(m_expectedMsgSize);
-            auto msgSize = m_expectedMsgSize;
-            m_expectedMsgSize = 0;
-            //std::cout << "After size msg numberOfBytesLeftToRead : " << m_numberOfBytesLeftToRead    << " m_readOffset : " << m_readOffset     << " m_expectedMsgSize : " << m_expectedMsgSize << std::endl;
-            return {m_recvBuffer + currentOffset, msgSize};
-        }
-        
-        return {nullptr, 0};
-    };
-
-    auto messageBuffer = readMessageFromRcvBuffer();
-
-    if (messageBuffer.first != nullptr)
-    {
-        return messageBuffer;
+        totalSent += numBytesSend;
     }
 
-    if (m_numberOfBytesLeftToRead > 0)
-    {
-        std::memcpy(m_recvBuffer, m_recvBuffer + m_readOffset, m_numberOfBytesLeftToRead);
-        m_readOffset = 0;
-        m_numberOfBytesLeftToRecv = RECEIVE_BUFF_SIZE - m_numberOfBytesLeftToRead;
-        assert(m_numberOfBytesLeftToRecv > 0);
-    }
-    else
-    {
-        assert(m_numberOfBytesLeftToRead == 0);
-        m_readOffset = 0;
-        m_numberOfBytesLeftToRecv = RECEIVE_BUFF_SIZE;
-    }
-
-    //std::cout << "Before recv numberOfBytesLeftToRead : " << m_numberOfBytesLeftToRead << " m_readOffset : " << m_readOffset  << std::endl;
-
-    int32_t numberOfBytesRead = 0;   
-    if (receiveMsg(m_socketId, m_recvBuffer + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
-    {
-        return {nullptr, 0};
-    }
-
-    m_numberOfBytesLeftToRead += (uint32_t) numberOfBytesRead;
-    //std::cout << "After recv numberOfBytesLeftToRead : " << m_numberOfBytesLeftToRead << std::endl;
-    return readMessageFromRcvBuffer();
+    return sendBytes;
 }
