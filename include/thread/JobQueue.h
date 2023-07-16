@@ -35,7 +35,7 @@ namespace lu::thread
         void cancelJob(const Job *job);
         void cancelJobs();
         bool isProcessing() const;
-        void onJobComplete(unsigned int jobID, bool success, Job *job) override;
+        void onJobComplete(Job *job) override;
         void onJobAbort(unsigned int jobID, Job *job) override;
 
     protected:

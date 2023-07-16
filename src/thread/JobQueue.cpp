@@ -43,7 +43,7 @@ JobQueue::~JobQueue()
   cancelJobs();
 }
 
-void JobQueue::onJobComplete(unsigned int jobID, bool success, Job *job)
+void JobQueue::onJobComplete(Job *job)
 {
   onJobNotify(job);
 }

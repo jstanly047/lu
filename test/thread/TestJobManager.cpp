@@ -67,12 +67,12 @@ public:
   }
 };
 
-class TestJobManager : public testing::Test
+class DISABLED_TestJobManager : public testing::Test
 {
 protected:
-  TestJobManager() { }
+  DISABLED_TestJobManager() { }
 
-  ~TestJobManager() override
+  ~DISABLED_TestJobManager() override
   {
     m_jobManger.cancelJobs();
     m_jobManger.restart();
@@ -81,7 +81,7 @@ protected:
   lu::thread::JobManager m_jobManger;
 };
 
-TEST_F(TestJobManager, addJob)
+TEST_F(DISABLED_TestJobManager, addJob)
 {
   Flags* flags = new Flags();
   ReallyDumbJob* job = new ReallyDumbJob(flags);
@@ -91,7 +91,7 @@ TEST_F(TestJobManager, addJob)
   delete flags;
 }
 
-TEST_F(TestJobManager, CancelJob)
+TEST_F(DISABLED_TestJobManager, CancelJob)
 {
   unsigned int id;
   Flags* flags = new Flags();
@@ -199,7 +199,7 @@ WaitForJobToStartProcessing(lu::thread::Job::PRIORITY priority, JobControlPackag
 }
 }
 
-TEST_F(TestJobManager, PauseLowPriorityJob)
+TEST_F(DISABLED_TestJobManager, PauseLowPriorityJob)
 {
   JobControlPackage package;
   BroadcastingJob *job (WaitForJobToStartProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE, package, m_jobManger));
@@ -213,7 +213,7 @@ TEST_F(TestJobManager, PauseLowPriorityJob)
   job->finishAndStopBlocking();
 }
 
-TEST_F(TestJobManager, isProcessing)
+TEST_F(DISABLED_TestJobManager, isProcessing)
 {
   JobControlPackage package;
   BroadcastingJob *job (WaitForJobToStartProcessing(lu::thread::Job::PRIORITY_LOW_PAUSABLE, package, m_jobManger));

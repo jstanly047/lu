@@ -93,7 +93,7 @@ namespace lu::thread
         friend class JobQueue;
 
         Job *getNextJob(const JobWorker *worker);
-        void onJobComplete(bool success, Job *job);
+        void onJobComplete(Job *job);
         bool onJobProgress(unsigned int progress, unsigned int total, const Job *job) const;
 
     private:

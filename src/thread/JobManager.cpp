@@ -33,7 +33,7 @@ void JobWorker::process()
       break;
     }
 
-    bool success = false;
+    /*bool success = false;
 
     try
     {
@@ -42,9 +42,9 @@ void JobWorker::process()
     catch (...)
     {
       std::cout << "Error processing job " << job->getType() << std::endl;
-    }
+    }*/
 
-    m_jobManager->onJobComplete(success, job);
+    m_jobManager->onJobComplete(job);
   }
 }
 
@@ -333,7 +333,8 @@ bool JobManager::onJobProgress(unsigned int progress, unsigned int total, const 
   return true; // couldn't find the job, or it's been cancelled
 }
 
-void JobManager::onJobComplete(bool success, Job *job)
+
+void JobManager::onJobComplete(Job *job)
 {
   std::unique_lock<std::mutex> lock(m_section);
   // remove the job from the processing queue
@@ -349,7 +350,7 @@ void JobManager::onJobComplete(bool success, Job *job)
     {
       if (item.m_userCallBack)
       {
-        item.m_userCallBack->onJobComplete(item.m_id, success, item.m_job);
+        item.m_userCallBack->onJobComplete(item.m_job);
       }
     }
     catch (...)

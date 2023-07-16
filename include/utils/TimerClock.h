@@ -1,38 +1,35 @@
 #pragma once
-#include <time.h>
+
 #include <string>
+#include <chrono>
 
 namespace lu::utils
 {
     class TimerClock
     {
     public:
-        TimerClock(const std::string& statName);
         void begin();
-        long long int end();
-        std::string getStatInMilliSec() const;
-        std::string getStatInSec() const;
+        long long int getElapsedTimeMSec() const;
+        long long int getElapsedTimeSec() const;
 
     protected:
-        std::string m_statName;
-        
-    private:
-        struct timespec m_start{};
-        struct timespec m_end{};
-        unsigned long long int m_diff = 0;
+        std::chrono::system_clock::time_point m_start;
     };
 
     class AccumulateAndAverage : private TimerClock
     {
     public:
-        AccumulateAndAverage(const std::string& statName);
         void begin();
         void end(unsigned long long int qty);
+
         std::string getStatInMilliSec() const;
         std::string getStatInSec() const;
+        long long int getTotalElapsedTimeMSec() const;
+        long long int getTotalElapsedTimeSec() const;
+        long long int getTotalQty() const { return m_totalQty; }
     
     private:
-        unsigned long long int m_totalTimeSpendInNanoSec = 0;
+        long long int m_totalTimeSpendInNanoSec = 0;
         unsigned long long int m_totalQty = 0;
     };
 }

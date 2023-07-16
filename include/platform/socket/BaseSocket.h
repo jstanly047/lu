@@ -1,27 +1,28 @@
 #pragma once
-
 #include<string>
 
 struct timeval;
 struct sockaddr;
 
-namespace lu::socket
+namespace lu::platform::socket
 {
-    constexpr static int NULL_SOCKET = -1;
-    constexpr int getDefaultTCPBlockSize() { return 128 * 1024; }
-
     class BaseSocket
     {
     public:
-        BaseSocket(BaseSocket&& move) noexcept;
-        BaseSocket& operator=(BaseSocket&& move) noexcept;
         BaseSocket(const BaseSocket&)               = delete;
         BaseSocket& operator=(const BaseSocket&)    = delete;
+
+        BaseSocket(int socketId);
+        BaseSocket(int socketId, const sockaddr& address);
         ~BaseSocket();
+
+        BaseSocket(BaseSocket&& other) noexcept;
+        BaseSocket& operator=(BaseSocket&& other) noexcept;
+        
+        int getFD() const { return m_fd; }
         void setNonBlocking();
-        bool registerEpoll(int epollFd);
-        bool setRecvBufferSize(int size);
-        bool setSendBufferSize(int size);
+        bool setRxBufferSize(int size);
+        bool setTxBufferSize(int size);
         void setReuseAddAndPort(bool reuseAddAndPort) { m_reuseAddAndPort = reuseAddAndPort; }
         bool setTCPMaxSendRate(unsigned long long int rateInBitPerSec);
         bool setTCPNoDelay();
@@ -35,23 +36,29 @@ namespace lu::socket
         bool setBufferTCPSendData();
         bool setMaxSendDataWaitThreshold(int numberOfBytes);
 
-        int getRcvBufferSize() const;
-        int getSendBufferSize() const;
+        int getRxBufferSize() const;
+        int getTxBufferSize() const;
 
         const std::string& getIP() const { return m_ip; }
         int getPort() const { return m_port; }
-
-    protected:
-        BaseSocket(int socketId);
         bool setReuseAddAndPort();
         bool setSocketDescriptorFlags();
+        //TODO close function for DataSocket to close the baseSocket
+
+    protected:
+        
+
+        
         void getIPAndPort(const struct sockaddr &address);
 
-        int m_socketId = NULL_SOCKET;
+    protected:
+        int m_fd;
+        std::string m_ip{};
+        int m_port{};
+
+    private:
         int m_socketFlags = 0;
         int m_socketDescriptorFlags = 0;
         bool m_reuseAddAndPort = true;
-        std::string m_ip{};
-        int m_port{};
     };
 }

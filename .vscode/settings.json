@@ -54,6 +54,15 @@
         "iomanip": "cpp",
         "thread": "cpp",
         "csignal": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "any": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "variant": "cpp",
+        "cinttypes": "cpp",
+        "cstring": "cpp"
     }
 }

@@ -43,7 +43,7 @@ file(GLOB UTILS_SRC  ./src/common/*.cpp)
 add_library(lucommon STATIC ${UTILS_SRC})
 target_include_directories(lucommon PUBLIC ${PROJ_INC_DIR}/common)
 
-file(GLOB UTILS_SRC  ./src/utility/*.cpp)
+file(GLOB UTILS_SRC  ./src/utils/*.cpp)
 add_library(utils STATIC ${UTILS_SRC})
 target_include_directories(utils PUBLIC ${PROJ_INC_DIR})
 
@@ -51,13 +51,20 @@ target_include_directories(utils PUBLIC ${PROJ_INC_DIR})
 #add_library(queue STATIC ${QUEUE_SRC})
 #target_include_directories(queue PUBLIC ${PROJ_INC_DIR})
 
-file(GLOB SOCKET_SRC  ./src/socket/*.cpp)
-add_library(socket STATIC ${SOCKET_SRC})
-target_include_directories(socket PUBLIC ${PROJ_INC_DIR})
+file(GLOB LU_PLATFORM_SRC  ./src/platform/*.cpp)
+add_library(luPlatform STATIC ${LU_PLATFORM_SRC})
+target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR})
 
-file(GLOB THREAD_SRC  ./src/thread/*.cpp)
-add_library(thread STATIC ${THREAD_SRC})
-target_include_directories(thread PUBLIC ${PROJ_INC_DIR})
+file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
+add_library(luSocket STATIC ${LU_SOCKET_SRC})
+target_include_directories(luSocket PUBLIC ${PROJ_INC_DIR})
+target_link_libraries(luSocket luPlatform)
+
+
+
+#file(GLOB THREAD_SRC  ./src/thread/*.cpp)
+#add_library(thread STATIC ${THREAD_SRC})
+#target_include_directories(thread PUBLIC ${PROJ_INC_DIR})
 
 
 ############################################################################
@@ -67,20 +74,24 @@ if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
     file(GLOB TEST_UTILS ./test/utils/*.cpp)
     file(GLOB TEST_QUEUE ./test/queue/*.cpp)
-    file(GLOB TEST_THREAD ./test/thread/*.cpp)
+    file(GLOB TEST_SOCKET ./test/platform/socket/*.cpp)
+    #file(GLOB TEST_THREAD ./test/thread/*.cpp)
 
 add_executable(LuTests ./test/TestMain.cpp 
                         ${TEST_UTILS}
                         ${TEST_QUEUE}
-                        ${TEST_THREAD})
+                        ${TEST_THREAD}
+                        ${TEST_SOCKET})
 
 target_link_libraries(LuTests
                         utils
-                        #queue
-                        thread
-                        -lgtest
-                        -lgmock
-                        -pthread)
+                        #thread
+                        luSocket
+                        luPlatform
+                        glog
+                        gtest
+                        gmock
+                        )
 
 endif(UNIT_TEST)
 unset(UNIT_TEST CACHE)

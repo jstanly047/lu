@@ -76,7 +76,6 @@ namespace lu::utils
         static  void DieWithUserMessage(const char *msg, const char *detail);
         static void DieWithSystemMessage(const char *msg);
         static void PrintSocketAddress(const struct sockaddr &address, FILE *stream);
-
         
     };
 }

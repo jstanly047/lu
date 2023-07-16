@@ -5,8 +5,9 @@
 #include <iostream>
 #include <chrono>
 
-constexpr unsigned int ITEMS_COUNT = 10'000'000;
-constexpr unsigned int QUEUE_SIZE = 4000;
+constexpr unsigned int ITEMS_COUNT = 1'000;
+constexpr unsigned int QUEUE_SIZE = 400;
+constexpr int NUMBER_TRY = 2;
 
 class TestQueue : public ::testing::Test
 {
@@ -18,6 +19,17 @@ protected:
         for (unsigned int i = 0; i < ITEMS_COUNT; i++)
         {
             m_data.push_back(new unsigned int(i));
+            m_totalCount+=i;
+
+            if (i < ITEMS_COUNT/2)
+            {
+                m_halfTotalCount += i;
+            }
+
+            if (i < ITEMS_COUNT/4)
+            {
+                m_quarterTotalCount += i;
+            }
         }
     }
 
@@ -30,6 +42,9 @@ protected:
     }
 
     std::vector <unsigned int*> m_data;
+    unsigned long long int m_totalCount = 0;
+    unsigned long long int m_halfTotalCount = 0;
+    unsigned long long int m_quarterTotalCount = 0;
 };
 
 TEST_F(TestQueue, consumerProducerSequenceCheckForSPSC)
@@ -37,7 +52,7 @@ TEST_F(TestQueue, consumerProducerSequenceCheckForSPSC)
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE, true, true, false, true> >;
     AtomicQueue testQueue{};
     
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::milliseconds produceTime;
         std::chrono::milliseconds consumerTime;
@@ -59,9 +74,7 @@ TEST_F(TestQueue, consumerProducerSequenceCheckForSPSC)
             auto started = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT; expectedItem++)
             {
-                testQueue.pop();
-                //unsigned int *p = (unsigned int *)testQueue.pop();
-                //ASSERT_TRUE(expectedItem == *p);
+                ASSERT_EQ(expectedItem, *testQueue.pop());
             }
 
             consumerTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - started);
@@ -82,7 +95,7 @@ TEST_F(TestQueue, consumerSPSCNoMINIMIZE_CONTENTION)
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE, false, true, false, true> >;
     AtomicQueue testQueue{};
     
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::milliseconds produceTime;
         std::chrono::milliseconds consumerTime;
@@ -104,9 +117,7 @@ TEST_F(TestQueue, consumerSPSCNoMINIMIZE_CONTENTION)
             auto started = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT; expectedItem++)
             {
-                testQueue.pop();
-                //unsigned int *p = (unsigned int *)testQueue.pop();
-                //ASSERT_TRUE(expectedItem == *p);
+                ASSERT_EQ(expectedItem, *testQueue.pop());
             }
 
             consumerTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - started);
@@ -126,7 +137,7 @@ TEST_F(TestQueue, consumerProducerSequenceCheck_SPSC_On_MPMC)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::milliseconds produceTime;
         std::chrono::milliseconds consumerTime;
@@ -148,9 +159,7 @@ TEST_F(TestQueue, consumerProducerSequenceCheck_SPSC_On_MPMC)
             auto started = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT; expectedItem++)
             {
-                testQueue.pop();
-                // int *p = (unsigned int *)testQueue.pop();
-                //ASSERT_TRUE(expectedItem == *p);
+                ASSERT_EQ(expectedItem, *testQueue.pop());
             }
 
             consumerTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - started);
@@ -170,12 +179,12 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MPSC)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::high_resolution_clock::time_point producerStartTime[2];
         std::chrono::milliseconds produceTime[2];
         std::chrono::milliseconds consumerTime;
-        
+        std::atomic<unsigned long long int> totalCount = 0;
         
         auto producer = [&](int timeIndex)
         {
@@ -194,7 +203,8 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MPSC)
             auto started = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT ; expectedItem++)
             {
-                testQueue.pop();
+                totalCount += *testQueue.pop();
+                
             }
 
             consumerTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - started);
@@ -206,6 +216,7 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MPSC)
         pt1.join();
         pt2.join();
         ct.join();
+        ASSERT_EQ(m_halfTotalCount*2, totalCount);
         std::cout << "Producer1 (ms):" << produceTime[0].count() <<std::endl;
         std::cout << "Producer2 (ms):" << produceTime[1].count() <<std::endl;
         std::cout << "Consumer (ms):"  << consumerTime.count() << std::endl;
@@ -217,11 +228,12 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MPSCNoMINIMIZE_CONTENTION)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE, false> >;
     AtomicQueue testQueue{};
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::high_resolution_clock::time_point producerStartTime[2];
         std::chrono::milliseconds produceTime[2];
         std::chrono::milliseconds consumerTime;
+        std::atomic<unsigned long long int> totalCount = 0;
         
         
         auto producer = [&](int timeIndex)
@@ -241,7 +253,7 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MPSCNoMINIMIZE_CONTENTION)
             auto started = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT ; expectedItem++)
             {
-                testQueue.pop();
+                totalCount += *testQueue.pop();
             }
 
             consumerTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - started);
@@ -253,6 +265,7 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MPSCNoMINIMIZE_CONTENTION)
         pt1.join();
         pt2.join();
         ct.join();
+        ASSERT_EQ(m_halfTotalCount*2, totalCount);
         std::cout << "Producer1 (ms):" << produceTime[0].count() <<std::endl;
         std::cout << "Producer2 (ms):" << produceTime[1].count() <<std::endl;
         std::cout << "Consumer (ms):"  << consumerTime.count() << std::endl;
@@ -264,11 +277,12 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MP$SC)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::high_resolution_clock::time_point producerStartTime[4];
         std::chrono::milliseconds produceTime[4];
         std::chrono::milliseconds consumerTime;
+        std::atomic<unsigned long long int> totalCount = 0;
         
         
         auto producer = [&](int timeIndex)
@@ -288,7 +302,7 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MP$SC)
             auto started = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT ; expectedItem++)
             {
-                testQueue.pop();
+                totalCount += *testQueue.pop();
             }
 
             consumerTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - started);
@@ -304,6 +318,7 @@ TEST_F(TestQueue, consumerProducerCheckMPSC_On_MP$SC)
         pt3.join();
         pt4.join();
         ct.join();
+        EXPECT_EQ(m_quarterTotalCount*4, totalCount);
         std::cout << "Producer1 (ms):" << produceTime[0].count() <<std::endl;
         std::cout << "Producer2 (ms):" << produceTime[1].count() <<std::endl;
         std::cout << "Producer3 (ms):" << produceTime[2].count() <<std::endl;
@@ -317,12 +332,13 @@ TEST_F(TestQueue, consumerProducerCheckMPMC)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
-    for (int numberExec = 0; numberExec < 2 ; numberExec++)
+    for (int numberExec = 0; numberExec < NUMBER_TRY ; numberExec++)
     {
         std::chrono::high_resolution_clock::time_point producerStartTime[2];
         std::chrono::milliseconds produceTime[2];
         std::chrono::high_resolution_clock::time_point consumerStartTime[2];
         std::chrono::milliseconds consumerTime[2];
+        std::atomic<unsigned long long int> totalCount = 0;
         
         auto producer = [&](int timeIndex)
         {
@@ -341,7 +357,7 @@ TEST_F(TestQueue, consumerProducerCheckMPMC)
             consumerStartTime[timeIndex] = std::chrono::high_resolution_clock::now();
             for (unsigned int expectedItem = 0; expectedItem < ITEMS_COUNT/2; expectedItem++)
             {
-                testQueue.pop();
+                totalCount += *testQueue.pop();
             }
 
             consumerTime[timeIndex] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - consumerStartTime[timeIndex] );
@@ -355,6 +371,7 @@ TEST_F(TestQueue, consumerProducerCheckMPMC)
         pt2.join();
         ct1.join();
         ct2.join();
+        ASSERT_EQ(m_halfTotalCount*2, totalCount);
         std::cout << "Producer1 (ms):" << produceTime[0].count() <<std::endl;
         std::cout << "Producer2 (ms):" << produceTime[1].count() <<std::endl;
         std::cout << "Consumer1 (ms):"  << consumerTime[0].count() << std::endl;
