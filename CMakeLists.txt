@@ -72,16 +72,17 @@ target_link_libraries(luSocket luPlatform)
 ############################################################################
 if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
-    file(GLOB TEST_UTILS ./test/utils/*.cpp)
-    file(GLOB TEST_QUEUE ./test/queue/*.cpp)
-    file(GLOB TEST_SOCKET ./test/platform/socket/*.cpp)
+    file(GLOB TEST_UTILS_SRC ./test/utils/*.cpp)
+    file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
+    file(GLOB TEST_SOCKET_SRC ./test/platform/socket/*.cpp)
+    file(GLOB TEST_PlATFORM_SRC ./test/platform/*.cpp)
     #file(GLOB TEST_THREAD ./test/thread/*.cpp)
 
 add_executable(LuTests ./test/TestMain.cpp 
-                        ${TEST_UTILS}
-                        ${TEST_QUEUE}
-                        ${TEST_THREAD}
-                        ${TEST_SOCKET})
+                        ${TEST_UTILS_SRC}
+                        ${TEST_QUEUE_SRC}
+                        ${TEST_SOCKET_SRC}
+                        ${TEST_PlATFORM_SRC})
 
 target_link_libraries(LuTests
                         utils

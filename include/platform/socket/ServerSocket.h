@@ -20,14 +20,17 @@ namespace lu::platform::socket
         
         BaseSocket* acceptDataSocket();
         const std::string& getService() const { return m_service; }
+        BaseSocket& getBaseSocket() { return m_baseSocket; }
+        void stop();
             
     private:
         void onEvent(struct ::epoll_event& event) override final;
-        int getFD() const override final { return m_baseSocket.getFD(); }
+        const lu::platform::FileDescriptor& getFD() const override final { return m_baseSocket.getFD(); }
 
         BaseSocket m_baseSocket;
         ConnectionHandler& m_connectionHandler;
         std::string m_service{};        
         bool m_reuseAddAndPort{};
+        pthread_t m_nativeHandle;
     };
 }

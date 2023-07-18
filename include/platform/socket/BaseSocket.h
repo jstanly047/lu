@@ -1,5 +1,8 @@
 #pragma once
+#include<platform/FileDescriptor.h>
+
 #include<string>
+#include<memory>
 
 struct timeval;
 struct sockaddr;
@@ -12,15 +15,24 @@ namespace lu::platform::socket
         BaseSocket(const BaseSocket&)               = delete;
         BaseSocket& operator=(const BaseSocket&)    = delete;
 
-        BaseSocket(int socketId);
+        BaseSocket(int socketId = lu::platform::NULL_FD);
         BaseSocket(int socketId, const sockaddr& address);
         ~BaseSocket();
 
         BaseSocket(BaseSocket&& other) noexcept;
         BaseSocket& operator=(BaseSocket&& other) noexcept;
         
-        int getFD() const { return m_fd; }
+        const lu::platform::FileDescriptor& getFD() const { return *m_fd; }
+        int getRxBufferSize() const;
+        int getTxBufferSize() const;
+        const std::string& getIP() const { return m_ip; }
+        int getPort() const { return m_port; }
+        template<typename T>
+        T getSocketOption(int level, int option) const;
+
+        void setAddress(const sockaddr& address);
         void setNonBlocking();
+        void setBlocking();
         bool setRxBufferSize(int size);
         bool setTxBufferSize(int size);
         void setReuseAddAndPort(bool reuseAddAndPort) { m_reuseAddAndPort = reuseAddAndPort; }
@@ -35,14 +47,14 @@ namespace lu::platform::socket
         bool setTCPKeepAlive(int maxIdleTime, int interval, int numberOfTry);
         bool setBufferTCPSendData();
         bool setMaxSendDataWaitThreshold(int numberOfBytes);
-
-        int getRxBufferSize() const;
-        int getTxBufferSize() const;
-
-        const std::string& getIP() const { return m_ip; }
-        int getPort() const { return m_port; }
         bool setReuseAddAndPort();
         bool setSocketDescriptorFlags();
+
+        template<typename T>
+        bool setSocketOption(int level, int option, const T& value);
+        void stop();
+
+        
         //TODO close function for DataSocket to close the baseSocket
 
     protected:
@@ -52,7 +64,7 @@ namespace lu::platform::socket
         void getIPAndPort(const struct sockaddr &address);
 
     protected:
-        int m_fd;
+        std::unique_ptr<lu::platform::FileDescriptor> m_fd;
         std::string m_ip{};
         int m_port{};
 

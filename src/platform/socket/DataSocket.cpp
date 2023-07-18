@@ -151,7 +151,7 @@ void DataSocket<DataHandler>::readMessages()
 template<lu::common::NonPtrClassOrStruct DataHandler>
 int DataSocket<DataHandler>::sendMsg(void* buffer, ssize_t size)
 {
-    if (m_baseSocket.getFD() == lu::platform::NULL_FD)
+    if (m_baseSocket.getFD() == nullptr)
     {
         return false;
     }

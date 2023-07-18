@@ -23,7 +23,7 @@ bool FDEventLoop::init()
 
 bool FDEventLoop::registerFDEventHandler(IFDEventHandler &event)
 {
-    assert(event.getFD() != NULL_FD);
+    assert(event.getFD() != nullptr);
     struct epoll_event epollEvent;
     epollEvent.events = EPOLLIN | EPOLLET;
     epollEvent.data.ptr = &event;

@@ -25,6 +25,7 @@ namespace lu::platform::socket
         bool Receive();
         int sendMsg(void* buffer, ssize_t size);
         int sendFile(int fileDescriptor, int size);
+        BaseSocket& getBaseSocket() { return m_baseSocket; }
         const std::string& getIP() const { return m_baseSocket.getIP(); }
         int getPort() const { return m_baseSocket.getPort(); }
 
@@ -32,7 +33,7 @@ namespace lu::platform::socket
         inline void readMessages();
         inline void updateForDataRead(std::size_t size);
         void onEvent(struct ::epoll_event& event) override final;
-        int getFD() const override final { return m_baseSocket.getFD(); }
+        const lu::platform::FileDescriptor& getFD() const override final { return m_baseSocket.getFD(); }
     
     protected:
         BaseSocket m_baseSocket;

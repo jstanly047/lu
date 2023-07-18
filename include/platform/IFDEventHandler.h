@@ -1,6 +1,9 @@
 #pragma once
 
+#include <platform/FileDescriptor.h>
+
 struct epoll_event;
+
 
 namespace lu::platform
 {
@@ -13,7 +16,7 @@ namespace lu::platform
         IFDEventHandler& operator=(IFDEventHandler&& other) = delete;
 
         virtual void onEvent(struct ::epoll_event& event) = 0;
-        virtual int getFD() const = 0;
+        virtual const FileDescriptor& getFD() const = 0;
     
     protected:
         IFDEventHandler() {}

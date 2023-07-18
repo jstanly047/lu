@@ -10,13 +10,14 @@
 #include <sys/epoll.h>
 
 #include <netdb.h>
+#include <csignal>
 
 
 using namespace lu::platform::socket;
 
 template<lu::common::NonPtrClassOrStruct ConnectionHandler>
 ServerSocket<ConnectionHandler>::ServerSocket(const std::string& service, ConnectionHandler &connectionHandler, bool reuseAddAndPort): 
-    m_baseSocket(lu::platform::NULL_FD), 
+    m_baseSocket(), 
     m_connectionHandler(connectionHandler),
     m_service(service),
     m_reuseAddAndPort(reuseAddAndPort)
@@ -57,46 +58,52 @@ bool ServerSocket<ConnectionHandler>::setUpTCP(int numberOfConnectionInWaitQueue
 
     if (rtnVal != 0)
     {
-        LOG(ERROR) << "Cannot start service " << m_service << "!!";
+        LOG(ERROR) << "Cannot find address for service " << m_service << "!!";
         return false;
     }
 
-    int fd = NULL_FD;
+    int fd = lu::platform::NULL_FD;
     struct sockaddr_storage localAddr;
 
     for (struct addrinfo *addr = servAddr; addr != NULL; addr = addr->ai_next)
     {
-        fd = ::socket(servAddr->ai_family, servAddr->ai_socktype, servAddr->ai_protocol);
+         LOG(INFO) << "ServerSocket try protocolFamily:" << addr->ai_family 
+            << ", socketType:" << addr->ai_socktype << ", protocol:" << addr->ai_protocol;
 
-        
+        fd = ::socket(servAddr->ai_family, servAddr->ai_socktype, servAddr->ai_protocol);
 
         if (fd < 0)
         {
+            LOG(WARNING) << "can not open socket!";
             continue;
         }
 
-        BaseSocket baseSocket(fd);
+        m_baseSocket = BaseSocket(fd);
 
         if (m_reuseAddAndPort)
         {
-            baseSocket.setReuseAddAndPort();
+            m_baseSocket.setReuseAddAndPort();
         }
 
-        if ((::bind(fd, servAddr->ai_addr, servAddr->ai_addrlen) == 0) && 
-                (::listen(fd, numberOfConnectionInWaitQueue) == 0))
+        if (::bind(fd, servAddr->ai_addr, servAddr->ai_addrlen) == 0)
         {
-            
-            socklen_t addrSize = sizeof(localAddr);
-            
-            if (::getsockname(fd, (struct sockaddr *) &localAddr, &addrSize) < 0)
-            {
-                LOG(ERROR) << "getsockname failed!!";
-                return false;
-            }
+            LOG(INFO) << "Binding successful";
 
+            if (::listen(fd, numberOfConnectionInWaitQueue) == 0)
+            {
+                socklen_t addrSize = sizeof(localAddr);
             
-            break;
+                if (::getsockname(fd, (struct sockaddr *) &localAddr, &addrSize) < 0)
+                {
+                    LOG(ERROR) << "getsockname failed!!";
+                    return false;
+                }
+
+                break;
+            }
         }
+
+        LOG(WARNING) << "Error code " << errno;
 
         ::close(fd);
         fd = lu::platform::NULL_FD;
@@ -104,11 +111,12 @@ bool ServerSocket<ConnectionHandler>::setUpTCP(int numberOfConnectionInWaitQueue
 
     if (fd == lu::platform::NULL_FD)
     {
+        LOG(ERROR) << "Cannot start service " << m_service << "!!";
         ::freeaddrinfo(servAddr);
         return false;
     }
 
-    m_baseSocket = BaseSocket(fd, (struct sockaddr&) localAddr);
+    m_baseSocket.setAddress((struct sockaddr&) localAddr);
     m_baseSocket.setSocketDescriptorFlags();
     LOG(INFO) << "Service started " << m_baseSocket.getIP() << ":" << m_baseSocket.getPort();
     return true;
@@ -117,10 +125,13 @@ bool ServerSocket<ConnectionHandler>::setUpTCP(int numberOfConnectionInWaitQueue
 template<lu::common::NonPtrClassOrStruct ConnectionHandler>
 BaseSocket* ServerSocket<ConnectionHandler>::acceptDataSocket()
 {
-    if (m_baseSocket.getFD() == lu::platform::NULL_FD )
+    if (m_baseSocket.getFD() == nullptr)
     {
         return nullptr;
     }
+
+    m_nativeHandle = pthread_self();
+
 
     struct sockaddr_storage clntAddr;
     socklen_t clntAddrLen = sizeof(clntAddr);
@@ -144,6 +155,18 @@ void ServerSocket<ConnectionHandler>::onEvent(struct ::epoll_event& event)
     }
 
     m_connectionHandler.onNewConnection(acceptDataSocket());
+}
+
+template<lu::common::NonPtrClassOrStruct ConnectionHandler>
+void ServerSocket<ConnectionHandler>::stop()
+{
+    if (m_baseSocket.getFD() == nullptr)
+    {
+        return;
+    }
+
+    LOG(INFO) << "Stop service " << m_baseSocket.getIP() << ":" << m_baseSocket.getPort();
+    pthread_kill(m_nativeHandle, SIGUSR1);
 }
 
 template class lu::platform::socket::ServerSocket<lu::platform::socket::IConnectionHandler>;

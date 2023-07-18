@@ -19,6 +19,7 @@ namespace lu::platform::socket
 
         const std::string& getHost() const { return m_host;}
         const std::string& getService() const { return m_service; }
+        BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
 
     private:
         DataSocket<DataHandler> *m_dataSocket = nullptr;

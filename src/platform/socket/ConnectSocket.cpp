@@ -64,7 +64,7 @@ bool ConnectSocket<DataHandler>::connectToTCP(DataHandler& dataHandler)
     for (struct addrinfo *addr = servAddr; addr != NULL; addr = addr->ai_next) 
     {
         fd = ::socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-        DLOG(INFO) << "Try connection to protocolFamily:" << addr->ai_family 
+        LOG(INFO) << "Try connection to protocolFamily:" << addr->ai_family 
             << ", socketType:" << addr->ai_socktype << ", protocol:" << addr->ai_protocol;
 
         if (fd < 0)
