@@ -20,7 +20,7 @@ namespace lu::platform::socket
         DataSocket(BaseSocket&& baseSocket, DataHandler& dataHandler);
         DataSocket(DataSocket&& other) noexcept;
         DataSocket& operator=(DataSocket&& other) noexcept;
-        ~DataSocket(){}
+        virtual ~DataSocket(){}
 
         bool Receive();
         int sendMsg(void* buffer, ssize_t size);

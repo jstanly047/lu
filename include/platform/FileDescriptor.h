@@ -16,15 +16,15 @@ namespace lu::platform
 
         FileDescriptor(int fd);
         FileDescriptor(std::nullptr_t);
-        
         ~FileDescriptor();
 
         operator int() const;
-
         bool operator ==(const FileDescriptor &other) const;
         bool operator !=(const FileDescriptor &other) const;
         bool operator ==(std::nullptr_t) const;
         bool operator !=(std::nullptr_t) const;
+
+        bool setToNonBlocking();
 
     private:
         int m_fd;

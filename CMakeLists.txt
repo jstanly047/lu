@@ -85,10 +85,10 @@ add_executable(LuTests ./test/TestMain.cpp
                         ${TEST_PlATFORM_SRC})
 
 target_link_libraries(LuTests
+                        luPlatform
                         utils
                         #thread
                         luSocket
-                        luPlatform
                         glog
                         gtest
                         gmock

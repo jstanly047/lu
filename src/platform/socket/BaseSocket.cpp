@@ -14,6 +14,11 @@
 
 using namespace lu::platform::socket;
 
+namespace
+{
+    lu::platform::FileDescriptor nullFileDescriptor(nullptr);
+}
+
 BaseSocket::BaseSocket(int fd) : m_fd(new FileDescriptor(fd))
 {
     if (m_fd == nullptr)
@@ -55,6 +60,16 @@ BaseSocket& BaseSocket::operator=(BaseSocket&& other) noexcept
     return *this;
 }
 
+const lu::platform::FileDescriptor& BaseSocket::getFD() const
+{
+    if (m_fd == nullptr)
+    {
+        return nullFileDescriptor;
+    }
+
+    return *m_fd;
+}
+
 void BaseSocket::setAddress(const sockaddr& address)
 {
     getIPAndPort(address);
@@ -62,7 +77,10 @@ void BaseSocket::setAddress(const sockaddr& address)
 
 void BaseSocket::setNonBlocking()
 {
-    m_socketDescriptorFlags |= O_NONBLOCK;
+    if (m_fd->setToNonBlocking())
+    {
+        LOG(ERROR) << "Can not set non blocking for socket " << (int) *m_fd << "!";
+    }
 }
 
 void BaseSocket::setBlocking()

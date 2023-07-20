@@ -125,13 +125,31 @@ TEST_F(TestBaseSocket, setBufferTCPSendData)
     ASSERT_EQ(ret, 0);
 }
 
-
-/*
-TEST_F(TestBaseSocket, getIPAndPort)
+TEST_F(TestBaseSocket, checkMove)
 {
-    lu::platform::socket::BaseSocket socketObject(m_socket);
-    struct sockaddr address;
-    socketObject.getIPAndPort(address);
-    ASSERT_EQ(socketObject.getIP(), "127.0.0.1");
-    ASSERT_EQ(socketObject.getPort(), 8080);
-}*/
+    lu::platform::socket::BaseSocket temSocketObj(m_socket);
+    ASSERT_NE(temSocketObj.getFD(), nullptr);
+    int flags = ::fcntl(m_socket, F_GETFL);
+    ASSERT_NE(flags, lu::platform::NULL_FD);
+    
+    lu::platform::socket::BaseSocket socketObject = std::move(temSocketObj);
+    ASSERT_EQ(temSocketObj.getFD(), nullptr);
+    flags = ::fcntl(m_socket, F_GETFL);
+    ASSERT_NE(flags, lu::platform::NULL_FD);
+    ASSERT_EQ(temSocketObj.getFD(), nullptr);
+    ASSERT_NE(socketObject.getFD(), nullptr);
+
+    int socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ASSERT_NE(socket, lu::platform::NULL_FD);
+    temSocketObj = lu::platform::socket::BaseSocket(socket);
+    ASSERT_NE(temSocketObj.getFD(), nullptr);
+    flags = ::fcntl(socket, F_GETFL);
+    ASSERT_NE(flags, lu::platform::NULL_FD);
+
+    temSocketObj = lu::platform::socket::BaseSocket();
+    ASSERT_EQ(temSocketObj.getFD(), nullptr);
+    flags = ::fcntl(socket, F_GETFL);
+    ASSERT_EQ(flags, lu::platform::NULL_FD);
+}
+
+

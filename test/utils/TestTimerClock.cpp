@@ -5,7 +5,8 @@
 
 using namespace lu::utils;
 
-TEST(TestTimerClock, ElapsedTime) {
+TEST(TestTimerClock, ElapsedTime) 
+{
     TimerClock timer;
     timer.begin();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -14,7 +15,8 @@ TEST(TestTimerClock, ElapsedTime) {
     EXPECT_LE(elapsed, 150);
 }
 
-TEST(TestTimerClock, Stat) {
+TEST(TestTimerClock, Stat) 
+{
     AccumulateAndAverage accumulator;
     accumulator.begin();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

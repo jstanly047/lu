@@ -19,14 +19,18 @@ namespace lu::platform
 
         FDTimer(FDTimer&& other) noexcept;
         FDTimer& operator=(FDTimer&& other) noexcept;
-        FDTimer();
+        FDTimer(TimerCallback& timerCallback);
 
-        bool start(int intervalInSec, int interValInNonSec);
-        void stop() { m_stop = true; }
+        bool start(int intervalInSec, int interValInNonSec, bool repeat=true);
+        bool stop();
+        void setToNonBlocking();
+
+        const FileDescriptor& getFD() const;
+        virtual ~FDTimer() {}
 
     private:
         void onEvent(struct ::epoll_event& event) override final;
-        const FileDescriptor& getFD() const { return *m_fd; }
+        
 
         std::unique_ptr<FileDescriptor> m_fd;
         itimerspec m_interval{};

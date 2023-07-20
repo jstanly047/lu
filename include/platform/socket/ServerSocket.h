@@ -15,6 +15,7 @@ namespace lu::platform::socket
         ServerSocket(const std::string& service, ConnectionHandler &connectionHandler, bool reuseAddAndPort = true);
         ServerSocket(ServerSocket&& other) noexcept;
         ServerSocket& operator=(ServerSocket&& other) noexcept;
+        virtual ~ServerSocket() {}
 
         bool setUpTCP(int numberOfConnectionInWaitQueue);
         

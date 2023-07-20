@@ -22,7 +22,7 @@ namespace lu::platform::socket
         BaseSocket(BaseSocket&& other) noexcept;
         BaseSocket& operator=(BaseSocket&& other) noexcept;
         
-        const lu::platform::FileDescriptor& getFD() const { return *m_fd; }
+        const lu::platform::FileDescriptor& getFD() const;
         int getRxBufferSize() const;
         int getTxBufferSize() const;
         const std::string& getIP() const { return m_ip; }
