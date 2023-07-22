@@ -88,7 +88,7 @@ bool ConnectSocket<DataHandler>::connectToTCP(DataHandler& dataHandler)
         return false;
     }
 
-    m_dataSocket = new DataSocket<DataHandler>(BaseSocket(fd, *connectAddr->ai_addr), dataHandler);
+    m_dataSocket.reset(new DataSocket<DataHandler>(BaseSocket(fd, *connectAddr->ai_addr), dataHandler));
     DLOG(INFO) << "Connecting to " << m_dataSocket->getIP() << ":" << m_dataSocket->getPort();
     ::freeaddrinfo(servAddr);
     return true;

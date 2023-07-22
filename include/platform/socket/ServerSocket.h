@@ -22,11 +22,12 @@ namespace lu::platform::socket
         BaseSocket* acceptDataSocket();
         const std::string& getService() const { return m_service; }
         BaseSocket& getBaseSocket() { return m_baseSocket; }
+        const lu::platform::FileDescriptor& getFD() const override final { return m_baseSocket.getFD(); }
+
         void stop();
             
     private:
         void onEvent(struct ::epoll_event& event) override final;
-        const lu::platform::FileDescriptor& getFD() const override final { return m_baseSocket.getFD(); }
 
         BaseSocket m_baseSocket;
         ConnectionHandler& m_connectionHandler;

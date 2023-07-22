@@ -25,6 +25,7 @@ namespace lu::platform
         bool operator !=(std::nullptr_t) const;
 
         bool setToNonBlocking();
+        bool setBlocking();
 
     private:
         int m_fd;

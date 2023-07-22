@@ -14,6 +14,7 @@ namespace lu::platform::socket
         ConnectSocket(const std::string& host, const std::string& service);
         ConnectSocket(ConnectSocket&& other) noexcept;
         ConnectSocket& operator=(ConnectSocket&& other) noexcept;
+        ~ConnectSocket() {}
 
         bool connectToTCP(DataHandler& dataHandler);
 
@@ -22,7 +23,7 @@ namespace lu::platform::socket
         BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
 
     private:
-        DataSocket<DataHandler> *m_dataSocket = nullptr;
+        std::unique_ptr<DataSocket<DataHandler>> m_dataSocket = nullptr;
         std::string m_host{};
         std::string m_service{};
     };

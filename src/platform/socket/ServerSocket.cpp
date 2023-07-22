@@ -117,7 +117,6 @@ bool ServerSocket<ConnectionHandler>::setUpTCP(int numberOfConnectionInWaitQueue
     }
 
     m_baseSocket.setAddress((struct sockaddr&) localAddr);
-    m_baseSocket.setSocketDescriptorFlags();
     LOG(INFO) << "Service started " << m_baseSocket.getIP() << ":" << m_baseSocket.getPort();
     return true;
 }

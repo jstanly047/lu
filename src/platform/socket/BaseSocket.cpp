@@ -20,13 +20,7 @@ namespace
 }
 
 BaseSocket::BaseSocket(int fd) : m_fd(new FileDescriptor(fd))
-{
-    if (m_fd == nullptr)
-    {
-        return;
-    }
-
-    m_socketDescriptorFlags = ::fcntl(*m_fd, F_GETFL, 0);  
+{ 
 }
 
 BaseSocket::~BaseSocket()
@@ -43,7 +37,6 @@ BaseSocket::BaseSocket(BaseSocket&& other) noexcept:
     m_ip(std::move(other.m_ip)),
     m_port(std::move(other.m_port)),
     m_socketFlags(std::move(other.m_socketFlags)),
-    m_socketDescriptorFlags(std::move(other.m_socketDescriptorFlags)),
     m_reuseAddAndPort(std::move(other.m_reuseAddAndPort))
     
 {
@@ -55,7 +48,6 @@ BaseSocket& BaseSocket::operator=(BaseSocket&& other) noexcept
     m_ip = std::move(other.m_ip);
     m_port = other.m_port;
     m_socketFlags = other.m_socketFlags;
-    m_socketDescriptorFlags = other.m_socketDescriptorFlags;
     m_reuseAddAndPort = other.m_reuseAddAndPort;
     return *this;
 }
@@ -85,9 +77,11 @@ void BaseSocket::setNonBlocking()
 
 void BaseSocket::setBlocking()
 {
-    m_socketDescriptorFlags &= ~O_NONBLOCK;
+    if (m_fd->setBlocking())
+    {
+        LOG(ERROR) << "Can not set blocking for socket " << (int) *m_fd << "!";
+    }
 }
-
 
 bool BaseSocket::setReuseAddAndPort()
 {
@@ -186,19 +180,6 @@ bool  BaseSocket::setTCPKeepAlive(int maxIdleTime, int interval, int numberOfTry
 
     // Number keep-alive probe attempt before closing the socket
     if (::setsockopt(*m_fd, IPPROTO_TCP, TCP_KEEPCNT, &numberOfTry, sizeof(numberOfTry)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool BaseSocket::setSocketDescriptorFlags()
-{
-    assert(*m_fd != nullptr);
-    int s = ::fcntl(*m_fd, F_SETFL, m_socketDescriptorFlags);
-
-    if (s == -1) 
     {
         return false;
     }

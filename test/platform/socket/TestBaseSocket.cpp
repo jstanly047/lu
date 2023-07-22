@@ -45,13 +45,15 @@ protected:
     int m_socket;
 };
 
-TEST_F(TestBaseSocket, setNonBlocking)
+TEST_F(TestBaseSocket, setNonBlockingAndBlocking)
 {
     lu::platform::socket::BaseSocket socketObject(m_socket);
     socketObject.setNonBlocking();
-    socketObject.setSocketDescriptorFlags();
     int flags = fcntl(socketObject.getFD(), F_GETFL, 0);
     ASSERT_TRUE(flags & O_NONBLOCK);
+    socketObject.setBlocking();
+    flags = fcntl(socketObject.getFD(), F_GETFL, 0);
+    ASSERT_FALSE(flags & O_NONBLOCK);
 }
 
 TEST_F(TestBaseSocket, setReuseAddAndPort)

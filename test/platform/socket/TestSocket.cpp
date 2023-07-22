@@ -40,7 +40,8 @@ protected:
         EXPECT_TRUE(result);
         ASSERT_EQ(serverSocket.getBaseSocket().getIP(), "0.0.0.0");
         ASSERT_EQ(serverSocket.getBaseSocket().getPort(), 10000);
-        int flags = ::fcntl(serverSocket.getBaseSocket().getFD(), F_GETFL, 0);
+        ASSERT_EQ(serverSocket.getService(), "10000");
+        int flags = ::fcntl(serverSocket.getFD(), F_GETFL, 0);
         ASSERT_TRUE(!(flags & O_NONBLOCK));
         serverThead = std::thread(&TestSocket::accept, this);
 
@@ -56,9 +57,11 @@ protected:
         EXPECT_CALL(mockDataHandler, readMessage).Times(0);
         EXPECT_CALL(mockDataHandler, onClose).Times(0);
         EXPECT_CALL(mockDataHandler, onNewConnection).Times(0);
+         EXPECT_EQ(connectSocket.getBaseSocket(), nullptr);
         result = connectSocket.connectToTCP(mockDataHandler);
         EXPECT_TRUE(result);
-            
+        EXPECT_EQ(connectSocket.getHost(), "localhost");
+        EXPECT_EQ(connectSocket.getService(), "10000");
     }
 
     void TearDown() override 
@@ -77,7 +80,7 @@ protected:
         }
        
         dataSocket = serverSocket.acceptDataSocket();
-
+        EXPECT_NE((int) dataSocket->getFD(), lu::platform::NULL_FD);
     }
 
     MockDataHandler mockDataHandler;
@@ -151,4 +154,53 @@ TEST_F(TestSocket, setMaxSendDataWaitThreshold)
     socketObject.setMaxSendDataWaitThreshold(512000);
     int ret = socketObject.getSocketOption<int>(SOL_SOCKET, TCP_NOTSENT_LOWAT);
     ASSERT_EQ(ret, 512000);
+}
+
+TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
+{
+    auto connectSocketTemp = new lu::platform::socket::ConnectSocket<lu::platform::socket::IDataHandler>("localhost", "10000");
+    connectSocketTemp->connectToTCP(mockDataHandler);
+    ASSERT_NE(connectSocketTemp->getBaseSocket(), nullptr);
+    int fd = connectSocketTemp->getBaseSocket()->getFD();
+    delete connectSocketTemp;
+    auto flags = ::fcntl(fd, F_GETFL);
+    ASSERT_EQ(flags, lu::platform::NULL_FD);
+}
+
+TEST_F(TestSocket, checkOnReconnectCloseAlreadyOpenedDataSocket)
+{
+    lu::platform::socket::ConnectSocket<lu::platform::socket::IDataHandler> connectSocketTemp("localhost", "10000");
+    connectSocketTemp.connectToTCP(mockDataHandler);
+    ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
+    int fd = connectSocketTemp.getBaseSocket()->getFD();
+    connectSocketTemp.connectToTCP(mockDataHandler);
+    ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
+    auto flags = ::fcntl(fd, F_GETFL);
+    ASSERT_EQ(flags, lu::platform::NULL_FD);
+}
+
+TEST_F(TestSocket, testMoveConstructAndOperatorConnectionSocket)
+{
+    auto dataSocket = connectSocket.getBaseSocket();
+    int fd = dataSocket->getFD();
+    auto connectSocketTemp = std::move(connectSocket);
+    ASSERT_EQ(connectSocketTemp.getBaseSocket()->getFD(), dataSocket->getFD());
+    connectSocket = std::move(connectSocketTemp);
+    ASSERT_EQ(connectSocketTemp.getBaseSocket(), nullptr);
+    ASSERT_EQ(connectSocket.getBaseSocket()->getFD(), dataSocket->getFD());
+    auto flags = ::fcntl(fd, F_GETFL);
+    ASSERT_NE(flags, lu::platform::NULL_FD);
+}
+
+TEST_F(TestSocket, testMoveConstructAndOperatorServiceSocket)
+{
+    auto& serverSocketBase = serverSocket.getBaseSocket();
+    int fd = serverSocketBase.getFD();
+    auto serverSocketTemp = std::move(serverSocket);
+    ASSERT_EQ((int)serverSocketTemp.getBaseSocket().getFD(), fd);
+    serverSocket = std::move(serverSocketTemp);
+    ASSERT_EQ(serverSocketTemp.getBaseSocket().getFD(), nullptr);
+    ASSERT_EQ((int)serverSocket.getBaseSocket().getFD(), fd);
+    auto flags = ::fcntl(fd, F_GETFL);
+    ASSERT_NE(flags, lu::platform::NULL_FD);
 }

@@ -48,8 +48,7 @@ namespace lu::platform::socket
         bool setBufferTCPSendData();
         bool setMaxSendDataWaitThreshold(int numberOfBytes);
         bool setReuseAddAndPort();
-        bool setSocketDescriptorFlags();
-
+        
         template<typename T>
         bool setSocketOption(int level, int option, const T& value);
         void stop();

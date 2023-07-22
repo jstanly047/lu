@@ -61,7 +61,7 @@ std::string AccumulateAndAverage::getStatInMilliSec() const
 
 std::string AccumulateAndAverage::getStatInSec() const
 {
-    return " Total Time (sec): " + std::to_string(getSec(m_totalTimeSpendInNanoSec)) +
+    return "Total Time (sec): " + std::to_string(getSec(m_totalTimeSpendInNanoSec)) +
                             " Total Qty : " + std::to_string(m_totalQty) +
                             " PerSecAvg : " + std::to_string(m_totalQty / getSec(m_totalTimeSpendInNanoSec) );
 }

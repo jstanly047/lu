@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10.2)
 project(joutillib)
 
 option(UNIT_TEST "Build for unit testing" OFF)
+option(COV_BUILD "Flag to enable unit test build" OFF)
+
 set(PROJ_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROJ_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -34,6 +36,13 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 add_compile_options(-static-libstdc++)
+
+if(COV_BUILD)
+  SET(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -coverage -fprofile-arcs -ftest-coverage")
+  SET(GCC_COVERAGE_LINK_FLAGS    "-coverage -lgcov")
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
+endif()
 
 
 ############################################################################
@@ -96,3 +105,4 @@ target_link_libraries(LuTests
 
 endif(UNIT_TEST)
 unset(UNIT_TEST CACHE)
+unset(COV_BUILD CACHE)
