@@ -1,7 +1,8 @@
 #include <platform/socket/ServerSocket.h>
 #include <platform/socket/ConnectSocket.h>
 #include <platform/socket/IDataHandler.h>
-#include <platform/socket/IConnectionHandler.h>
+#include <platform/socket/IServerSocketCallback.h>
+#include <platform/socket/IDataSocketCallback.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <netinet/in.h>
@@ -11,8 +12,11 @@
 #include <thread>
 #include <condition_variable>
 
+using namespace lu::platform::socket;
+
+
 // Define a mock DataHandler class
-class MockDataHandler : public lu::platform::socket::IConnectionHandler, public lu::platform::socket::IDataHandler
+/*class MockDataHandler :  public IDataHandler
 {
 public:
     MOCK_METHOD(uint8_t*, getReceiveBufferToFill, (),(override));
@@ -20,8 +24,11 @@ public:
     MOCK_METHOD(std::size_t, getHeaderSize, (), (override));
     MOCK_METHOD(std::size_t, readHeader, (std::size_t), (override));
     MOCK_METHOD(void, readMessage, (std::size_t, std::size_t), (override));
-    MOCK_METHOD(void, onClose, (lu::platform::socket::DataSocket<lu::platform::socket::IDataHandler>*), (override));
-    MOCK_METHOD(void, onNewConnection, (lu::platform::socket::BaseSocket*), (override));
+};*/
+
+class MockSeverSocketCallback : public IServerSocketCallback
+{
+    MOCK_METHOD(void, onNewConnection, (BaseSocket*), (override));
 };
 
 
@@ -29,7 +36,7 @@ class TestSocket : public ::testing::Test
 {
 public:
     TestSocket() :  connectSocket("localhost", "10000"),
-                    serverSocket("10000", mockDataHandler, true)
+                    serverSocket("10000", m_mockServerSocketCallback, true)
     {
 
     }
@@ -50,15 +57,10 @@ protected:
             startCondition.wait(lock, [&] { return threadStarted; });
         }
 
-        EXPECT_CALL(mockDataHandler, getReceiveBufferToFill).Times(0);
-        EXPECT_CALL(mockDataHandler, getReceiveBufferSize).WillRepeatedly(::testing::Return(512));
-        EXPECT_CALL(mockDataHandler, getHeaderSize).WillRepeatedly(::testing::Return(64));
-        EXPECT_CALL(mockDataHandler, readHeader).Times(0);
-        EXPECT_CALL(mockDataHandler, readMessage).Times(0);
-        EXPECT_CALL(mockDataHandler, onClose).Times(0);
-        EXPECT_CALL(mockDataHandler, onNewConnection).Times(0);
-         EXPECT_EQ(connectSocket.getBaseSocket(), nullptr);
-        result = connectSocket.connectToTCP(mockDataHandler);
+        //EXPECT_CALL(mockDataHandler, onClientClose).Times(0);
+        //EXPECT_CALL(mockDataHandler, onNewConnection).Times(0);
+        EXPECT_EQ(connectSocket.getBaseSocket(), nullptr);
+        result = connectSocket.connectToTCP(m_clientDataSocketCallback);
         EXPECT_TRUE(result);
         EXPECT_EQ(connectSocket.getHost(), "localhost");
         EXPECT_EQ(connectSocket.getService(), "10000");
@@ -83,11 +85,12 @@ protected:
         EXPECT_NE((int) dataSocket->getFD(), lu::platform::NULL_FD);
     }
 
-    MockDataHandler mockDataHandler;
-    lu::platform::socket::ConnectSocket<lu::platform::socket::IDataHandler> connectSocket;
-    lu::platform::socket::ServerSocket<lu::platform::socket::IConnectionHandler> serverSocket;
+    MockSeverSocketCallback m_mockServerSocketCallback;
+    IDataSocketCallback<IDataHandler> m_clientDataSocketCallback;
+    ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler> connectSocket;
+    ServerSocket<IServerSocketCallback> serverSocket;
     std::thread serverThead;
-    lu::platform::socket::BaseSocket* dataSocket = nullptr;
+    BaseSocket* dataSocket = nullptr;
     std::mutex startMutex;
     std::condition_variable startCondition;
     bool threadStarted = false;
@@ -106,7 +109,7 @@ TEST_F(TestSocket, setTCPKeepAlive)
     ret = socketObject.getSocketOption<int>(SOL_SOCKET, SO_KEEPALIVE);
     ASSERT_EQ(ret, 1);
 
-    lu::platform::socket::BaseSocket& serverBaseSocket = serverSocket.getBaseSocket();
+    BaseSocket& serverBaseSocket = serverSocket.getBaseSocket();
     serverBaseSocket.setTCPKeepAlive(1, 2, 3);  
     ret = serverBaseSocket.getSocketOption<int>(IPPROTO_TCP, TCP_KEEPIDLE);
     ASSERT_EQ(ret, 1);
@@ -158,8 +161,8 @@ TEST_F(TestSocket, setMaxSendDataWaitThreshold)
 
 TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 {
-    auto connectSocketTemp = new lu::platform::socket::ConnectSocket<lu::platform::socket::IDataHandler>("localhost", "10000");
-    connectSocketTemp->connectToTCP(mockDataHandler);
+    auto connectSocketTemp = new ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler>("localhost", "10000");
+    connectSocketTemp->connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp->getBaseSocket(), nullptr);
     int fd = connectSocketTemp->getBaseSocket()->getFD();
     delete connectSocketTemp;
@@ -169,11 +172,11 @@ TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 
 TEST_F(TestSocket, checkOnReconnectCloseAlreadyOpenedDataSocket)
 {
-    lu::platform::socket::ConnectSocket<lu::platform::socket::IDataHandler> connectSocketTemp("localhost", "10000");
-    connectSocketTemp.connectToTCP(mockDataHandler);
+    ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler> connectSocketTemp("localhost", "10000");
+    connectSocketTemp.connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
     int fd = connectSocketTemp.getBaseSocket()->getFD();
-    connectSocketTemp.connectToTCP(mockDataHandler);
+    connectSocketTemp.connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
     auto flags = ::fcntl(fd, F_GETFL);
     ASSERT_EQ(flags, lu::platform::NULL_FD);

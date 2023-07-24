@@ -1,5 +1,6 @@
 #include<platform/socket/ConnectSocket.h>
 #include<platform/socket/IDataHandler.h>
+#include<platform/socket/IDataSocketCallback.h>
 #include <platform/defs.h>
 
 #include <unistd.h>
@@ -14,16 +15,16 @@
 
 using namespace lu::platform::socket;
 
-template<lu::common::NonPtrClassOrStruct DataHandler>
-ConnectSocket<DataHandler>::ConnectSocket(const std::string& host, const std::string& service): 
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+ConnectSocket<DataSocketCallback, DataHandler>::ConnectSocket(const std::string& host, const std::string& service): 
         m_dataSocket(nullptr),
         m_host(host), 
         m_service(service)
 {
 }
 
-template<lu::common::NonPtrClassOrStruct DataHandler>
-ConnectSocket<DataHandler>::ConnectSocket(ConnectSocket&& other) noexcept :
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+ConnectSocket<DataSocketCallback, DataHandler>::ConnectSocket(ConnectSocket&& other) noexcept :
     m_dataSocket(std::move(other.m_dataSocket)),
     m_host(std::move(other.m_host)),
     m_service(std::move(other.m_service))
@@ -31,8 +32,8 @@ ConnectSocket<DataHandler>::ConnectSocket(ConnectSocket&& other) noexcept :
     other.m_dataSocket = nullptr;
 }
 
-template<lu::common::NonPtrClassOrStruct DataHandler>
-ConnectSocket<DataHandler>& ConnectSocket<DataHandler>::operator=(ConnectSocket&& other) noexcept
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+ConnectSocket<DataSocketCallback, DataHandler>& ConnectSocket<DataSocketCallback, DataHandler>::operator=(ConnectSocket&& other) noexcept
 {
     m_dataSocket = std::move(other.m_dataSocket);
     m_host = std::move(other.m_host);
@@ -41,8 +42,8 @@ ConnectSocket<DataHandler>& ConnectSocket<DataHandler>::operator=(ConnectSocket&
     return *this;
 }
 
-template<lu::common::NonPtrClassOrStruct DataHandler>
-bool ConnectSocket<DataHandler>::connectToTCP(DataHandler& dataHandler)
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+bool ConnectSocket<DataSocketCallback, DataHandler>::connectToTCP(DataSocketCallback& dataSocketCallback)
 {
     struct addrinfo addrCriteria;
     ::memset(&addrCriteria, 0, sizeof(addrCriteria));
@@ -88,10 +89,10 @@ bool ConnectSocket<DataHandler>::connectToTCP(DataHandler& dataHandler)
         return false;
     }
 
-    m_dataSocket.reset(new DataSocket<DataHandler>(BaseSocket(fd, *connectAddr->ai_addr), dataHandler));
+    m_dataSocket.reset(new DataSocket<DataSocketCallback, DataHandler>(dataSocketCallback, BaseSocket(fd, *connectAddr->ai_addr)));
     DLOG(INFO) << "Connecting to " << m_dataSocket->getIP() << ":" << m_dataSocket->getPort();
     ::freeaddrinfo(servAddr);
     return true;
 }
 
-template class lu::platform::socket::ConnectSocket<lu::platform::socket::IDataHandler>;
+template class lu::platform::socket::ConnectSocket<lu::platform::socket::IDataSocketCallback<lu::platform::socket::IDataHandler>, lu::platform::socket::IDataHandler>;

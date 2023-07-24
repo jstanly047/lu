@@ -69,7 +69,7 @@ void BaseSocket::setAddress(const sockaddr& address)
 
 void BaseSocket::setNonBlocking()
 {
-    if (m_fd->setToNonBlocking())
+    if (m_fd->setToNonBlocking() == false)
     {
         LOG(ERROR) << "Can not set non blocking for socket " << (int) *m_fd << "!";
     }

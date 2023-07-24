@@ -8,18 +8,23 @@ namespace lu::platform
     class FDEventLoop
     {
     public:
-        FDEventLoop(FDEventLoop&& other) = delete;
-        FDEventLoop& operator=(FDEventLoop&& other) = delete;
         FDEventLoop(const FDEventLoop&) = delete;
         FDEventLoop& operator=(const FDEventLoop&) = delete;
 
+        FDEventLoop(FDEventLoop&& other);
+        FDEventLoop& operator=(FDEventLoop&& other);
+        FDEventLoop() : m_epollFD(NULL_FD), m_stop(false) {}
+        ~FDEventLoop();
+
         bool init();
-        bool registerFDEventHandler(IFDEventHandler &event);
+        bool add(IFDEventHandler &event);
+        bool remove(IFDEventHandler &event);
         void start(int maxEvents);
-        //TODO
-        //void stop();
+        void stop();
+        int getFD() { return m_epollFD; }
 
     private:
         int m_epollFD = NULL_FD;
+        bool m_stop;
     };
 }

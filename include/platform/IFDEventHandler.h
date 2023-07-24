@@ -4,6 +4,9 @@
 
 struct epoll_event;
 
+/*
+ TODO : we can try using function pointer to check the performance
+*/
 
 namespace lu::platform
 {

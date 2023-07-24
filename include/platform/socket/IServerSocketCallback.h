@@ -7,7 +7,7 @@
 namespace lu::platform::socket
 {
 
-    class IConnectionHandler
+    class IServerSocketCallback
     {
     public:
         virtual void onNewConnection(BaseSocket* dataSocket) =  0;

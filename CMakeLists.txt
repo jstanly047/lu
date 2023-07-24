@@ -60,6 +60,7 @@ target_include_directories(utils PUBLIC ${PROJ_INC_DIR})
 #add_library(queue STATIC ${QUEUE_SRC})
 #target_include_directories(queue PUBLIC ${PROJ_INC_DIR})
 
+
 file(GLOB LU_PLATFORM_SRC  ./src/platform/*.cpp)
 add_library(luPlatform STATIC ${LU_PLATFORM_SRC})
 target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR})
@@ -69,6 +70,10 @@ add_library(luSocket STATIC ${LU_SOCKET_SRC})
 target_include_directories(luSocket PUBLIC ${PROJ_INC_DIR})
 target_link_libraries(luSocket luPlatform)
 
+file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
+add_library(luThread STATIC ${LU_THREAD_SRC})
+target_include_directories(luThread PUBLIC ${PROJ_INC_DIR})
+target_link_libraries(luThread luSocket)
 
 
 #file(GLOB THREAD_SRC  ./src/thread/*.cpp)
@@ -98,6 +103,7 @@ target_link_libraries(LuTests
                         utils
                         #thread
                         luSocket
+                        luThread
                         glog
                         gtest
                         gmock

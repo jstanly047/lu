@@ -73,14 +73,23 @@ bool FDTimer<TimerCallback>::start(int intervalInSec, int interValInNonSec, bool
 template<lu::common::NonPtrClassOrStruct TimerCallback>
 void FDTimer<TimerCallback>::onEvent(struct ::epoll_event& event) 
 {
-    // TODO what are the other event can happens
-    if (!(event.events & EPOLLIN))
+    // TODO what are the other event can happens EPOLLHUP dont part of timer fd
+    if ((event.events & EPOLLERR))
+    {
+        m_fd.reset(nullptr);
+        return;
+    }
+    else if (!(event.events & EPOLLIN))
     {
         return;
     }
 
     int64_t res;
-    ::read(*m_fd, &res, sizeof(res));
+    if (::read(*m_fd, &res, sizeof(res)) == -1)
+    {
+        LOG(ERROR) << "Read failed for timer FD[" << (int) *m_fd << "]!";
+        return;
+    }
     m_timerCallback.onTimer(*this);
 }
 
@@ -115,7 +124,7 @@ bool FDTimer<TimerCallback>::stop()
 template<lu::common::NonPtrClassOrStruct TimerCallback>
 void FDTimer<TimerCallback>::setToNonBlocking()
 {
-    if (m_fd->setToNonBlocking())
+    if (m_fd->setToNonBlocking() == false)
     {
         LOG(ERROR) << "Can not set non blocking for timer fd " << (int) *m_fd << "!";
     }

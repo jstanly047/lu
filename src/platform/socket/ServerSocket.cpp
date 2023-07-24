@@ -1,6 +1,6 @@
 #include <platform/socket/ServerSocket.h>
 #include <platform/socket/IDataHandler.h>
-#include <platform/socket/IConnectionHandler.h>
+#include <platform/socket/IServerSocketCallback.h>
 #include <platform/defs.h>
 #include <glog/logging.h>
 
@@ -15,37 +15,37 @@
 
 using namespace lu::platform::socket;
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-ServerSocket<ConnectionHandler>::ServerSocket(const std::string& service, ConnectionHandler &connectionHandler, bool reuseAddAndPort): 
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+ServerSocket<ServerSocketCallback>::ServerSocket(const std::string& service, ServerSocketCallback &connectionHandler, bool reuseAddAndPort): 
     m_baseSocket(), 
-    m_connectionHandler(connectionHandler),
+    m_serverSocketCallback(connectionHandler),
     m_service(service),
     m_reuseAddAndPort(reuseAddAndPort)
 {
 
 }
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-ServerSocket<ConnectionHandler>::ServerSocket(ServerSocket&& other) noexcept : 
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+ServerSocket<ServerSocketCallback>::ServerSocket(ServerSocket&& other) noexcept : 
     m_baseSocket(std::move(other.m_baseSocket)),
-    m_connectionHandler(other.m_connectionHandler),
+    m_serverSocketCallback(other.m_serverSocketCallback),
     m_service(std::move(other.m_service)),
     m_reuseAddAndPort(std::move(other.m_reuseAddAndPort))
 {
 }
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-ServerSocket<ConnectionHandler>& ServerSocket<ConnectionHandler>::operator=(ServerSocket&& other) noexcept
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+ServerSocket<ServerSocketCallback>& ServerSocket<ServerSocketCallback>::operator=(ServerSocket&& other) noexcept
 {
     m_baseSocket = std::move(other.m_baseSocket);
-    m_connectionHandler = other.m_connectionHandler;
+    m_serverSocketCallback = other.m_serverSocketCallback;
     m_service = std::move(other.m_service);
     m_reuseAddAndPort = other.m_reuseAddAndPort;
     return *this;
 }
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-bool ServerSocket<ConnectionHandler>::setUpTCP(int numberOfConnectionInWaitQueue)
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+bool ServerSocket<ServerSocketCallback>::setUpTCP(int numberOfConnectionInWaitQueue)
 {
     struct addrinfo addrCriteria;
     ::memset(&addrCriteria, 0, sizeof(addrCriteria));
@@ -121,8 +121,8 @@ bool ServerSocket<ConnectionHandler>::setUpTCP(int numberOfConnectionInWaitQueue
     return true;
 }
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-BaseSocket* ServerSocket<ConnectionHandler>::acceptDataSocket()
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+BaseSocket* ServerSocket<ServerSocketCallback>::acceptDataSocket()
 {
     if (m_baseSocket.getFD() == nullptr)
     {
@@ -145,19 +145,25 @@ BaseSocket* ServerSocket<ConnectionHandler>::acceptDataSocket()
     return new BaseSocket(fd, (struct sockaddr &) clntAddr);
 }
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-void ServerSocket<ConnectionHandler>::onEvent(struct ::epoll_event& event)
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+void ServerSocket<ServerSocketCallback>::onEvent(struct ::epoll_event& event)
 {
-    if ((event.events & EPOLLERR) || !(event.events & EPOLLIN))
+    if ((event.events & EPOLLHUP || event.events & EPOLLERR))
+    {
+        m_baseSocket = BaseSocket();
+        return;
+    }
+    else if (!(event.events & EPOLLIN))
     {
         return;
     }
+    
 
-    m_connectionHandler.onNewConnection(acceptDataSocket());
+    m_serverSocketCallback.onNewConnection(acceptDataSocket());
 }
 
-template<lu::common::NonPtrClassOrStruct ConnectionHandler>
-void ServerSocket<ConnectionHandler>::stop()
+template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
+void ServerSocket<ServerSocketCallback>::stop()
 {
     if (m_baseSocket.getFD() == nullptr)
     {
@@ -168,4 +174,4 @@ void ServerSocket<ConnectionHandler>::stop()
     pthread_kill(m_nativeHandle, SIGUSR1);
 }
 
-template class lu::platform::socket::ServerSocket<lu::platform::socket::IConnectionHandler>;
+template class lu::platform::socket::ServerSocket<lu::platform::socket::IServerSocketCallback>;

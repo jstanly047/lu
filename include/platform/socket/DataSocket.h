@@ -10,14 +10,14 @@ struct sockaddr;
 
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct DataHandler>
+    template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
     class DataSocket : public lu::platform::IFDEventHandler
     {
     public:
         DataSocket(const DataSocket&)               = delete;
         DataSocket& operator=(const DataSocket&)    = delete;
 
-        DataSocket(BaseSocket&& baseSocket, DataHandler& dataHandler);
+        DataSocket(DataSocketCallback& dataSocketCallback, BaseSocket&& baseSocket);
         DataSocket(DataSocket&& other) noexcept;
         DataSocket& operator=(DataSocket&& other) noexcept;
         virtual ~DataSocket(){}
@@ -28,6 +28,7 @@ namespace lu::platform::socket
         BaseSocket& getBaseSocket() { return m_baseSocket; }
         const std::string& getIP() const { return m_baseSocket.getIP(); }
         int getPort() const { return m_baseSocket.getPort(); }
+        DataHandler& getDataHandler() { return m_dataHandler; }
 
     private:
         inline void readMessages();
@@ -37,7 +38,8 @@ namespace lu::platform::socket
     
     protected:
         BaseSocket m_baseSocket;
-        DataHandler& m_dataHandler;
+        DataSocketCallback& m_dataSocketCallback;
+        DataHandler m_dataHandler;
         std::size_t m_headerSize{};
         std::size_t m_receiveBufferShiftSize{};
         std::size_t m_numberOfBytesInBuffer{};

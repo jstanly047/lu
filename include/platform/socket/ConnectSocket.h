@@ -4,7 +4,7 @@
 
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct DataHandler>
+    template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
     class ConnectSocket 
     {
     public:
@@ -16,14 +16,14 @@ namespace lu::platform::socket
         ConnectSocket& operator=(ConnectSocket&& other) noexcept;
         ~ConnectSocket() {}
 
-        bool connectToTCP(DataHandler& dataHandler);
+        bool connectToTCP(DataSocketCallback& dataSocketCallback);
 
         const std::string& getHost() const { return m_host;}
         const std::string& getService() const { return m_service; }
         BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
 
     private:
-        std::unique_ptr<DataSocket<DataHandler>> m_dataSocket = nullptr;
+        std::unique_ptr<DataSocket<DataSocketCallback, DataHandler>> m_dataSocket = nullptr;
         std::string m_host{};
         std::string m_service{};
     };
