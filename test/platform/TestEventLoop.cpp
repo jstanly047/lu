@@ -1,16 +1,16 @@
 #include <platform/FDEventLoop.h>
 #include <platform/FDTimer.h>
-#include <platform/ITimerHandler.h>
+#include <platform/ITimerCallback.h>
 
 #include <fcntl.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-class MockTimerCallback : public lu::platform::ITimerHandler
+class MockTimerCallback : public lu::platform::ITimerCallback
 {
 public:
-    MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<lu::platform::ITimerHandler>&), (override));
+    MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<lu::platform::ITimerCallback>&), (override));
 };
 
 
@@ -22,11 +22,13 @@ TEST(TestEventLoop, testWithTimer)
     ASSERT_NE(fd, lu::platform::NULL_FD);
 
     MockTimerCallback timerCallback1;
-    lu::platform::FDTimer<lu::platform::ITimerHandler> timer1(timerCallback1);
+    lu::platform::FDTimer<lu::platform::ITimerCallback> timer1(timerCallback1, "timer1");
+    timer1.init();
     timer1.setToNonBlocking();
 
     MockTimerCallback timerCallback2;
-    lu::platform::FDTimer<lu::platform::ITimerHandler> timer2(timerCallback2);
+    lu::platform::FDTimer<lu::platform::ITimerCallback> timer2(timerCallback2, "timer2");
+    timer2.init();
     timer2.setToNonBlocking();
     
     ASSERT_EQ(eventLoop.add(timer1), true);
@@ -35,7 +37,7 @@ TEST(TestEventLoop, testWithTimer)
     int timer2CallCount = 0;
 
     EXPECT_CALL(timerCallback1, onTimer(::testing::Ref(timer1))).Times(1);
-    EXPECT_CALL(timerCallback2, onTimer(::testing::Ref(timer2))).WillRepeatedly(::testing::Invoke([&](const lu::platform::FDTimer<lu::platform::ITimerHandler>& timer){
+    EXPECT_CALL(timerCallback2, onTimer(::testing::Ref(timer2))).WillRepeatedly(::testing::Invoke([&](const lu::platform::FDTimer<lu::platform::ITimerCallback>& timer){
         timer2CallCount++;
 
         if (timer2CallCount == 2)

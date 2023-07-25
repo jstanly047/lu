@@ -1,5 +1,5 @@
 #include <platform/FDTimer.h>
-#include <platform/ITimerHandler.h>
+#include <platform/ITimerCallback.h>
 #include <glog/logging.h>
 
 #include <sys/timerfd.h>
@@ -14,23 +14,23 @@ namespace
 }
 
 template<lu::common::NonPtrClassOrStruct TimerCallback>
-FDTimer<TimerCallback>::FDTimer(TimerCallback& timerCallback) : m_timerCallback(timerCallback)
+FDTimer<TimerCallback>::FDTimer(TimerCallback& timerCallback, const std::string& name) : 
+    m_fd(),
+    m_interval(),
+    m_timerCallback(timerCallback),
+    m_name(name),
+    m_stop(false)
 {
-    int fd = ::timerfd_create(CLOCK_MONOTONIC, 0);
     
-    if (fd == NULL_FD) 
-    {
-        LOG(ERROR) << "Failed to create timer fd!";
-    }
-
-    m_fd.reset(new FileDescriptor(fd));
 }
 
 template<lu::common::NonPtrClassOrStruct TimerCallback>
 FDTimer<TimerCallback>::FDTimer(FDTimer&& other) noexcept :
     m_fd(std::move(other.m_fd)),
     m_interval(std::move(other.m_interval)),
-    m_timerCallback(other.m_timerCallback)
+    m_timerCallback(other.m_timerCallback),
+    m_name(std::move(other.m_name)),
+    m_stop(std::move(other.m_stop))
 {
 }
 
@@ -40,7 +40,24 @@ FDTimer<TimerCallback>& FDTimer<TimerCallback>::operator=(FDTimer<TimerCallback>
     m_fd = std::move(other.m_fd);
     m_interval = other.m_interval;
     m_timerCallback = other.m_timerCallback;
+    m_name = std::move(other.m_name);
+    m_stop = std::move(other.m_stop);
     return *this;
+}
+
+template<lu::common::NonPtrClassOrStruct TimerCallback>
+bool FDTimer<TimerCallback>::init()
+{
+    int fd = ::timerfd_create(CLOCK_MONOTONIC, 0);
+    
+    if (fd == NULL_FD) 
+    {
+        LOG(ERROR) << "Failed to create timer fd!";
+        return false;
+    }
+
+    m_fd.reset(new FileDescriptor(fd));
+    return true;
 }
 
 template<lu::common::NonPtrClassOrStruct TimerCallback>
@@ -131,4 +148,4 @@ void FDTimer<TimerCallback>::setToNonBlocking()
 }
 
 
-template class lu::platform::FDTimer<lu::platform::ITimerHandler>;
+template class lu::platform::FDTimer<lu::platform::ITimerCallback>;

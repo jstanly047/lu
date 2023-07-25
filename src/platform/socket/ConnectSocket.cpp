@@ -15,7 +15,7 @@
 
 using namespace lu::platform::socket;
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
 ConnectSocket<DataSocketCallback, DataHandler>::ConnectSocket(const std::string& host, const std::string& service): 
         m_dataSocket(nullptr),
         m_host(host), 
@@ -23,7 +23,7 @@ ConnectSocket<DataSocketCallback, DataHandler>::ConnectSocket(const std::string&
 {
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
 ConnectSocket<DataSocketCallback, DataHandler>::ConnectSocket(ConnectSocket&& other) noexcept :
     m_dataSocket(std::move(other.m_dataSocket)),
     m_host(std::move(other.m_host)),
@@ -32,7 +32,7 @@ ConnectSocket<DataSocketCallback, DataHandler>::ConnectSocket(ConnectSocket&& ot
     other.m_dataSocket = nullptr;
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
 ConnectSocket<DataSocketCallback, DataHandler>& ConnectSocket<DataSocketCallback, DataHandler>::operator=(ConnectSocket&& other) noexcept
 {
     m_dataSocket = std::move(other.m_dataSocket);
@@ -42,7 +42,7 @@ ConnectSocket<DataSocketCallback, DataHandler>& ConnectSocket<DataSocketCallback
     return *this;
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
 bool ConnectSocket<DataSocketCallback, DataHandler>::connectToTCP(DataSocketCallback& dataSocketCallback)
 {
     struct addrinfo addrCriteria;
@@ -95,4 +95,4 @@ bool ConnectSocket<DataSocketCallback, DataHandler>::connectToTCP(DataSocketCall
     return true;
 }
 
-template class lu::platform::socket::ConnectSocket<lu::platform::socket::IDataSocketCallback<lu::platform::socket::IDataHandler>, lu::platform::socket::IDataHandler>;
+template class lu::platform::socket::ConnectSocket<lu::platform::socket::IDataSocketCallback, lu::platform::socket::IDataHandler>;

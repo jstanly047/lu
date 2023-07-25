@@ -2,15 +2,15 @@
 
 #include <cstddef>
 #include <platform/socket/DataSocket.h>
+#include <platform/socket/IDataHandler.h>
 
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct DataHandler>
     class IDataSocketCallback
     {
     public:
 
-        virtual void onClientClose(const lu::platform::socket::DataSocket<IDataSocketCallback, DataHandler>& baseSocket) {}
-        virtual void onMessage(const lu::platform::socket::DataSocket<IDataSocketCallback, DataHandler>& baseSocket, void* data) {}
+        virtual void onClientClose([[maybe_unused]] const DataSocket<IDataSocketCallback, IDataHandler>& baseSocket) {}
+        virtual void onMessage([[maybe_unused]] const DataSocket<IDataSocketCallback, IDataHandler>& baseSocket, [[maybe_unused]] void* data) {}
     };
 }

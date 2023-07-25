@@ -5,9 +5,9 @@
 
 namespace lu::platform
 {
-    class ITimerHandler
+    class ITimerCallback
     {
     public:
-        virtual void onTimer(const lu::platform::FDTimer<ITimerHandler>& ) =  0;
+        virtual void onTimer(const lu::platform::FDTimer<ITimerCallback>& ) =  0;
     };
 }

@@ -1,32 +1,28 @@
 #pragma once
 #include <platform/socket/ServerSocket.h>
 #include <platform/thread/ServerClientThread.h>
+#include <platform/thread/ServerConfig.h>
 #include <platform/FDEventLoop.h>
+#include <platform/FDTimer.h>
+#include <platform/ITimerCallback.h>
 
 #include <thread>
 #include <vector>
 
+
 namespace lu::platform::thread
 {
-        class IServerThreadCallback
+        class IServerThreadCallback : public lu::platform::socket::IDataSocketCallback, public lu::platform::ITimerCallback
         {
         public:
             virtual void onStart() {}
+            virtual void onStartComplete() {}
             virtual void onExit() {}
-            virtual void onNewConnection(lu::platform::socket::BaseSocket&& baseSocket) {}
+            virtual void onNewConnection([[maybe_unused]] lu::platform::socket::BaseSocket&& baseSocket) {}
+            virtual void onTimer([[maybe_unused]] const lu::platform::FDTimer<ITimerCallback>& ) override {}
         };
 
-        struct SeverConfig
-        {
-            bool CREATE_NEW_THREAD = false;
-            bool ACT_AS_CLIENT_HANDLER = false;
-            unsigned int NUMBER_OF_CLIENT_HANDLE_THREADS = 2u;
-            unsigned int NUMBER_OF_CONNECTION_IN_WAITING_QUEUE = 50u;
-            unsigned int NUMBER_OF_EVENTS_PER_HANDLE = 10u;
-            unsigned int CLIENT_HANDLER_NUMBER_OF_EVENTS_PER_HANDLE = NUMBER_OF_EVENTS_PER_HANDLE;
-        };
-
-        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
+        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
         class ServerThread
         {
         public:
@@ -35,7 +31,8 @@ namespace lu::platform::thread
             ServerThread(const ServerThread&) = delete;
             ServerThread& operator=(const ServerThread&) = delete;
 
-            ServerThread(const std::string& name, ServerThreadCallback& serverThreadCallback, const std::string& service, SeverConfig serverConfig = SeverConfig{}, bool reuseAddAndPort = true);
+            ServerThread(const std::string& name, ServerThreadCallback& serverThreadCallback, const std::string& service, 
+                        SeverConfig serverConfig = SeverConfig{}, bool reuseAddAndPort = true);
             ~ServerThread() {}
             bool init();
             void start();
@@ -43,17 +40,19 @@ namespace lu::platform::thread
             void onNewConnection(lu::platform::socket::BaseSocket* baseSocket);
             void join();
 
-            const std::string& getName() const { return m_name; }
+            const auto& getName() const { return m_name; }
+            const auto& getSeverClientThreads() const { return m_serverClientThreads; }
 
         private:
-            lu::platform::socket::ServerSocket<ServerThread> m_serverSocket;
-            ServerThreadCallback& m_serverThreadCallback;
-            const SeverConfig m_serverConfig;
-            lu::platform::FDEventLoop m_eventLoop;
-            std::thread m_thread;
-            std::vector<ServerClientThread<SeverClientThreadCallback, DataHandler>> m_serverClientThreads;
             std::string m_name;
+            ServerThreadCallback& m_serverThreadCallback;
+            lu::platform::FDEventLoop m_eventLoop;
+            lu::platform::socket::ServerSocket<ServerThread> m_serverSocket;
+            lu::platform::FDTimer<ServerThreadCallback> m_timer;
             unsigned int m_currentClientHandler{};
+            std::vector<ServerClientThread<SeverClientThreadCallback, DataHandler> > m_serverClientThreads;
+            const SeverConfig m_serverConfig;
+            std::thread m_thread;
         };
 }
 

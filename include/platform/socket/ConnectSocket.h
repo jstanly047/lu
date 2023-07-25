@@ -4,7 +4,7 @@
 
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+    template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
     class ConnectSocket 
     {
     public:

@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include <memory>
+#include <string>
 
 namespace lu::platform
 {
@@ -19,13 +20,15 @@ namespace lu::platform
 
         FDTimer(FDTimer&& other) noexcept;
         FDTimer& operator=(FDTimer&& other) noexcept;
-        FDTimer(TimerCallback& timerCallback);
+        FDTimer(TimerCallback& timerCallback, const std::string& name);
 
+        bool init();
         bool start(int intervalInSec, int interValInNonSec, bool repeat=true);
         bool stop();
         void setToNonBlocking();
 
         const FileDescriptor& getFD() const;
+        const auto& getName() const { return m_name; }
         virtual ~FDTimer() {}
 
     private:
@@ -35,6 +38,7 @@ namespace lu::platform
         std::unique_ptr<FileDescriptor> m_fd;
         itimerspec m_interval{};
         TimerCallback& m_timerCallback;
+        std::string m_name;
         bool m_stop = false;
     };
 }

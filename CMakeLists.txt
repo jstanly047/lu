@@ -6,6 +6,7 @@ option(COV_BUILD "Flag to enable unit test build" OFF)
 
 set(PROJ_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROJ_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(PROJ_TEST_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/include")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -19,7 +20,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/bin)
 #Include and Headers
 ############################################################################
 include_directories (${PROJ_INC_DIR})
-
+include_directories (${PROJ_TEST_INC_DIR})
 
 ############################################################################
 # End Inlcudes and headers
@@ -89,25 +90,29 @@ if (UNIT_TEST)
     file(GLOB TEST_UTILS_SRC ./test/utils/*.cpp)
     file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
     file(GLOB TEST_SOCKET_SRC ./test/platform/socket/*.cpp)
+    file(GLOB TEST_THREAD_SRC ./test/platform/thread/*.cpp)
     file(GLOB TEST_PlATFORM_SRC ./test/platform/*.cpp)
     #file(GLOB TEST_THREAD ./test/thread/*.cpp)
 
-add_executable(LuTests ./test/TestMain.cpp 
-                        ${TEST_UTILS_SRC}
-                        ${TEST_QUEUE_SRC}
-                        ${TEST_SOCKET_SRC}
-                        ${TEST_PlATFORM_SRC})
+    add_executable(LuTests ./test/TestMain.cpp 
+                            ${TEST_UTILS_SRC}
+                            ${TEST_QUEUE_SRC}
+                            ${TEST_SOCKET_SRC}
+                            ${TEST_THREAD_SRC}
+                            ${TEST_PlATFORM_SRC})
 
-target_link_libraries(LuTests
-                        luPlatform
-                        utils
-                        #thread
-                        luSocket
-                        luThread
-                        glog
-                        gtest
-                        gmock
-                        )
+    target_include_directories(LuTests PUBLIC ${PROJ_TEST_INC_DIR})
+
+    target_link_libraries(LuTests
+                            luPlatform
+                            utils
+                            #thread
+                            luSocket
+                            luThread
+                            glog
+                            gtest
+                            gmock
+                            )
 
 endif(UNIT_TEST)
 unset(UNIT_TEST CACHE)

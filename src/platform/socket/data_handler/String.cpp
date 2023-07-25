@@ -23,3 +23,4 @@ void String<DataSocketCallback>::readMessage(std::size_t offset, std::size_t siz
 {
     m_dataSocketCallback.onMessage(new std::string(m_buffer.get() + offset, m_buffer.get() + offset + size));
 }
+

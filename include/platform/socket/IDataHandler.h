@@ -1,31 +1,26 @@
 #pragma once
 
-#include <cstddef>
-#include <platform/socket/IDataSocketCallback.h>
+#include <cstdint>
+#include <cassert>
+#include <common/TemplateConstraints.h>
 
 namespace lu::platform::socket
 {
+    template<lu::common::NonPtrClassOrStruct DataSocketCallback>
     class IDataHandler
     {
     public:
-        IDataHandler(IDataHandler&& other) noexcept: 
-            m_iDataSocketCallback(other.m_iDataSocketCallback) {}
-            
-        IDataHandler& operator=(IDataHandler&& other)
-        {
-            std::swap(m_iDataSocketCallback, other.m_iDataSocketCallback);
-            return *this;
-        }
+        IDataHandler(DataSocketCallback& dataSocketCallback);
+        IDataHandler(IDataHandler&& other) noexcept;
+        IDataHandler& operator=(IDataHandler&& other);
 
-        IDataHandler(IDataSocketCallback<IDataHandler>& iDataSocketCallback) :  m_iDataSocketCallback(iDataSocketCallback) {}
         virtual uint8_t* getReceiveBufferToFill() { return nullptr; }
         virtual std::size_t getReceiveBufferSize() { return 0; }
         virtual std::size_t getHeaderSize() { return 0; }
-        virtual std::size_t readHeader(std::size_t offset) {return 0; }
-        virtual void readMessage(std::size_t offset, std::size_t size) {}
+        virtual std::size_t readHeader(std::size_t offset) {return offset; }
+        virtual void readMessage([[maybe_unused]] std::size_t offset, [[maybe_unused]] std::size_t size) {   }
 
     private:
-        IDataSocketCallback<IDataHandler>& m_iDataSocketCallback;
-        
+        DataSocketCallback& m_dataSocketCallback;
     };
 }

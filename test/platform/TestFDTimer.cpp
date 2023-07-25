@@ -1,5 +1,5 @@
 #include <platform/FDTimer.h>
-#include <platform/ITimerHandler.h>
+#include <platform/ITimerCallback.h>
 
 #include <fcntl.h>
 #include <thread>
@@ -8,10 +8,10 @@
 #include <gmock/gmock.h>
 
 
-class MockTimerCallback : public lu::platform::ITimerHandler
+class MockTimerCallback : public lu::platform::ITimerCallback
 {
 public:
-    MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<lu::platform::ITimerHandler>&), (override));
+    MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<lu::platform::ITimerCallback>&), (override));
 };
 
 class TestFDTimerTest : public testing::Test 
@@ -20,9 +20,12 @@ protected:
     void SetUp() override 
     {
         // Create the timer and set up the interval for testing
-        fdTimer = new lu::platform::FDTimer<lu::platform::ITimerHandler>(mockTimerCallback);
+        fdTimer = new lu::platform::FDTimer<lu::platform::ITimerCallback>(mockTimerCallback, "TestTimer");
+        ASSERT_EQ(fdTimer->getFD(), nullptr);
+        ASSERT_EQ(fdTimer->init(), true);
         ASSERT_NE(fdTimer->getFD(), nullptr);
         fd = fdTimer->getFD();
+        ASSERT_NE(fdTimer->getName(), "TestTimer");
     }
 
     void TearDown() override 
@@ -33,7 +36,7 @@ protected:
     }
 
     MockTimerCallback mockTimerCallback;
-    lu::platform::FDTimer<lu::platform::ITimerHandler>* fdTimer = nullptr;
+    lu::platform::FDTimer<lu::platform::ITimerCallback>* fdTimer = nullptr;
     int fd = lu::platform::NULL_FD;
 };
 
@@ -45,22 +48,26 @@ TEST_F(TestFDTimerTest, createFDTimer)
 TEST_F(TestFDTimerTest, moveConstruct)
 {
     EXPECT_CALL(mockTimerCallback, onTimer(::testing::Ref(*fdTimer))).Times(0);
-    lu::platform::FDTimer<lu::platform::ITimerHandler> tempFDTimer(std::move(*fdTimer));
+    lu::platform::FDTimer<lu::platform::ITimerCallback> tempFDTimer(std::move(*fdTimer));
+    tempFDTimer.init();
     int flags = ::fcntl(fd, F_GETFL);
     ASSERT_NE(flags, lu::platform::NULL_FD);
     ASSERT_EQ(fdTimer->getFD(), nullptr);
     int tempFD = tempFDTimer.getFD();
     ASSERT_EQ(tempFD, fd);
+    ASSERT_NE(tempFDTimer.getName(), "TestTimer");
 }
 
 TEST_F(TestFDTimerTest, moveOperator)
 {
     EXPECT_CALL(mockTimerCallback, onTimer(::testing::Ref(*fdTimer))).Times(0);
-    *fdTimer = lu::platform::FDTimer<lu::platform::ITimerHandler>(mockTimerCallback);
+    *fdTimer = lu::platform::FDTimer<lu::platform::ITimerCallback>(mockTimerCallback, "NewTimer");
+    fdTimer->init();
     int flags = ::fcntl(fd, F_GETFL);
     ASSERT_EQ(flags, lu::platform::NULL_FD);
     int tempFD = fdTimer->getFD();
     ASSERT_NE(tempFD, fd);
+    ASSERT_NE(fdTimer->getName(), "NewTimer");
 }
 
 
