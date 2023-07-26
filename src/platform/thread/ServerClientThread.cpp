@@ -6,29 +6,16 @@ using namespace lu::platform::thread;
 
 template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 ServerClientThread<ServerClientThreadCallback, DataHandler>::ServerClientThread(ServerClientThreadCallback& severClientThreadCallback,
-    const std::string& name, SeverClientThreadConfig serverConfig)
+    const std::string& name, ClientThreadConfig serverConfig) : ClientThread(severClientThreadCallback, name, serverConfig)
     :
-    m_name(name),
-    m_severClientThreadCallback(severClientThreadCallback),
-    m_serverThreadClientConfig(serverConfig),
-    m_eventLoop(),
-    m_timer(m_severClientThreadCallback, serverConfig.TIMER_NAME),
-    m_eventChannel(*this),
-    m_thread()
+    m_eventChannel(*this)
 {
-
 }
 
 template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 ServerClientThread<ServerClientThreadCallback, DataHandler>::ServerClientThread(ServerClientThread&& other):
-    m_name(std::move(other.m_name)),
-    m_severClientThreadCallback(other.m_severClientThreadCallback),
-    m_serverThreadClientConfig(std::move(other.m_serverThreadClientConfig)),
-    m_eventLoop(std::move(other.m_eventLoop)),
-    m_timer(std::move(other.m_timer)),
-    m_eventChannel(std::move(other.m_eventChannel)),
-    m_thread(std::move(other.m_thread))
-    
+    ClientThread(std::move(other)),
+    m_eventChannel(std::move(other.m_eventChannel))    
 {
 
 }
@@ -36,13 +23,8 @@ ServerClientThread<ServerClientThreadCallback, DataHandler>::ServerClientThread(
 template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 ServerClientThread<ServerClientThreadCallback, DataHandler>& ServerClientThread<ServerClientThreadCallback, DataHandler>::operator=(ServerClientThread<ServerClientThreadCallback, DataHandler>&& other)
 {
-    m_name = std::move(other.m_name);
-    m_severClientThreadCallback = std::move(other.m_severClientThreadCallback);
-    m_serverThreadClientConfig = other.m_serverThreadClientConfig;
-    m_eventLoop = std::move(other.m_eventLoop);
-    m_timer = std::move(other.m_timer);
+    ClientThread::operator=(std::move(other));
     m_eventChannel = std::move(other.m_eventChannel);
-    m_thread = std::move(other.m_thread);
     return *this;
 }
 
@@ -55,22 +37,7 @@ bool ServerClientThread<ServerClientThreadCallback, DataHandler>::init()
         return false;
     }
 
-    if (m_eventLoop.init() == false)
-    {
-        LOG(ERROR) << "Thead[" << m_name << "] failed init FD event loop!";
-        return false;
-    }
-
-    if (m_serverThreadClientConfig.TIMER_IN_MSEC != 0u)
-    {
-        if (m_timer.init() == false)
-        {
-            LOG(ERROR) << "Thread[" << m_name << "] failed to create timer!";
-            return false;
-        }
-    }
-
-    return true;
+    return ClientThread::init();
 }
 
 template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
@@ -82,36 +49,8 @@ void ServerClientThread<ServerClientThreadCallback, DataHandler>::start()
 template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 void ServerClientThread<ServerClientThreadCallback, DataHandler>::run()
 {
-    LOG(INFO) << "Started " << m_name;
-    m_severClientThreadCallback.onStart();
     m_eventLoop.add(m_eventChannel);
-
-    if (m_serverThreadClientConfig.TIMER_IN_MSEC != 0u)
-    {
-        m_timer.setToNonBlocking();
-        m_eventLoop.add(m_timer);
-        m_timer.start(0, (int) m_serverThreadClientConfig.TIMER_IN_MSEC * 1'000'1000);
-    }
-
-    // TODO make event channel non blocking
-    
-    m_eventLoop.start(m_serverThreadClientConfig.NUMBER_OF_EVENTS_PER_HANDLE);
-}
-
-template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
-void ServerClientThread<ServerClientThreadCallback, DataHandler>::stop()
-{
-    LOG(INFO) << "Stopping " << m_name;
-
-    if (m_serverThreadClientConfig.TIMER_IN_MSEC == 0u)
-    {
-        m_timer.init();
-        m_timer.setToNonBlocking();
-        m_eventLoop.add(m_timer);
-        m_timer.start(0, 1'000'1000u, false);
-    }
-
-    m_eventLoop.stop(); //Expect to stop in next timer
+    ClientThread::run();
 }
 
 template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
@@ -124,11 +63,4 @@ void ServerClientThread<ServerClientThreadCallback, DataHandler>::onNewConnectio
     delete baseSocket;
 }
 
-template<lu::common::NonPtrClassOrStruct ServerClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
-void ServerClientThread<ServerClientThreadCallback, DataHandler>::join()
-{
-    m_thread.join();
-    m_severClientThreadCallback.onExit();
-}
-
-template class ServerClientThread<IServerClientThreadCallback, lu::platform::socket::data_handler::String>;
+template class ServerClientThread<IClientThreadCallback, lu::platform::socket::data_handler::String>;

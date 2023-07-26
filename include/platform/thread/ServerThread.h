@@ -29,10 +29,10 @@ namespace lu::platform::thread
     concept BaseOrSameClass = std::is_base_of_v<Base, Derived> || std::is_same_v<Base, Derived>;
 
 
-    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct BaseSeverClientThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback>
-    class ServerThread
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct BaseClientThreadCallback, lu::common::NonPtrClassOrStruct ClientThreadCallback>
+    class ServerThread : : public ClientThread<ClientThreadCallback, DataHandler>
     {
-        static_assert(BaseOrSameClass<BaseSeverClientThreadCallback, SeverClientThreadCallback>, "BaseSeverClientThreadCallback must be a base class of BaseSeverClientThreadCallback or the same as BaseSeverClientThreadCallback");
+        static_assert(BaseOrSameClass<BaseClientThreadCallback, ClientThreadCallback>, "BaseClientThreadCallback must be a base class of BaseClientThreadCallback or the same as BaseClientThreadCallback");
     public:
         ServerThread(ServerThread&& other) = delete;
         ServerThread& operator=(ServerThread&& other) = delete;
@@ -64,7 +64,7 @@ namespace lu::platform::thread
             {
                 std::string clientThreadName = m_name + "_client_handler_" + std::to_string(i);
                 serverClientThreadConfig.TIMER_NAME += std::to_string(i+1);
-                m_serverClientThreads.emplace_back(ServerClientThread<SeverClientThreadCallback, DataHandler>(clientThreadName, serverClientThreadConfig));
+                m_serverClientThreads.emplace_back(ServerClientThread<ClientThreadCallback, DataHandler>(clientThreadName, serverClientThreadConfig));
             }
         }
 
@@ -197,7 +197,7 @@ namespace lu::platform::thread
         lu::platform::socket::ServerSocket<ServerThread> m_serverSocket;
         lu::platform::FDTimer<ServerThreadCallback> m_timer;
         unsigned int m_currentClientHandler{};
-        std::vector<ServerClientThread<BaseSeverClientThreadCallback, DataHandler>> m_serverClientThreads;
+        std::vector<ServerClientThread<BaseClientThreadCallback, DataHandler>> m_serverClientThreads;
         const SeverConfig m_serverConfig;
         std::thread m_thread;
     };

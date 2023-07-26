@@ -17,9 +17,9 @@ namespace lu::platform::thread
         bool REPEAT_TIMER = true;
     };
 
-    struct SeverClientThreadConfig
+    struct ClientThreadConfig
     {
-        SeverClientThreadConfig(const SeverConfig& serverConfig):
+        ClientThreadConfig(const SeverConfig& serverConfig):
             NUMBER_OF_EVENTS_PER_HANDLE(serverConfig.CLIENT_HANDLER_NUMBER_OF_EVENTS_PER_HANDLE),
             TIMER_IN_MSEC(serverConfig.TIMER_IN_MSEC),
             TIMER_NAME(serverConfig.TIMER_NAME),
