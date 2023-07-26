@@ -38,7 +38,7 @@ template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
 ServerSocket<ServerSocketCallback>& ServerSocket<ServerSocketCallback>::operator=(ServerSocket&& other) noexcept
 {
     m_baseSocket = std::move(other.m_baseSocket);
-    m_serverSocketCallback = other.m_serverSocketCallback;
+    //m_serverSocketCallback = other.m_serverSocketCallback;
     m_service = std::move(other.m_service);
     m_reuseAddAndPort = other.m_reuseAddAndPort;
     return *this;
@@ -174,4 +174,4 @@ void ServerSocket<ServerSocketCallback>::stop()
     pthread_kill(m_nativeHandle, SIGUSR1);
 }
 
-template class lu::platform::socket::ServerSocket<lu::platform::socket::IServerSocketCallback>;
+template class ServerSocket<lu::platform::socket::IServerSocketCallback>;

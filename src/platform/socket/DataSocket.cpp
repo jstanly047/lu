@@ -10,11 +10,9 @@
 #include <arpa/inet.h>
 
 #include <assert.h>
-#include<stdio.h>
+#include <stdio.h>
 #include <cstring>
 #include<string>
-
-
 
 using namespace lu::platform::socket;
 
@@ -47,19 +45,19 @@ namespace
     }
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 DataSocket<DataSocketCallback, DataHandler>::DataSocket(DataSocketCallback& dataSocketCallback, BaseSocket&& baseSocket) :
     m_baseSocket(std::move(baseSocket)),
     m_dataSocketCallback(dataSocketCallback),
-    m_dataHandler(dataSocketCallback),
+    m_dataHandler(),
     m_headerSize(m_dataHandler.getHeaderSize()),
     m_receiveBufferShiftSize(m_dataHandler.getReceiveBufferSize() / 4),
     m_numberOfBytesLeftToRecv(m_dataHandler.getReceiveBufferSize())
 
 {
 }
-
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+/*
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 DataSocket<DataSocketCallback, DataHandler>::DataSocket(DataSocket<DataSocketCallback, DataHandler>&& other) noexcept : 
     m_baseSocket(std::move(other.m_baseSocket)),
     m_dataSocketCallback(other.m_dataSocketCallback),
@@ -73,11 +71,11 @@ DataSocket<DataSocketCallback, DataHandler>::DataSocket(DataSocket<DataSocketCal
 {
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 DataSocket<DataSocketCallback, DataHandler>& DataSocket<DataSocketCallback, DataHandler>::operator=(DataSocket<DataSocketCallback, DataHandler>&& other) noexcept
 {
     m_baseSocket = std::move(other.m_baseSocket);
-    std::swap(m_dataSocketCallback, other.m_dataSocketCallback);
+    m_dataSocketCallback =  std::move(other.m_dataSocketCallback);
     m_dataHandler = std::move(other.m_dataHandler);
     std::swap(m_headerSize, other.m_headerSize);
     std::swap(m_receiveBufferShiftSize, other.m_receiveBufferShiftSize);
@@ -86,16 +84,16 @@ DataSocket<DataSocketCallback, DataHandler>& DataSocket<DataSocketCallback, Data
     std::swap(m_numberOfBytesLeftToRead, other.m_numberOfBytesLeftToRead);
     std::swap(m_numberOfBytesLeftToRecv, other.m_numberOfBytesLeftToRecv);
     return *this;
-}
+}*/
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 void DataSocket<DataSocketCallback, DataHandler>::updateForDataRead(std::size_t size)
 {
     m_readOffset += size;
     m_numberOfBytesLeftToRead -= size;
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 bool DataSocket<DataSocketCallback, DataHandler>::Receive()
 {
     int numberOfBytesRead = 0;
@@ -124,7 +122,7 @@ bool DataSocket<DataSocketCallback, DataHandler>::Receive()
     return true;
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 void DataSocket<DataSocketCallback, DataHandler>::readMessages()
 {
     unsigned int expectedMsgSize = 0;
@@ -144,7 +142,7 @@ void DataSocket<DataSocketCallback, DataHandler>::readMessages()
 
         if (m_numberOfBytesLeftToRead >= expectedMsgSize)
         {
-            m_dataHandler.readMessage(m_readOffset, expectedMsgSize);
+            m_dataSocketCallback.onData(*this, m_dataHandler.readMessage(m_readOffset, expectedMsgSize));
             updateForDataRead(expectedMsgSize);
             continue;
         }
@@ -153,7 +151,7 @@ void DataSocket<DataSocketCallback, DataHandler>::readMessages()
     }
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 int DataSocket<DataSocketCallback, DataHandler>::sendMsg(void* buffer, ssize_t size)
 {
     if (m_baseSocket.getFD() == nullptr)
@@ -196,7 +194,7 @@ int DataSocket<DataSocketCallback, DataHandler>::sendMsg(void* buffer, ssize_t s
     return totalSent;
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 int DataSocket<DataSocketCallback, DataHandler>::sendFile(int fileDescriptor, int size)
 {
     off_t offset = 0;
@@ -241,7 +239,7 @@ int DataSocket<DataSocketCallback, DataHandler>::sendFile(int fileDescriptor, in
     return sendBytes;
 }
 
-template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct  DataHandler>
 void DataSocket<DataSocketCallback, DataHandler>::onEvent(struct ::epoll_event& events)
 {
     if ((events.events & EPOLLHUP || events.events & EPOLLERR))
@@ -257,4 +255,4 @@ void DataSocket<DataSocketCallback, DataHandler>::onEvent(struct ::epoll_event& 
     Receive();
 }
 
-template class DataSocket<IDataSocketCallback, IDataHandler>;
+template class DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>;

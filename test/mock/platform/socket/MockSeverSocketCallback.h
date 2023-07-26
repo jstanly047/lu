@@ -3,7 +3,7 @@
 #include <platform/socket/IServerSocketCallback.h>
 #include <gmock/gmock.h>
 
-namespace lu::mock::platform::socket
+namespace lu::platform::socket
 {
     class MockSeverSocketCallback : public lu::platform::socket::IServerSocketCallback
     {

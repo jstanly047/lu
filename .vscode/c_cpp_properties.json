@@ -5,7 +5,7 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/test/include"
+                "${workspaceFolder}/test/mock"
             ],
             "cStandard": "gnu20",
             "cppStandard": "gnu++20"

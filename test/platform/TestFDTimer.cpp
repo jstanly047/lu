@@ -25,7 +25,7 @@ protected:
         ASSERT_EQ(fdTimer->init(), true);
         ASSERT_NE(fdTimer->getFD(), nullptr);
         fd = fdTimer->getFD();
-        ASSERT_NE(fdTimer->getName(), "TestTimer");
+        ASSERT_EQ(fdTimer->getName(), "TestTimer");
     }
 
     void TearDown() override 
@@ -55,7 +55,7 @@ TEST_F(TestFDTimerTest, moveConstruct)
     ASSERT_EQ(fdTimer->getFD(), nullptr);
     int tempFD = tempFDTimer.getFD();
     ASSERT_EQ(tempFD, fd);
-    ASSERT_NE(tempFDTimer.getName(), "TestTimer");
+    ASSERT_EQ(tempFDTimer.getName(), "TestTimer");
 }
 
 TEST_F(TestFDTimerTest, moveOperator)
@@ -67,7 +67,7 @@ TEST_F(TestFDTimerTest, moveOperator)
     ASSERT_EQ(flags, lu::platform::NULL_FD);
     int tempFD = fdTimer->getFD();
     ASSERT_NE(tempFD, fd);
-    ASSERT_NE(fdTimer->getName(), "NewTimer");
+    ASSERT_EQ(fdTimer->getName(), "NewTimer");
 }
 
 

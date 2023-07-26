@@ -12,7 +12,7 @@
 #include <thread>
 #include <condition_variable>
 
-#include <mock/platform/socket/MockSeverSocketCallback.h>
+#include <platform/socket/MockSeverSocketCallback.h>
 
 using namespace lu::platform::socket;
 
@@ -70,9 +70,9 @@ protected:
         EXPECT_NE((int) dataSocket->getFD(), lu::platform::NULL_FD);
     }
 
-    lu::mock::platform::socket::MockSeverSocketCallback m_mockServerSocketCallback;
-    IDataSocketCallback m_clientDataSocketCallback;
-    ConnectSocket<IDataSocketCallback, IDataHandler> connectSocket;
+    MockSeverSocketCallback m_mockServerSocketCallback;
+    IDataSocketCallback<IDataHandler> m_clientDataSocketCallback;
+    ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler> connectSocket;
     ServerSocket<IServerSocketCallback> serverSocket;
     std::thread serverThead;
     BaseSocket* dataSocket = nullptr;
@@ -146,7 +146,7 @@ TEST_F(TestSocket, setMaxSendDataWaitThreshold)
 
 TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 {
-    auto connectSocketTemp = new ConnectSocket<IDataSocketCallback, IDataHandler>("localhost", "10000");
+    auto connectSocketTemp = new ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler>("localhost", "10000");
     connectSocketTemp->connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp->getBaseSocket(), nullptr);
     int fd = connectSocketTemp->getBaseSocket()->getFD();
@@ -157,7 +157,7 @@ TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 
 TEST_F(TestSocket, checkOnReconnectCloseAlreadyOpenedDataSocket)
 {
-    ConnectSocket<IDataSocketCallback, IDataHandler> connectSocketTemp("localhost", "10000");
+    ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler> connectSocketTemp("localhost", "10000");
     connectSocketTemp.connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
     int fd = connectSocketTemp.getBaseSocket()->getFD();

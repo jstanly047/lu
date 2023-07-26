@@ -10,7 +10,7 @@ using namespace lu::platform;
 
 namespace
 {
-    lu::platform::FileDescriptor nullFileDescriptor(nullptr);
+    FileDescriptor nullFileDescriptor(nullptr);
 }
 
 template<lu::common::NonPtrClassOrStruct TimerCallback>
@@ -39,7 +39,7 @@ FDTimer<TimerCallback>& FDTimer<TimerCallback>::operator=(FDTimer<TimerCallback>
 {
     m_fd = std::move(other.m_fd);
     m_interval = other.m_interval;
-    m_timerCallback = other.m_timerCallback;
+    m_timerCallback = std::move(other.m_timerCallback);
     m_name = std::move(other.m_name);
     m_stop = std::move(other.m_stop);
     return *this;
@@ -111,7 +111,7 @@ void FDTimer<TimerCallback>::onEvent(struct ::epoll_event& event)
 }
 
 template<lu::common::NonPtrClassOrStruct TimerCallback>
-const lu::platform::FileDescriptor& FDTimer<TimerCallback>::getFD() const
+const FileDescriptor& FDTimer<TimerCallback>::getFD() const
 {
     if (m_fd == nullptr)
     {
@@ -148,4 +148,4 @@ void FDTimer<TimerCallback>::setToNonBlocking()
 }
 
 
-template class lu::platform::FDTimer<lu::platform::ITimerCallback>;
+template class FDTimer<ITimerCallback>;

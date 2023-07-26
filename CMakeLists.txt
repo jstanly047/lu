@@ -6,7 +6,7 @@ option(COV_BUILD "Flag to enable unit test build" OFF)
 
 set(PROJ_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROJ_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(PROJ_TEST_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/include")
+set(PROJ_TEST_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/mock")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -66,13 +66,19 @@ file(GLOB LU_PLATFORM_SRC  ./src/platform/*.cpp)
 add_library(luPlatform STATIC ${LU_PLATFORM_SRC})
 target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR})
 
+
+file(GLOB LU_SOCKET_DATAH_SRC  ./src/platform/socket/data_handler/*.cpp)
+add_library(luSocketDataHandler STATIC ${LU_SOCKET_DATAH_SRC})
+
 file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
 add_library(luSocket STATIC ${LU_SOCKET_SRC})
+
 target_include_directories(luSocket PUBLIC ${PROJ_INC_DIR})
 target_link_libraries(luSocket luPlatform)
 
 file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
 add_library(luThread STATIC ${LU_THREAD_SRC})
+
 target_include_directories(luThread PUBLIC ${PROJ_INC_DIR})
 target_link_libraries(luThread luSocket)
 
@@ -87,6 +93,15 @@ target_link_libraries(luThread luSocket)
 ############################################################################
 if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
+
+    file(GLOB LU_MOCK_SOCKET_SRC  ./test/mock/platform/socket/*.h)
+    add_library(luMockSocket STATIC ${LU_MOCK_SOCKET_SRC})
+    target_link_libraries(luMockSocket luSocket)
+
+    file(GLOB LU_MOCK_THREAD_SRC  ./test/mock/platform/thread/*.h)
+    add_library(luMockThread STATIC ${LU_MOCK_THREAD_SRC})
+    target_link_libraries(luMockThread luThread)
+
     file(GLOB TEST_UTILS_SRC ./test/utils/*.cpp)
     file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
     file(GLOB TEST_SOCKET_SRC ./test/platform/socket/*.cpp)
@@ -101,14 +116,15 @@ if (UNIT_TEST)
                             ${TEST_THREAD_SRC}
                             ${TEST_PlATFORM_SRC})
 
-    target_include_directories(LuTests PUBLIC ${PROJ_TEST_INC_DIR})
-
     target_link_libraries(LuTests
                             luPlatform
                             utils
                             #thread
+                            luSocketDataHandler
                             luSocket
+                            luMockSocket
                             luThread
+                            luMockThread
                             glog
                             gtest
                             gmock

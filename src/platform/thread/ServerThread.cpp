@@ -1,9 +1,10 @@
+/*
 #include <platform/thread/ServerThread.h>
 #include <glog/logging.h>
 
 using namespace lu::platform::thread;
 
-template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::ServerThread(const std::string& name, 
     ServerThreadCallback& serverThreadCallback,  const std::string& service, SeverConfig serverConfig, bool reuseAddAndPort):
     m_name(name),
@@ -34,7 +35,7 @@ ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::Serv
     }
 }
 
-template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 bool ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::init()
 {
     for (auto &serverClientThread : m_serverClientThreads)
@@ -51,7 +52,7 @@ bool ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
         return false;
     }
 
-    if (m_serverConfig.TIMER_IN_MSEC == 0u)
+    if (m_serverConfig.TIMER_IN_MSEC != 0u)
     {
         if (m_timer.init() == false)
         {
@@ -63,7 +64,7 @@ bool ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
     return true;
 }
 
-template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::start()
 {
     for (auto& serverClientThread : m_serverClientThreads)
@@ -81,7 +82,7 @@ void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
     }
 }
 
-template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::run()
 {
     LOG(INFO) << "Started " << m_name;
@@ -94,14 +95,35 @@ void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
 
     m_serverSocket.getBaseSocket().setNonBlocking();
     m_eventLoop.add(m_serverSocket);
-    m_timer.setToNonBlocking();
-    m_eventLoop.add(m_timer);
+
+    if (m_serverConfig.TIMER_IN_MSEC != 0u)
+    {
+        m_timer.setToNonBlocking();
+        m_timer.start(0, (int) m_serverConfig.TIMER_IN_MSEC * 1'000'000u);
+        m_eventLoop.add(m_timer);
+    }
+
     m_serverThreadCallback.onStartComplete();
-    m_timer.start(0, (int) m_serverConfig.TIMER_IN_MSEC * 1000, m_serverConfig.REPEAT_TIMER);
     m_eventLoop.start(m_serverConfig.NUMBER_OF_EVENTS_PER_HANDLE);
 }
 
-template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
+void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::stop()
+{
+    LOG(INFO) << "Stop " << m_name;
+
+    if (m_serverConfig.TIMER_IN_MSEC == 0u)
+    {
+        m_timer.init();
+        m_timer.setToNonBlocking();
+        m_eventLoop.add(m_timer);
+        m_timer.start(0, 1'000'000u, false);
+    }
+
+    m_eventLoop.stop();
+}
+
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
 {
     if (m_currentClientHandler == m_serverClientThreads.size())
@@ -109,7 +131,7 @@ void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
         if (m_serverConfig.ACT_AS_CLIENT_HANDLER)
         {
             auto dataSocket = new lu::platform::socket::DataSocket<ServerThreadCallback, DataHandler>(m_serverThreadCallback, std::move(*baseSocket));
-            m_serverThreadCallback.onNewConnection(std::move(*baseSocket));
+            m_serverThreadCallback.onNewConnection(baseSocket);
             dataSocket->getBaseSocket().setNonBlocking();
             m_eventLoop.add(*dataSocket);
             delete baseSocket;
@@ -123,7 +145,7 @@ void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
     m_serverClientThreads[m_currentClientHandler++].getEventChannel().notify(lu::platform::EventData(lu::platform::EventData::NewConnection, baseSocket));
 }
 
-template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, template<typename> class DataHandler>
+template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct SeverClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>::join()
 {
     for (auto& serverClientThread : m_serverClientThreads)
@@ -135,7 +157,4 @@ void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
     m_thread.join();
     m_serverThreadCallback.onExit();
 }
-
-template class lu::platform::thread::ServerThread<lu::platform::thread::IServerThreadCallback, 
-                        lu::platform::thread::IServerClientThreadCallback, lu::platform::socket::IDataHandler>;
-template class lu::platform::FDTimer<lu::platform::thread::IServerThreadCallback>;
+*/

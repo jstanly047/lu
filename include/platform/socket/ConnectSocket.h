@@ -2,9 +2,10 @@
 #include  <platform/socket/DataSocket.h>
 #include <common/TemplateConstraints.h>
 
+// TODO Revisit and change the callbacks
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct DataSocketCallback, template<typename> class DataHandler>
+    template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
     class ConnectSocket 
     {
     public:
@@ -21,6 +22,7 @@ namespace lu::platform::socket
         const std::string& getHost() const { return m_host;}
         const std::string& getService() const { return m_service; }
         BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
+        int sendMsg(void* buffer, ssize_t size) { return m_dataSocket->sendMsg(buffer, size); }
 
     private:
         std::unique_ptr<DataSocket<DataSocketCallback, DataHandler>> m_dataSocket = nullptr;
