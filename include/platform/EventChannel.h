@@ -45,7 +45,7 @@ namespace lu::platform
 
     private:
         EventChannelHandler &m_eventChannelHandler;
-        std::unique_ptr<FileDescriptor> m_out;
         std::unique_ptr<FileDescriptor> m_in;
+        std::unique_ptr<FileDescriptor> m_out;
     };
 }

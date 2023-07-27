@@ -1,10 +1,7 @@
 #pragma once
 #include <platform/socket/ServerSocket.h>
-#include <platform/thread/ServerClientThread.h>
-#include <platform/thread/ServerConfig.h>
-#include <platform/FDEventLoop.h>
-#include <platform/FDTimer.h>
-#include <platform/ITimerCallback.h>
+#include <platform/thread/ClientThread.h>
+#include <platform/thread/Config.h>
 #include <glog/logging.h>
 
 #include <thread>
@@ -21,7 +18,7 @@ namespace lu::platform::thread
         virtual void nExit() = 0;
         virtual void onNewConnection(lu::platform::socket::DataSocket<IServerThreadCallback, lu::platform::socket::data_handler::String>* dataSocket) = 0;
         virtual void onTimer(const lu::platform::FDTimer<IServerThreadCallback>&) = 0;
-        virtual void onClientClose(lu::platform::socket::DataSocket<IServerThreadCallback, lu::platform::socket::data_handler::String>&) =0 ;
+        virtual void onClientClose(lu::platform::socket::DataSocket<IServerThreadCallback, lu::platform::socket::data_handler::String>&) = 0;
         virtual void onData(lu::platform::socket::DataSocket<IServerThreadCallback, lu::platform::socket::data_handler::String>&, void*) = 0;
     };
 
@@ -29,8 +26,8 @@ namespace lu::platform::thread
     concept BaseOrSameClass = std::is_base_of_v<Base, Derived> || std::is_same_v<Base, Derived>;
 
 
-    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct BaseClientThreadCallback, lu::common::NonPtrClassOrStruct ClientThreadCallback>
-    class ServerThread : : public ClientThread<ClientThreadCallback, DataHandler>
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct ClientThreadCallback, lu::common::NonPtrClassOrStruct BaseClientThreadCallback=ClientThreadCallback>
+    class ServerThread : public ClientThread<BaseClientThreadCallback, DataHandler>
     {
         static_assert(BaseOrSameClass<BaseClientThreadCallback, ClientThreadCallback>, "BaseClientThreadCallback must be a base class of BaseClientThreadCallback or the same as BaseClientThreadCallback");
     public:
@@ -41,15 +38,12 @@ namespace lu::platform::thread
 
         ServerThread(const std::string& name, ServerThreadCallback& serverThreadCallback, const std::string& service, 
                     SeverConfig serverConfig = SeverConfig{}, bool reuseAddAndPort = true):
-                    m_name(name),
+                    ClientThread<BaseClientThreadCallback, DataHandler>(static_cast<BaseClientThreadCallback&>(serverThreadCallback), name,  EventThreadConfig(serverConfig)),
                     m_serverThreadCallback(serverThreadCallback),
-                    m_eventLoop(),
                     m_serverSocket(service, *this, reuseAddAndPort),
-                    m_timer(serverThreadCallback, m_serverConfig.TIMER_NAME),
                     m_currentClientHandler(0u),
                     m_serverClientThreads(),
-                    m_serverConfig(serverConfig),
-                    m_thread()
+                    m_serverConfig(serverConfig)
         {
             if (serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS >= std::thread::hardware_concurrency() - 1u)
             {
@@ -57,14 +51,24 @@ namespace lu::platform::thread
             }
 
             m_serverClientThreads.reserve(serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS);
-            SeverClientThreadConfig serverClientThreadConfig(m_serverConfig);
+            m_serverClientThreadsCallbacks.reserve(serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS);
+            m_serverClientThreadsCallbacksPtr.reserve(serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS + 1);
+            ClientThreadConfig clientThreadConfig(m_serverConfig);
+            
             
 
             for (unsigned int i = 0u; i < serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS; i++)
             {
-                std::string clientThreadName = m_name + "_client_handler_" + std::to_string(i);
-                serverClientThreadConfig.TIMER_NAME += std::to_string(i+1);
-                m_serverClientThreads.emplace_back(ServerClientThread<ClientThreadCallback, DataHandler>(clientThreadName, serverClientThreadConfig));
+                std::string clientThreadName = this->m_name + "_client_handler_" + std::to_string(i);
+                clientThreadConfig.TIMER_NAME += std::to_string(i+1);
+                m_serverClientThreadsCallbacks.emplace_back(ClientThreadCallback());
+                m_serverClientThreads.emplace_back(ServerClientThread<BaseClientThreadCallback, DataHandler>(static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), clientThreadConfig));
+                m_serverClientThreadsCallbacksPtr.push_back(&m_serverClientThreadsCallbacks.back());
+            }
+
+            if (m_serverConfig.ACT_AS_CLIENT_HANDLER)
+            {
+                m_serverClientThreadsCallbacksPtr.push_back(&m_serverThreadCallback);
             }
         }
 
@@ -75,27 +79,13 @@ namespace lu::platform::thread
         {
             for (auto &serverClientThread : m_serverClientThreads)
             {
-                if (serverClientThread.getServerClientThreadCallback().onInit() == false)
+                if (serverClientThread.getClientThreadCallback().onInit() == false)
                 {
                     return false;
                 }
             }
 
-            if (m_eventLoop.init() == false)
-            {
-                LOG(ERROR) << "Thread[" << m_name << "] failed to create event channel!";
-                return false;
-            }
-
-            if (m_serverConfig.TIMER_IN_MSEC != 0u)
-            {
-                if (m_timer.init() == false)
-                {
-                    LOG(ERROR) << "Thread[" << m_name << "] failed to create timer!";
-                    return false;
-                }
-            }
-
+            ClientThread<BaseClientThreadCallback, DataHandler>::init();
             return true;
         }
 
@@ -118,7 +108,7 @@ namespace lu::platform::thread
 
         void run()
         {
-            LOG(INFO) << "Started " << m_name;
+            LOG(INFO) << "Started " << this->m_name;
             m_serverThreadCallback.onStart();
             
             if (m_serverSocket.setUpTCP(m_serverConfig.NUMBER_OF_CONNECTION_IN_WAITING_QUEUE) == false)
@@ -126,34 +116,13 @@ namespace lu::platform::thread
                 return;
             }
 
-            m_serverSocket.getBaseSocket().setNonBlocking();
-            m_eventLoop.add(m_serverSocket);
-
-            if (m_serverConfig.TIMER_IN_MSEC != 0u)
-            {
-                m_timer.setToNonBlocking();
-                m_timer.start(0, (int) m_serverConfig.TIMER_IN_MSEC * 1'000'000u);
-                m_eventLoop.add(m_timer);
-            }
-
+            this->m_serverSocket.getBaseSocket().setNonBlocking();
+            this->m_eventLoop.add(m_serverSocket);
+            ClientThread<BaseClientThreadCallback, DataHandler>::run();
             m_serverThreadCallback.onStartComplete();
-            m_eventLoop.start(m_serverConfig.NUMBER_OF_EVENTS_PER_HANDLE);
+            this->m_eventLoop.start(m_serverConfig.NUMBER_OF_EVENTS_PER_HANDLE);
         }
 
-        void stop()
-        {
-            LOG(INFO) << "Stop " << m_name;
-
-            if (m_serverConfig.TIMER_IN_MSEC == 0u)
-            {
-                m_timer.init();
-                m_timer.setToNonBlocking();
-                m_eventLoop.add(m_timer);
-                m_timer.start(0, 1'000'000u, false);
-            }
-
-            m_eventLoop.stop();
-        }
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
         {
             if (m_currentClientHandler == m_serverClientThreads.size())
@@ -163,7 +132,7 @@ namespace lu::platform::thread
                     auto dataSocket = new lu::platform::socket::DataSocket<ServerThreadCallback, DataHandler>(m_serverThreadCallback, std::move(*baseSocket));
                     m_serverThreadCallback.onNewConnection(baseSocket);
                     dataSocket->getBaseSocket().setNonBlocking();
-                    m_eventLoop.add(*dataSocket);
+                    this->m_eventLoop.add(*dataSocket);
                     delete baseSocket;
                     m_currentClientHandler = 0;
                     return;
@@ -180,26 +149,23 @@ namespace lu::platform::thread
             for (auto& serverClientThread : m_serverClientThreads)
             {
                 serverClientThread.join();
-                serverClientThread.getServerClientThreadCallback().onExit();
+                serverClientThread.getClientThreadCallback().onExit();
             }
 
-            m_thread.join();
+            ClientThread<BaseClientThreadCallback, DataHandler>::join();
             m_serverThreadCallback.onExit();
         }
 
-        const auto& getName() const { return m_name; }
-        auto& getSeverClientThreads() { return m_serverClientThreads; }
+        std::vector<BaseClientThreadCallback*>& getClientThreadCallbacks() { return m_serverClientThreadsCallbacksPtr; }
 
     private:
-        std::string m_name;
         ServerThreadCallback& m_serverThreadCallback;
-        lu::platform::FDEventLoop m_eventLoop;
         lu::platform::socket::ServerSocket<ServerThread> m_serverSocket;
-        lu::platform::FDTimer<ServerThreadCallback> m_timer;
         unsigned int m_currentClientHandler{};
+        std::vector<ClientThreadCallback> m_serverClientThreadsCallbacks;
+        std::vector<BaseClientThreadCallback*> m_serverClientThreadsCallbacksPtr;
         std::vector<ServerClientThread<BaseClientThreadCallback, DataHandler>> m_serverClientThreads;
-        const SeverConfig m_serverConfig;
-        std::thread m_thread;
+        SeverConfig m_serverConfig;
     };
 }
 

@@ -1,5 +1,8 @@
 #include <platform/EventChannel.h>
 #include <platform/socket/BaseSocket.h>
+#include <platform/thread/ClientThread.h>
+#include <platform/thread/IClientThreadCallback.h>
+#include <platform/socket/data_handler/String.h>
 #include <glog/logging.h>
 
 #include <unistd.h>
@@ -50,6 +53,7 @@ bool EventChannel<EventChannelHandler>::init()
     m_in.reset(new FileDescriptor(pipeFDs[0]));
     m_out.reset(new FileDescriptor(pipeFDs[1]));
     LOG(INFO) << "File created channel out[" << (int) *m_in << "], out[" << (int) *m_out << "]";
+    return true;
 }
 
 template<lu::common::NonPtrClassOrStruct EventChannelHandler>
@@ -112,3 +116,5 @@ const lu::platform::FileDescriptor& EventChannel<EventChannelHandler>::getFD() c
 
     return *m_in;
 }
+
+template class EventChannel<lu::platform::thread::ClientThread<lu::platform::thread::IClientThreadCallback, lu::platform::socket::data_handler::String> >;

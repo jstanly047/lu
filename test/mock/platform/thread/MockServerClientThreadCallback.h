@@ -1,25 +1,25 @@
 #pragma once
 
-#include <platform/thread/ServerClientThread.h>
+#include <platform/thread/IClientThreadCallback.h>
 #include <platform/socket/data_handler/String.h>
 #include <platform/EventChannel.h>
 #include <gmock/gmock.h>
 
 namespace lu::platform::thread
 {
-    class MockServerClientThreadCallback 
+    class MockServerClientThreadCallback : public IClientThreadCallback
     {
     public:
         MockServerClientThreadCallback() {}
         MockServerClientThreadCallback(MockServerClientThreadCallback&&) {}
         MockServerClientThreadCallback& operator=(MockServerClientThreadCallback&&) { return *this; }
         
-        MOCK_METHOD(bool, onInit, ());
-        MOCK_METHOD(void, onStart, ());
-        MOCK_METHOD(void, onExit, ());
-        MOCK_METHOD(void, onNewConnection, ((lu::platform::socket::DataSocket<MockServerClientThreadCallback, lu::platform::socket::data_handler::String>* baseSocket)));
-        MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<MockServerClientThreadCallback>&));
-        MOCK_METHOD(void, onClientClose, ((lu::platform::socket::DataSocket<MockServerClientThreadCallback, lu::platform::socket::data_handler::String>&)));
-        MOCK_METHOD(void, onMessage, (void* ));
+        MOCK_METHOD(bool, onInit, (), (override));
+        MOCK_METHOD(void, onStart, (), (override));
+        MOCK_METHOD(void, onExit, (), (override));
+        MOCK_METHOD(void, onNewConnection, ((lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>* baseSocket)), (override));
+        MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<IClientThreadCallback>&), (override));
+        MOCK_METHOD(void, onClientClose, ((lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&)), (override));
+        MOCK_METHOD(void, onData, ((lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&), void* ), (override));
     };
 }
