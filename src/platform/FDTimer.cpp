@@ -1,5 +1,9 @@
 #include <platform/FDTimer.h>
 #include <platform/ITimerCallback.h>
+#include <platform/thread/IEventThreadCallback.h>
+#include <platform/thread/IClientThreadCallback.h>
+#include <platform/thread/IServerThreadCallback.h>
+#include <platform/thread/IConnectionThreadCallback.h>
 #include <glog/logging.h>
 
 #include <sys/timerfd.h>
@@ -149,3 +153,7 @@ void FDTimer<TimerCallback>::setToNonBlocking()
 
 
 template class FDTimer<ITimerCallback>;
+template class FDTimer<lu::platform::thread::IEventThreadCallback>;
+template class FDTimer<lu::platform::thread::IClientThreadCallback>;
+template class FDTimer<lu::platform::thread::IServerThreadCallback>;
+template class FDTimer<lu::platform::thread::IConnectionThreadCallback>;

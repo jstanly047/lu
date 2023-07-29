@@ -72,9 +72,8 @@ add_library(luSocketDataHandler STATIC ${LU_SOCKET_DATAH_SRC})
 
 file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
 add_library(luSocket STATIC ${LU_SOCKET_SRC})
-
 target_include_directories(luSocket PUBLIC ${PROJ_INC_DIR})
-target_link_libraries(luSocket luPlatform)
+target_link_libraries(luSocket luSocketDataHandler luPlatform)
 
 file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
 add_library(luThread STATIC ${LU_THREAD_SRC})

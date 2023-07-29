@@ -7,7 +7,7 @@ namespace lu::platform::thread
     struct SeverConfig
     {
         bool CREATE_NEW_THREAD = false;
-        bool ACT_AS_CLIENT_HANDLER = false;
+        //bool ACT_AS_CLIENT_HANDLER = false;
         unsigned int NUMBER_OF_CLIENT_HANDLE_THREADS = 2u;
         unsigned int NUMBER_OF_CONNECTION_IN_WAITING_QUEUE = 50u;
         unsigned int NUMBER_OF_EVENTS_PER_HANDLE = 10u;

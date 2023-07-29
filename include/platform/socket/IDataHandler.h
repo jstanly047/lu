@@ -9,7 +9,7 @@ namespace lu::platform::socket
     class IDataHandler
     {
     public:
-        IDataHandler();
+        IDataHandler(){}
 
         virtual uint8_t* getReceiveBufferToFill() { return nullptr; }
         virtual std::size_t getReceiveBufferSize() { return 0; }

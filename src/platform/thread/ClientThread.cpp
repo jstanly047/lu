@@ -53,7 +53,7 @@ template<lu::common::NonPtrClassOrStruct ClientThreadCallback, lu::common::NonPt
 void ClientThread<ClientThreadCallback, DataHandler>::run()
 {
     this->m_eventLoop.add(m_eventChannel);
-    ClientThread<ClientThreadCallback, DataHandler>::run();
+    EventThread<ClientThreadCallback>::run();
 }
 
 template<lu::common::NonPtrClassOrStruct ClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>

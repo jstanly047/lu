@@ -1,6 +1,8 @@
 #include<platform/socket/DataSocket.h>
 #include<platform/socket/IDataHandler.h>
 #include<platform/socket/IDataSocketCallback.h>
+#include<platform/thread/IClientThreadCallback.h>
+#include<platform/thread/IConnectionThreadCallback.h>
 #include <platform/defs.h>
 #include <utils/Utils.h>
 
@@ -256,3 +258,6 @@ void DataSocket<DataSocketCallback, DataHandler>::onEvent(struct ::epoll_event& 
 }
 
 template class DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>;
+template class DataSocket<IDataSocketCallback<data_handler::String>, data_handler::String>;
+template class DataSocket<lu::platform::thread::IClientThreadCallback, data_handler::String>;
+template class DataSocket<lu::platform::thread::IConnectionThreadCallback, data_handler::String>;

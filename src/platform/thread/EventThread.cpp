@@ -1,5 +1,9 @@
 #include <platform/thread/EventThread.h>
 #include <platform/thread/IEventThreadCallback.h>
+#include <platform/thread/IServerThreadCallback.h>
+#include <platform/thread/IClientThreadCallback.h>
+#include <platform/thread/IConnectionThreadCallback.h>
+
 #include <glog/logging.h>
 
 using namespace lu::platform::thread;
@@ -61,9 +65,7 @@ bool EventThread<EventThreadCallback>::init()
         }
     }
 
-    m_severEventThreadCallback.onInit();
-
-    return true;
+    return m_severEventThreadCallback.onInit();
 }
 
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
@@ -78,7 +80,7 @@ void EventThread<EventThreadCallback>::run()
         m_eventLoop.add(m_timer);
         m_timer.start(0, (int) m_clientThreadConfig.TIMER_IN_MSEC * 1'000'1000);
     }
-
+    m_severEventThreadCallback.onStartComplete();
     m_eventLoop.start(m_clientThreadConfig.NUMBER_OF_EVENTS_PER_HANDLE);
 }
 
@@ -106,3 +108,6 @@ void EventThread<EventThreadCallback>::join()
 }
 
 template class EventThread<IEventThreadCallback>;
+template class EventThread<IServerThreadCallback>;
+template class EventThread<IClientThreadCallback>;
+template class EventThread<IConnectionThreadCallback>;

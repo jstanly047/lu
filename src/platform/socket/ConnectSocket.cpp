@@ -1,6 +1,9 @@
-#include<platform/socket/ConnectSocket.h>
-#include<platform/socket/IDataHandler.h>
-#include<platform/socket/IDataSocketCallback.h>
+#include <platform/socket/ConnectSocket.h>
+#include <platform/socket/IDataHandler.h>
+#include <platform/socket/IDataSocketCallback.h>
+#include <platform/socket/data_handler/String.h>
+#include <platform/thread/IConnectionThreadCallback.h>
+
 #include <platform/defs.h>
 
 #include <unistd.h>
@@ -86,6 +89,7 @@ bool ConnectSocket<DataSocketCallback, DataHandler>::connectToTCP(DataSocketCall
     if  (fd == lu::platform::NULL_FD)
     {
         ::freeaddrinfo(servAddr);
+        LOG(ERROR) << "Can create connection to " << m_host << ":" << m_service;
         return false;
     }
 
@@ -96,3 +100,5 @@ bool ConnectSocket<DataSocketCallback, DataHandler>::connectToTCP(DataSocketCall
 }
 
 template class ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler>;
+template class ConnectSocket<IDataSocketCallback<data_handler::String>, data_handler::String>;
+template class ConnectSocket<lu::platform::thread::IConnectionThreadCallback, data_handler::String>;

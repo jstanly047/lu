@@ -1,6 +1,7 @@
 #include <platform/socket/ServerSocket.h>
 #include <platform/socket/IDataHandler.h>
 #include <platform/socket/IServerSocketCallback.h>
+#include <platform/thread/IServerThreadCallback.h>
 #include <platform/defs.h>
 #include <glog/logging.h>
 
@@ -12,7 +13,7 @@
 #include <netdb.h>
 #include <csignal>
 
-
+/*
 using namespace lu::platform::socket;
 
 template<lu::common::NonPtrClassOrStruct ServerSocketCallback>
@@ -175,3 +176,5 @@ void ServerSocket<ServerSocketCallback>::stop()
 }
 
 template class ServerSocket<lu::platform::socket::IServerSocketCallback>;
+template class ServerSocket<lu::platform::thread::IServerThreadCallback>;
+*/
