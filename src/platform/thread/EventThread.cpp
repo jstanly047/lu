@@ -13,10 +13,10 @@ EventThread<EventThreadCallback>::EventThread(EventThreadCallback& severEventThr
     const std::string& name, EventThreadConfig serverConfig)
     :
     m_name(name),
-    m_severEventThreadCallback(severEventThreadCallback),
+    m_eventThreadCallback(severEventThreadCallback),
     m_clientThreadConfig(serverConfig),
     m_eventLoop(),
-    m_timer(m_severEventThreadCallback, serverConfig.TIMER_NAME),
+    m_timer(m_eventThreadCallback, serverConfig.TIMER_NAME),
     m_thread()
 {
 
@@ -25,7 +25,7 @@ EventThread<EventThreadCallback>::EventThread(EventThreadCallback& severEventThr
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 EventThread<EventThreadCallback>::EventThread(EventThread&& other):
     m_name(std::move(other.m_name)),
-    m_severEventThreadCallback(other.m_severEventThreadCallback),
+    m_eventThreadCallback(other.m_eventThreadCallback),
     m_clientThreadConfig(std::move(other.m_clientThreadConfig)),
     m_eventLoop(std::move(other.m_eventLoop)),
     m_timer(std::move(other.m_timer)),
@@ -39,7 +39,7 @@ template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 EventThread<EventThreadCallback>& EventThread<EventThreadCallback>::operator=(EventThread<EventThreadCallback>&& other)
 {
     m_name = std::move(other.m_name);
-    m_severEventThreadCallback = std::move(other.m_severEventThreadCallback);
+    m_eventThreadCallback = std::move(other.m_eventThreadCallback);
     m_clientThreadConfig = other.m_clientThreadConfig;
     m_eventLoop = std::move(other.m_eventLoop);
     m_timer = std::move(other.m_timer);
@@ -65,22 +65,23 @@ bool EventThread<EventThreadCallback>::init()
         }
     }
 
-    return m_severEventThreadCallback.onInit();
+    return m_eventThreadCallback.onInit();
 }
 
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 void EventThread<EventThreadCallback>::run()
 {
     LOG(INFO) << "Started " << m_name;
-    m_severEventThreadCallback.onStart();
-
     if (m_clientThreadConfig.TIMER_IN_MSEC != 0u)
     {
         m_timer.setToNonBlocking();
         m_eventLoop.add(m_timer);
-        m_timer.start(0, (int) m_clientThreadConfig.TIMER_IN_MSEC * 1'000'1000);
+        int sec = m_clientThreadConfig.TIMER_IN_MSEC / 1'000;
+        int mSec = m_clientThreadConfig.TIMER_IN_MSEC % 1'000;
+        m_timer.start(sec, mSec * 1'000'000);
     }
-    m_severEventThreadCallback.onStartComplete();
+
+    m_eventThreadCallback.onStart();
     m_eventLoop.start(m_clientThreadConfig.NUMBER_OF_EVENTS_PER_HANDLE);
 }
 
@@ -104,7 +105,7 @@ template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 void EventThread<EventThreadCallback>::join()
 {
     m_thread.join();
-    m_severEventThreadCallback.onExit();
+    m_eventThreadCallback.onExit();
 }
 
 template class EventThread<IEventThreadCallback>;

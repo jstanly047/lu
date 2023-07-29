@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <cstring>
-#include<string>
+#include <string>
 
 using namespace lu::platform::socket;
 
@@ -135,14 +135,14 @@ void DataSocket<DataSocketCallback, DataHandler>::readMessages()
         {
             // TODO the reader function must handle the alignment and endianess
             expectedMsgSize = m_dataHandler.readHeader(m_readOffset);
-            updateForDataRead(m_headerSize);
+            //updateForDataRead(m_headerSize);
         }
         else
         {
             return;
         }
 
-        if (m_numberOfBytesLeftToRead >= expectedMsgSize)
+        if (m_numberOfBytesLeftToRead + m_headerSize >= expectedMsgSize)
         {
             m_dataSocketCallback.onData(*this, m_dataHandler.readMessage(m_readOffset, expectedMsgSize));
             updateForDataRead(expectedMsgSize);
@@ -162,11 +162,12 @@ int DataSocket<DataSocketCallback, DataHandler>::sendMsg(void* buffer, ssize_t s
     }
 
     ssize_t totalSent = 0;
+    auto uint8_tBuffer = reinterpret_cast<uint8_t*>(buffer);
 
     while (totalSent < size)
     {
         //TODO we can try replace this by ::writev (scatter/gather IO)
-        ssize_t numBytesSend = ::send(m_baseSocket.getFD(), buffer, size, MSG_DONTWAIT);
+        ssize_t numBytesSend = ::send(m_baseSocket.getFD(), uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
 
         if (numBytesSend < 0)
         {

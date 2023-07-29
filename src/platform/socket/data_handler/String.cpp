@@ -17,5 +17,7 @@ unsigned int String::readHeader(std::size_t offset)
 
 void* String::readMessage(std::size_t offset, std::size_t size)
 {
-    return (void*) new std::string(m_buffer.get() + offset, m_buffer.get() + offset + size);
+    auto newMessage = new Message();
+    std::memcpy(newMessage, (void*) (m_buffer.get() + offset), size);
+    return newMessage;
 }

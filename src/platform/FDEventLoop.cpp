@@ -94,6 +94,7 @@ void FDEventLoop::start(int maxEvents)
                 return;
             }
 
+            m_epollFD = lu::platform::NULL_FD;
             LOG(INFO) << "Stoped FD[" << m_epollFD << "] event pool!";
             break;
         }

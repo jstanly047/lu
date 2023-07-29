@@ -2,9 +2,6 @@
 #include <platform/thread/EventThread.h>
 #include <platform/socket/DataSocket.h>
 #include <platform/socket/ConnectSocket.h>
-#include <platform/socket/data_handler/String.h>
-#include <platform/socket/IDataSocketCallback.h>
-#include <platform/socket/data_handler/String.h>
 
 #include <memory>
 #include <list>
@@ -51,7 +48,7 @@ namespace lu::platform::thread
                 service.connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataHandler>(service.host, service.service));
             }
 
-            EventThread<ConnectionThreadCallback>::init();
+            return EventThread<ConnectionThreadCallback>::init();
         }
 
         void start(bool createThread = false)
@@ -67,7 +64,7 @@ namespace lu::platform::thread
                 return;
             }
 
-            std::thread(&ConnectionThread::run, this);
+            this->m_thread = std::thread(&ConnectionThread::run, this);
         }
 
         void run()
@@ -79,6 +76,7 @@ namespace lu::platform::thread
                     continue;
                 }
 
+                m_connectionThreadCallback.onConnection(*service.connection);
                 this->m_eventLoop.add(*(service.connection->getDataSocket()));
             }
 

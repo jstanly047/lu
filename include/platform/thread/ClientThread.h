@@ -22,6 +22,7 @@ namespace lu::platform::thread
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket);
 
         const lu::platform::EventChannel<ClientThread>& getEventChannel() const { return m_eventChannel; }
+        ClientThreadCallback& getCallback() { return m_clientThreadCallback; }
 
     private:
         ClientThreadCallback& m_clientThreadCallback;

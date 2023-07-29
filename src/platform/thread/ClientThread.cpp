@@ -40,13 +40,13 @@ bool ClientThread<ClientThreadCallback, DataHandler>::init()
         return false;
     }
 
-    return ClientThread<ClientThreadCallback, DataHandler>::init();
+    return EventThread<ClientThreadCallback>::init();
 }
 
 template<lu::common::NonPtrClassOrStruct ClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>
 void ClientThread<ClientThreadCallback, DataHandler>::start()
 {
-    std::thread(&ClientThread::run, this);
+    this->m_thread = std::thread(&ClientThread::run, this);
 }
 
 template<lu::common::NonPtrClassOrStruct ClientThreadCallback, lu::common::NonPtrClassOrStruct DataHandler>

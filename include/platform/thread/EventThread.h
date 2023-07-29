@@ -26,14 +26,14 @@ namespace lu::platform::thread
         void join();
 
         const std::string& getName() const { return m_name; }
-        EventThreadCallback& getEventThreadCallback() { return m_severEventThreadCallback; }
+        EventThreadCallback& getEventThreadCallback() { return m_eventThreadCallback; }
 
     protected:
         EventThread(EventThreadCallback& severEventThreadCallback, const std::string& name, EventThreadConfig clientThreadConfig);
         virtual ~EventThread() {}
 
         std::string m_name;
-        EventThreadCallback& m_severEventThreadCallback;
+        EventThreadCallback& m_eventThreadCallback;
         EventThreadConfig m_clientThreadConfig;
         lu::platform::FDEventLoop m_eventLoop;
         lu::platform::FDTimer<EventThreadCallback> m_timer;

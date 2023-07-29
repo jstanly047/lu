@@ -43,7 +43,7 @@ FDTimer<TimerCallback>& FDTimer<TimerCallback>::operator=(FDTimer<TimerCallback>
 {
     m_fd = std::move(other.m_fd);
     m_interval = other.m_interval;
-    m_timerCallback = std::move(other.m_timerCallback);
+    m_timerCallback = other.m_timerCallback;
     m_name = std::move(other.m_name);
     m_stop = std::move(other.m_stop);
     return *this;
@@ -84,7 +84,7 @@ bool FDTimer<TimerCallback>::start(int intervalInSec, int interValInNonSec, bool
 
     if (::timerfd_settime(*m_fd, 0, &m_interval, nullptr) == -1) 
     {
-        LOG(ERROR) << "Failed to set timer!";
+        LOG(ERROR) << "Failed to set timer for fd[" << (int) *m_fd <<"]!";
         return false;
     }
 

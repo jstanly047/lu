@@ -74,7 +74,7 @@ void ServerThread<ServerThreadCallback, SeverClientThreadCallback, DataHandler>:
 
     if (m_serverConfig.CREATE_NEW_THREAD)
     {
-        std::thread(&ServerThread::run, this);
+        this->m_thread = std::thread(&ServerThread::run, this);
     }
     else
     {

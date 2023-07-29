@@ -15,11 +15,11 @@ namespace lu::platform::thread
         MockServerThreadCallback(MockServerThreadCallback&&) {}
         MockServerThreadCallback& operator=(MockServerThreadCallback&&) { return *this; }
 
-        MOCK_METHOD(bool, onInit, ());
-        MOCK_METHOD(void, onStart, ());
-        MOCK_METHOD(void, onStartComplete, ());
-        MOCK_METHOD(void, onExit, ());
-        MOCK_METHOD(void, onNewConnection, (lu::platform::socket::BaseSocket* baseSocket));
-        MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<IServerThreadCallback>&));
+        MOCK_METHOD(bool, onInit, (), (override));
+        MOCK_METHOD(void, onStart, (), (override));
+        //MOCK_METHOD(void, onStartComplete, ());
+        MOCK_METHOD(void, onExit, (), (override));
+        MOCK_METHOD(void, onNewConnection, (lu::platform::socket::BaseSocket* baseSocket), (override));
+        MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<IServerThreadCallback>&), (override));
     };
 }

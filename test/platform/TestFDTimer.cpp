@@ -49,7 +49,6 @@ TEST_F(TestFDTimerTest, moveConstruct)
 {
     EXPECT_CALL(mockTimerCallback, onTimer(::testing::Ref(*fdTimer))).Times(0);
     lu::platform::FDTimer<lu::platform::ITimerCallback> tempFDTimer(std::move(*fdTimer));
-    tempFDTimer.init();
     int flags = ::fcntl(fd, F_GETFL);
     ASSERT_NE(flags, lu::platform::NULL_FD);
     ASSERT_EQ(fdTimer->getFD(), nullptr);
@@ -62,7 +61,6 @@ TEST_F(TestFDTimerTest, moveOperator)
 {
     EXPECT_CALL(mockTimerCallback, onTimer(::testing::Ref(*fdTimer))).Times(0);
     *fdTimer = lu::platform::FDTimer<lu::platform::ITimerCallback>(mockTimerCallback, "NewTimer");
-    fdTimer->init();
     int flags = ::fcntl(fd, F_GETFL);
     ASSERT_EQ(flags, lu::platform::NULL_FD);
     int tempFD = fdTimer->getFD();
