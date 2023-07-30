@@ -50,12 +50,11 @@ namespace lu::platform::thread
 
             for (unsigned int i = 0u; i < serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS; i++)
             {
-                std::string clientThreadName = this->m_name + "_client_handler_" + std::to_string(i);
+                std::string clientThreadName = this->m_name + "_" + std::to_string(i+1);
                 eventThreadConfig.TIMER_NAME += std::to_string(i+1);
                 m_serverClientThreadsCallbacks.emplace_back(ClientThreadCallback());
-                m_serverClientThreads.emplace_back(new ClientThread<BaseClientThreadCallback, DataHandler>(
-                        static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), clientThreadName,
-                        eventThreadConfig));
+                m_serverClientThreads.emplace_back(std::make_unique<ClientThread<BaseClientThreadCallback, DataHandler>>(static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), 
+                                                clientThreadName, eventThreadConfig));
                 m_serverClientThreadsCallbacksPtr.push_back(&m_serverClientThreadsCallbacks.back());
             }
         }
@@ -138,7 +137,7 @@ namespace lu::platform::thread
         unsigned int m_currentClientHandler{};
         std::vector<ClientThreadCallback> m_serverClientThreadsCallbacks;
         std::vector<BaseClientThreadCallback*> m_serverClientThreadsCallbacksPtr;
-        std::vector<ClientThread<BaseClientThreadCallback, DataHandler>*> m_serverClientThreads;
+        std::vector<std::unique_ptr<ClientThread<BaseClientThreadCallback, DataHandler>>> m_serverClientThreads;
         SeverConfig m_serverConfig;
     };
 }

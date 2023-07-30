@@ -8,6 +8,8 @@
 
 using namespace lu::platform::thread;
 
+thread_local std::string lu::platform::thread::gtlThreadName="None";
+
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 EventThread<EventThreadCallback>::EventThread(EventThreadCallback& severEventThreadCallback,
     const std::string& name, EventThreadConfig serverConfig)
@@ -72,6 +74,7 @@ template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 void EventThread<EventThreadCallback>::run()
 {
     LOG(INFO) << "Started " << m_name;
+    gtlThreadName = m_name;
     if (m_clientThreadConfig.TIMER_IN_MSEC != 0u)
     {
         m_timer.setToNonBlocking();

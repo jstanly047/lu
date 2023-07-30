@@ -3,7 +3,10 @@
 
 int main(int argc, char **argv)
 {
-    ::testing::InitGoogleTest(&argc, argv);
     google::InitGoogleLogging(argv[0]);
-    return RUN_ALL_TESTS();
+    FLAGS_minloglevel = google::WARNING;
+    ::testing::InitGoogleTest(&argc, argv);
+    int testResult = RUN_ALL_TESTS();
+    google::ShutdownGoogleLogging();
+    return testResult;
 }

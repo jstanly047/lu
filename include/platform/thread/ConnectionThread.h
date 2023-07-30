@@ -76,7 +76,7 @@ namespace lu::platform::thread
                     continue;
                 }
 
-                m_connectionThreadCallback.onConnection(*service.connection);
+                m_connectionThreadCallback.onConnection(*(service.connection->getDataSocket()));
                 this->m_eventLoop.add(*(service.connection->getDataSocket()));
             }
 

@@ -9,7 +9,7 @@
 
 namespace lu::platform::thread
 {
-    
+    extern thread_local std::string gtlThreadName;
 
     template<lu::common::NonPtrClassOrStruct EventThreadCallback>
     class EventThread
