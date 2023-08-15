@@ -1,0 +1,9 @@
+Upload prebuild binary
+conan export-pkg --name lu_platform --version 1.0 --user lu --channel stable  -s build_type=Release .
+  
+Ex conanfile.txt
+[requires]
+lu_platform/1.0@lu/stable
+
+[generators]
+CMakeToolchain
