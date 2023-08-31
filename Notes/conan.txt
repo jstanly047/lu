@@ -1,3 +1,6 @@
+Build
+conan build . -o UnitTest=True --settings build_type=Release
+
 Upload prebuild binary
 conan export-pkg --name lu_platform --version 1.0 --user lu --channel stable  -s build_type=Release .
   
