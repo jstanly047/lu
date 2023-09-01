@@ -1,5 +1,109 @@
+ConanFile
+Ex:
+==========================================================================
+[requires]
+zlib/1.2.11
+
+[tool_requires]
+cmake/3.22.6
+
+[generators]
+CMakeDeps
+CMakeToolchain
+==========================================================================
+
+conan install . --output-folder=build --build=missing
+cd build
+source conanbuild.sh        //this will change environment variable so the it will select cmake 3.22.6
+cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+
+
+source deactivate_conanbuild.sh         // revert the change done by source conanbuild.sh
+* In Cmake file you can put this print version of cmake
+==========================================================================
+message("Building with CMake version: ${CMAKE_VERSION}")
+==========================================================================
+
+* You can explicitly specify the profile or you can change a setting of a profile
+conan install . --build=missing --profile=default
+conan install . --output-folder=build --build=missing --settings=build_type=Debug
+
+* Using option we can specify linking types
+conan install . --output-folder=build --build=missing --options=zlib/1.2.11:shared=True
+
+* Use below to set and reset the path for run/execution dependency (like shared library path)
+source conanrun.sh
+source deactivate_conanrun.sh
+
+conanfile.py
+* You can add required and requirements so we dont need a conanfile.txt
+==========================================================================
+def requirements(self):
+        self.requires("zlib/1.2.11")
+
+def build_requirements(self):
+        self.tool_requires("cmake/3.22.6")
+==========================================================================
+conan install . --output-folder build --build=missing
+cd build
+source conanbuild.sh
+cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+
+
+* Instead of giving --output-folder option we can use layout to change the path based on other requirements
+==============================================================================================================
+def layout(self):
+        multi = True if self.settings.get_safe("compiler") == "msvc" else False
+        if multi:
+            self.folders.generators = os.path.join("build", "generators")
+        else:
+            self.folders.generators = os.path.join("build", str(self.settings.build_type), "generators")
+==============================================================================================================
+conan install . --build=missing
+cd build
+source ./Release/generators/conanbuild.sh
+cmake .. -DCMAKE_TOOLCHAIN_FILE=Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+
+* To use default build in layout method use below
+==============================================================================================================
+def layout(self):
+        cmake_layout(self)
+==============================================================================================================
+
+* use Validate to do validation and stop build
+==============================================================================================================
+def validate(self):
+        if self.settings.os == "Macos" and self.settings.arch == "armv8":
+            raise ConanInvalidConfiguration("ARM v8 not supported in Macos")
+==============================================================================================================
+
+
+* Cross compiling 
+conan install . --build=missing --profile:host=someprofile --profile:build=default
+profile:build: This is the profile that defines the platform where the binaries will be built.
+profile:host: This is the profile that defines the platform where the built binaries will run
+
+*Version ranges
+==============================================================================================================
+    def requirements(self):
+        self.requires("zlib/[~1.2]")
+    def build_requirements(self):
+        self.tool_requires("cmake/[>3.10]")
+==============================================================================================================
+hat requires contains the expression zlib/[~1.2], which means “approximately” 1.2 version, that means, it can resolve to any zlib/1.2.8, 
+zlib/1.2.11 or zlib/1.2.12, but it will not resolve to something like zlib/1.3.0. Among the available matching versions, a version range 
+will always pick the latest one.
+
+==============================================================================================================
+def requirements(self):
+    self.requires("zlib/1.2.12#87a7211557b6690ef5bf7fc599dd8349")
+==============================================================================================================
+
 Build
-conan build . -o UnitTest=True --settings build_type=Release
+conan build . --output-folder=build --build=missing -o UNIT_TEST=True --settings build_type=Release
 
 Upload prebuild binary
 conan export-pkg --name lu_platform --version 1.0 --user lu --channel stable  -s build_type=Release .

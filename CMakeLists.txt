@@ -12,9 +12,9 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/bin)
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/lib)
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/lib)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/bin)
 
 ############################################################################
 #Include and Headers
@@ -92,6 +92,7 @@ target_link_libraries(luThread luSocket)
 ############################################################################
 if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
+    find_package(GTest REQUIRED)
 
     file(GLOB LU_MOCK_SOCKET_SRC  ./test/mock/platform/socket/*.h)
     add_library(luMockSocket STATIC ${LU_MOCK_SOCKET_SRC})
@@ -115,6 +116,8 @@ if (UNIT_TEST)
                             ${TEST_THREAD_SRC}
                             ${TEST_PlATFORM_SRC})
 
+    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS})
+
     target_link_libraries(LuTests
                             luPlatform
                             utils
@@ -125,8 +128,8 @@ if (UNIT_TEST)
                             luThread
                             luMockThread
                             glog
-                            gtest
-                            gmock
+                            GTest::gtest
+                            GTest::gmock
                             )
 
 endif(UNIT_TEST)
