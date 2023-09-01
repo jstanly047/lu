@@ -1,7 +1,7 @@
 import os
 from conan import ConanFile
 from conan.tools.files import copy
-from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
+from conan.tools.cmake import CMakeToolchain,CMakeDeps, CMake, cmake_layout
 
 class snapafwRecipe(ConanFile):
     name = "lu_platform"
@@ -29,26 +29,28 @@ class snapafwRecipe(ConanFile):
     }
 
     def config_options(self):
-        if self.settings.build_type == "Release":
-            self.options.COV_BUILD = False
-        elif self.settings.build_type == "Coverage":
+        if self.settings.COV_BUILD:
             self.options.UNIT_TEST = True
-            self.options.COV_BUILD = True
+        elif self.settings.build_type == "Debug":
+            self.options.UNIT_TEST = True
 
     def configure(self):
         pass
 
     def layout(self):
         cmake_layout(self)
-        #self.cpp.source.includedirs = ["include"]
+        self.cpp.source.includedirs = ["include"]
         #self.cpp.build.libdirs = ["dist/lib"]
         #self.cpp.build.bindirs = ["dist/bin"]
 
     def requirements(self):
         if self.options.UNIT_TEST:
             self.test_requires("gtest/1.14.0")
+        self.requires("glog/0.6.0")
     
     def generate(self):
+        cmake = CMakeDeps(self)
+        cmake.generate()
         tc = CMakeToolchain(self)
         if self.options.UNIT_TEST:
             tc.variables["UNIT_TEST"] = True
@@ -58,15 +60,17 @@ class snapafwRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
+        cmake.parallel = True
         cmake.configure()
         cmake.build()
-        #if not self.conf.get("tools.build:skip_test", default=False):
-        #    self.run(os.path.join(self.cpp.build.bindirs[0], "LuTests"))
+        if self.options.UNIT_TEST:
+            self.run(os.path.join(self.cpp.build.bindirs[0], "LuTests"))
 
     def package(self):
-        print("sdfsdf")
-        copy(self, "*.h", self.cpp.source.includedirs[0], os.path.join(self.package_folder, "include"), keep_path=True)
-        copy(self, "*.a", self.cpp.build.libdirs[0], os.path.join(self.package_folder, "lib"), keep_path=True)
+        print(os.path.join(self.source_folder, "include"))
+        print(self.build_folder)
+        copy(self, "*.h", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"), keep_path=True)
+        copy(self, "*.a", self.build_folder, os.path.join(self.package_folder, "lib"), keep_path=True)
 
     def package_info(self):
         self.cpp_info.libs = ["lu_platform"]

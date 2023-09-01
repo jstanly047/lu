@@ -104,9 +104,11 @@ def requirements(self):
 
 Build
 conan build . --output-folder=build --build=missing -o UNIT_TEST=True --settings build_type=Release
+conan build . -o UNIT_TEST=True --settings build_type=Release --build=missing
 
 Upload prebuild binary
 conan export-pkg --name lu_platform --version 1.0 --user lu --channel stable  -s build_type=Release .
+  onan export-pkg --user lu --channel stable  -s build_type=Release .
   
 Ex conanfile.txt
 [requires]

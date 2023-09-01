@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(joutillib)
-
 option(UNIT_TEST "Build for unit testing" OFF)
 option(COV_BUILD "Flag to enable unit test build" OFF)
 
@@ -15,12 +14,6 @@ endif()
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/lib)
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/lib)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist/bin)
-
-############################################################################
-#Include and Headers
-############################################################################
-include_directories (${PROJ_INC_DIR})
-include_directories (${PROJ_TEST_INC_DIR})
 
 ############################################################################
 # End Inlcudes and headers
@@ -46,12 +39,14 @@ if(COV_BUILD)
 endif()
 
 
+find_package(glog REQUIRED)
+
 ############################################################################
 #Build Libraries
 ############################################################################
 file(GLOB UTILS_SRC  ./src/common/*.cpp)
 add_library(lucommon STATIC ${UTILS_SRC})
-target_include_directories(lucommon PUBLIC ${PROJ_INC_DIR}/common)
+target_include_directories(lucommon PUBLIC ${PROJ_INC_DIR})
 
 file(GLOB UTILS_SRC  ./src/utils/*.cpp)
 add_library(utils STATIC ${UTILS_SRC})
@@ -61,24 +56,20 @@ target_include_directories(utils PUBLIC ${PROJ_INC_DIR})
 #add_library(queue STATIC ${QUEUE_SRC})
 #target_include_directories(queue PUBLIC ${PROJ_INC_DIR})
 
-
 file(GLOB LU_PLATFORM_SRC  ./src/platform/*.cpp)
 add_library(luPlatform STATIC ${LU_PLATFORM_SRC})
-target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR})
-
+target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR} ${glog_INCLUDE_DIRS})
 
 file(GLOB LU_SOCKET_DATAH_SRC  ./src/platform/socket/data_handler/*.cpp)
-add_library(luSocketDataHandler STATIC ${LU_SOCKET_DATAH_SRC})
+add_library(luSocketDataHandler STATIC ${LU_SOCKET_DATAH_SRC} )
+target_include_directories(luSocketDataHandler PUBLIC ${PROJ_INC_DIR})
 
 file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
 add_library(luSocket STATIC ${LU_SOCKET_SRC})
-target_include_directories(luSocket PUBLIC ${PROJ_INC_DIR})
 target_link_libraries(luSocket luSocketDataHandler luPlatform)
 
 file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
 add_library(luThread STATIC ${LU_THREAD_SRC})
-
-target_include_directories(luThread PUBLIC ${PROJ_INC_DIR})
 target_link_libraries(luThread luSocket)
 
 
@@ -97,10 +88,12 @@ if (UNIT_TEST)
     file(GLOB LU_MOCK_SOCKET_SRC  ./test/mock/platform/socket/*.h)
     add_library(luMockSocket STATIC ${LU_MOCK_SOCKET_SRC})
     target_link_libraries(luMockSocket luSocket)
+    target_include_directories(luMockSocket PUBLIC ${PROJ_TEST_INC_DIR})
 
     file(GLOB LU_MOCK_THREAD_SRC  ./test/mock/platform/thread/*.h)
     add_library(luMockThread STATIC ${LU_MOCK_THREAD_SRC})
     target_link_libraries(luMockThread luThread)
+    target_include_directories(luMockThread PUBLIC ${PROJ_TEST_INC_DIR})
 
     file(GLOB TEST_UTILS_SRC ./test/utils/*.cpp)
     file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
@@ -127,7 +120,7 @@ if (UNIT_TEST)
                             luMockSocket
                             luThread
                             luMockThread
-                            glog
+                            glog::glog
                             GTest::gtest
                             GTest::gmock
                             )
