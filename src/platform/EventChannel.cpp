@@ -21,7 +21,6 @@ EventChannel<EventChannelHandler>::EventChannel(EventChannelHandler& eventChanne
 
 }
 
-
 template<lu::common::NonPtrClassOrStruct EventChannelHandler>
 EventChannel<EventChannelHandler>::EventChannel(EventChannel<EventChannelHandler>&& other):
     m_eventChannelHandler(other.m_eventChannelHandler),
@@ -93,17 +92,6 @@ template<lu::common::NonPtrClassOrStruct EventChannelHandler>
 const lu::platform::FileDescriptor& EventChannel<EventChannelHandler>::getInFD() const
 {
     return getFD();
-}
-
-template<lu::common::NonPtrClassOrStruct EventChannelHandler>
-const lu::platform::FileDescriptor& EventChannel<EventChannelHandler>::getOutFD() const
-{
-    if (m_out == nullptr)
-    {
-        return nullFileDescriptor;
-    }
-
-    return *m_out;
 }
 
 template<lu::common::NonPtrClassOrStruct EventChannelHandler>

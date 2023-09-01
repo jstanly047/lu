@@ -30,7 +30,6 @@ namespace lu::platform::socket
         BaseSocket& getBaseSocket() { return m_baseSocket; }
         const std::string& getIP() const { return m_baseSocket.getIP(); }
         int getPort() const { return m_baseSocket.getPort(); }
-        auto& getDataHandler() { return m_dataHandler; }
 
     private:
         inline void readMessages();

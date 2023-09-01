@@ -25,7 +25,7 @@ namespace lu::platform
         bool init();
         bool start(int intervalInSec, int interValInNonSec, bool repeat=true);
         bool stop();
-        void setToNonBlocking();
+        bool setToNonBlocking();
 
         const FileDescriptor& getFD() const;
         const auto& getName() const { return m_name; }

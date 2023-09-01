@@ -346,7 +346,7 @@ namespace lu::queue
     };
 
 
-      template<class T, unsigned SIZE, bool MINIMIZE_CONTENTION = true, bool MAXIMIZE_THROUGHPUT = true, bool TOTAL_ORDER = false, bool SPSC = false>
+    template<class T, unsigned SIZE, bool MINIMIZE_CONTENTION = true, bool MAXIMIZE_THROUGHPUT = true, bool TOTAL_ORDER = false, bool SPSC = false>
     class AtomicQueue2 : public QueueBase<AtomicQueue2<T, SIZE, MINIMIZE_CONTENTION, MAXIMIZE_THROUGHPUT, TOTAL_ORDER, SPSC>> {
         using Base = QueueBase<AtomicQueue2<T, SIZE, MINIMIZE_CONTENTION, MAXIMIZE_THROUGHPUT, TOTAL_ORDER, SPSC>>;
         using State = typename Base::State;
@@ -386,8 +386,6 @@ namespace lu::queue
     struct RetryDecorator : Queue 
     {
         using T = typename Queue::value_type;
-
-        using Queue::Queue;
 
         void push(T element) noexcept 
         {

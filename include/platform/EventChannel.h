@@ -37,8 +37,7 @@ namespace lu::platform
         bool init();
         bool notify(const EventData& eventData) const;
         const FileDescriptor& getInFD() const;
-        const FileDescriptor& getOutFD() const;
-
+        
     private:
         void onEvent(struct ::epoll_event& event) override final;
         const FileDescriptor& getFD() const override final;

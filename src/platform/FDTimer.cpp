@@ -56,7 +56,6 @@ bool FDTimer<TimerCallback>::init()
     
     if (fd == NULL_FD) 
     {
-        LOG(ERROR) << "Failed to create timer fd!";
         return false;
     }
 
@@ -84,7 +83,6 @@ bool FDTimer<TimerCallback>::start(int intervalInSec, int interValInNonSec, bool
 
     if (::timerfd_settime(*m_fd, 0, &m_interval, nullptr) == -1) 
     {
-        LOG(ERROR) << "Failed to set timer for fd[" << (int) *m_fd <<"]!";
         return false;
     }
 
@@ -135,7 +133,6 @@ bool FDTimer<TimerCallback>::stop()
 
     if (::timerfd_settime(*m_fd, 0, &m_interval, nullptr) == -1) 
     {
-        LOG(ERROR) << "Failed to stop the timer!";
         return false;
     }
 
@@ -143,12 +140,9 @@ bool FDTimer<TimerCallback>::stop()
 }
 
 template<lu::common::NonPtrClassOrStruct TimerCallback>
-void FDTimer<TimerCallback>::setToNonBlocking()
+bool FDTimer<TimerCallback>::setToNonBlocking()
 {
-    if (m_fd->setToNonBlocking() == false)
-    {
-        LOG(ERROR) << "Can not set non blocking for timer fd " << (int) *m_fd << "!";
-    }
+    return m_fd->setToNonBlocking();
 }
 
 

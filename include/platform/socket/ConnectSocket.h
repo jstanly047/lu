@@ -22,7 +22,6 @@ namespace lu::platform::socket
         const std::string& getHost() const { return m_host;}
         const std::string& getService() const { return m_service; }
         BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
-        int sendMsg(void* buffer, ssize_t size) { return m_dataSocket->sendMsg(buffer, size); }
         std::unique_ptr<DataSocket<DataSocketCallback, DataHandler> >& getDataSocket() { return m_dataSocket; }
 
     private:

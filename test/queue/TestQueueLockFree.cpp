@@ -77,7 +77,7 @@ TEST_F(TestQueueLockFree, consumerProducerSequenceCheckForSPSC)
     }
 }
 
-TEST_F(TestQueueLockFree, consumerSPSCNoMINIMIZE_CONTENTION)
+TEST_F(TestQueueLockFree, consumerSPSC_NoMINIMIZE_CONTENTION)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue<unsigned int*, QUEUE_SIZE, nullptr,  false, true, false, true> >;
     AtomicQueue testQueue{};
@@ -122,7 +122,7 @@ TEST_F(TestQueueLockFree, consumerSPSCNoMINIMIZE_CONTENTION)
     }
 }
 
-TEST_F(TestQueueLockFree, consumerProducerSequenceCheck_SPSC_On_MPMC)
+TEST_F(TestQueueLockFree, consumerProducerSequenceCheck_MPMC_1P_1C)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
@@ -166,7 +166,7 @@ TEST_F(TestQueueLockFree, consumerProducerSequenceCheck_SPSC_On_MPMC)
     }
 }
 
-TEST_F(TestQueueLockFree, consumerProducerCheckMPSC_On_MPSC)
+TEST_F(TestQueueLockFree, consumerProducerCheck_MPMC_2P_1C)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
@@ -213,7 +213,7 @@ TEST_F(TestQueueLockFree, consumerProducerCheckMPSC_On_MPSC)
     }
 }
 
-TEST_F(TestQueueLockFree, consumerProducerCheckMPSC_On_MPSCNoMINIMIZE_CONTENTION)
+TEST_F(TestQueueLockFree, consumerProducerCheck_MPSC_MPSCNoMINIMIZE_CONTENTION_2P_1C)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue<unsigned int*, QUEUE_SIZE, nullptr, false> >;
     AtomicQueue testQueue{};
@@ -260,7 +260,7 @@ TEST_F(TestQueueLockFree, consumerProducerCheckMPSC_On_MPSCNoMINIMIZE_CONTENTION
     }
 }
 
-TEST_F(TestQueueLockFree, consumerProducerCheckMPSC_On_MP$SC)
+TEST_F(TestQueueLockFree, consumerProducerCheck_MPSC_4P_1C)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
@@ -313,7 +313,7 @@ TEST_F(TestQueueLockFree, consumerProducerCheckMPSC_On_MP$SC)
     }
 }
 
-TEST_F(TestQueueLockFree, consumerProducerCheckMPMC)
+TEST_F(TestQueueLockFree, consumerProducerCheck_MPMC_2P_2C)
 {
     using AtomicQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue<unsigned int*, QUEUE_SIZE> >;
     AtomicQueue testQueue{};
