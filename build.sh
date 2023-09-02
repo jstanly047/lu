@@ -27,7 +27,7 @@ while getopts ":t:cu" opt; do
             esac
             ;;
         c)
-            cleanBuild="--clean-first"
+            rm -rf build
             ;;
         u)
             buildunittest=true
@@ -47,41 +47,27 @@ done
 
 
 
-BUILD_CMD="-DCMAKE_BUILD_TYPE=$buildType"
+BUILD_CMD="conan build . "
 
 if [ $buildunittest = true ]; then
-    BUILD_CMD="$BUILD_CMD -DUNIT_TEST=ON"
+    BUILD_CMD="$BUILD_CMD -o UNIT_TEST=True"
 fi
 
-if [ "$buildType" = "Coverage" ]; then
-    BUILD_CMD="$BUILD_CMD -DCOV_BUILD=ON  -DUNIT_TEST=ON"
-
-elif [ $buildunittest = true ]; then
-    BUILD_CMD="$BUILD_CMD -DUNIT_TEST=ON"
+if [ "$buildType" = "Debug" ]; then
+    BUILD_CMD="$BUILD_CMD -s build_type=Debug"
+elif [ "$buildType" = "Coverage" ]; then
+    BUILD_CMD="$BUILD_CMD -o COV_BUILD=True -s build_type=Debug"
+else
+    BUILD_CMD="$BUILD_CMD -s build_type=Release"
 fi
+
+BUILD_CMD="$BUILD_CMD -s g*:build_type=Release -s x*:build_type=Release -s z*:build_type=Release -s libu*:build_type=Release"
 
 RED='\033[0;31m'
 PURPLE='\033[0;35m'
 NC='\033[0m'
 
-NUM_OF_CPU_AVL=`grep -c ^processor /proc/cpuinfo`
-
-#use maiximum 6 parallel build
-if [ $NUM_OF_CPU_AVL -gt 4 ]
-then
-    NUM_OF_CPU_AVL=4
-fi
-
-#protoc --cpp_out=src/message --proto_path=src/protomsg src/protomsg/*.proto
-mkdir -p build
-cd build
-#conan install ../
-#cmake ../ -DCMAKE_BUILD_TYPE=$BUILD_TYPE  -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake &> /dev/null
-cmake ../ $BUILD_CMD
-cd ..
-
 printf  "\n${PURPLE}=====================> Start Building Engines & SO...${NC}\n"
-echo "cmake $BUILD_CMD"
-echo "cmake --build ./build $cleanBuild -- -j $NUM_OF_CPU_AVL -i"
-cmake --build ./build $cleanBuild -- -j $NUM_OF_CPU_AVL -i 
+printf "$BUILD_CMD"
+$BUILD_CMD
 printf  "\n${PURPLE}======================> Done Building Engines & SO...${NC}\n"

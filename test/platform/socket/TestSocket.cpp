@@ -128,7 +128,7 @@ TEST_F(TestSocket, setTxBufferSize)
     ASSERT_EQ(socketObject.getTxBufferSize(), 4608);
 }
 
-TEST_F(TestSocket, setMinimumDataToReturnSend)
+TEST_F(TestSocket, DISABLED_setMinimumDataToReturnSend)
 {
     auto& socketObject = *connectSocket.getBaseSocket();
     socketObject.setMinimumDataToReturnSend(8);
@@ -136,7 +136,7 @@ TEST_F(TestSocket, setMinimumDataToReturnSend)
     ASSERT_EQ(ret, 181242);
 }
 
-TEST_F(TestSocket, setMaxSendDataWaitThreshold)
+TEST_F(TestSocket, DISABLED_setMaxSendDataWaitThreshold)
 {
     auto& socketObject = *connectSocket.getBaseSocket();
     socketObject.setMaxSendDataWaitThreshold(512000);

@@ -29,8 +29,9 @@ class snapafwRecipe(ConanFile):
     }
 
     def config_options(self):
-        if self.settings.COV_BUILD:
+        if self.options.COV_BUILD:
             self.options.UNIT_TEST = True
+            self.settings.build_type = "Debug"
         elif self.settings.build_type == "Debug":
             self.options.UNIT_TEST = True
 
@@ -63,12 +64,9 @@ class snapafwRecipe(ConanFile):
         cmake.parallel = True
         cmake.configure()
         cmake.build()
-        if self.options.UNIT_TEST:
-            self.run(os.path.join(self.cpp.build.bindirs[0], "LuTests"))
+        self.run_tests()
 
     def package(self):
-        print(os.path.join(self.source_folder, "include"))
-        print(self.build_folder)
         copy(self, "*.h", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"), keep_path=True)
         copy(self, "*.a", self.build_folder, os.path.join(self.package_folder, "lib"), keep_path=True)
 
@@ -83,3 +81,28 @@ class snapafwRecipe(ConanFile):
         else:
             self.cpp_info.libs = ["LuTests"]
         '''
+
+    #################Custom private functions##################
+    def run_tests(self):
+        unitTestResultPath=os.path.join(self.build_folder, "unitTestResult")
+        os.environ['GTEST_OUTPUT'] = "xml:" + unitTestResultPath + "/Result.xml"
+        coverageBaseLineFile=self.build_folder + "/coverage.baseline "
+
+        if self.options.COV_BUILD:
+            self.run("lcov -c -i -b . -d " + self.build_folder + " -o " + coverageBaseLineFile)
+
+        if self.options.UNIT_TEST:
+            self.run(os.path.join(self.cpp.build.bindirs[0], "LuTests"))
+        
+        if self.options.COV_BUILD:
+            coverageOutFile=self.build_folder + "/coverage.out "
+            coverageCombinedFile=self.build_folder + "/coverage.combined "
+            coverageReportPath=self.build_folder + "/coverage "
+            print(coverageBaseLineFile)
+            print(coverageOutFile)
+            print(coverageCombinedFile)
+            print(coverageReportPath)
+            self.run("lcov -c -d " + self.build_folder + " -b . -o " + coverageOutFile)
+            self.run("lcov -a " + coverageBaseLineFile + " -a " + coverageOutFile + "  -o  " + coverageCombinedFile)
+            self.run("lcov -r " + coverageCombinedFile + " '/usr/include/*' '*usr/lib/*' '*test*' -o " + coverageCombinedFile)
+            self.run("genhtml -o " + coverageReportPath + coverageCombinedFile)
