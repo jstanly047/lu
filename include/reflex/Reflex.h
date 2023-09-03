@@ -1,14 +1,10 @@
 #include <string>
 #include <vector>
 #include <limits>
-
 #include <type_traits>
 
-namespace  snap::reflex
+namespace  lu::reflex
 {
-    template<typename T, unsigned int i=std::numeric_limits<unsigned int>::max()>
-    struct FieldData{};
-
     #define PARENS () 
 
     #define EXPAND(...) EXPAND4(EXPAND4(EXPAND4(EXPAND4(__VA_ARGS__))))
@@ -17,63 +13,13 @@ namespace  snap::reflex
     #define EXPAND2(...) EXPAND1(EXPAND1(EXPAND1(EXPAND1(__VA_ARGS__))))
     #define EXPAND1(...) __VA_ARGS__
 
-    #define REFLEX_REGISTER_MEMBER(CLASS_OR_STRUCT, MEMBER, INDEX) \
-    template<> \
-    struct FieldData<CLASS_OR_STRUCT, INDEX> \
-    { \
-        static constexpr const char* getName() { return #MEMBER; } \
-        static constexpr unsigned int getSize() { return sizeof(CLASS_OR_STRUCT::MEMBER); } \
-    };
-
-    #define FOR_EACH_HELPER(CLASS_OR_STRUCT, COUNTER, MEMBER, ...) \
-    REFLEX_REGISTER_MEMBER(CLASS_OR_STRUCT, MEMBER, COUNTER) \
-    __VA_OPT__(FOR_EACH_AGAIN PARENS (CLASS_OR_STRUCT, COUNTER + 1, __VA_ARGS__))
-
-    #define FOR_EACH_AGAIN() FOR_EACH_HELPER
-
-    #define FOR_EACH(CLASS_OR_STRUCT, COUNTER, ...) \
-    __VA_OPT__(EXPAND(FOR_EACH_HELPER(CLASS_OR_STRUCT, COUNTER, __VA_ARGS__)))
-
-
-    #define REFLEX_REGISTER(CLASS_OR_STRUCT, ...) \
-    template<> \
-    struct FieldData<CLASS_OR_STRUCT, std::numeric_limits<unsigned int>::max()> \
-    { \
-        static constexpr const char* getName() { return #CLASS_OR_STRUCT; } \
-        static constexpr unsigned int getSize() { return sizeof(CLASS_OR_STRUCT); } \
-    }; \
-    FOR_EACH (CLASS_OR_STRUCT, 0, __VA_ARGS__)
-
-     #define GET_BINDING_LIST_HELPER(MEMBER, ...) \
-    ",:" #MEMBER \
-    __VA_OPT__(GET_BINDING_LIST_AGAIN PARENS (CLASS_OR_STRUCT, COUNTER + 1, __VA_ARGS__))
-
-    #define GET_BINDING_LIST_AGAIN() GET_BINDING_LIST_HELPER
-
-    #define GET_BINDING_LIST(MEMBER, ...) \
-    ":" #MEMBER \
-    __VA_OPT__(EXPAND(GET_BINDING_LIST_HELPER(__VA_ARGS__)))
-
-
-    #define GET_BINDING_VALUE_LIST_HELPER(MEMBER, ...) \
-    , soci::use(MEMBER) \
-    __VA_OPT__(GET_BINDING_VALUE_LIST_AGAIN PARENS (CLASS_OR_STRUCT, COUNTER + 1, __VA_ARGS__))
-
-    #define GET_BINDING_VALUE_LIST_AGAIN() GET_BINDING_VALUE_LIST_HELPER
-
-    #define GET_BINDING_VALUE_LIST(...) \
-    __VA_OPT__(EXPAND(GET_BINDING_VALUE_LIST_HELPER(__VA_ARGS__)))
-
-
-
-    #define GENERATE_SOCI_WRITE(CLASS_OR_STRUCT, ...) \
-    void write(soci::session& session) \
-    { \
-        session << "insert into " #CLASS_OR_STRUCT " (" #__VA_ARGS__ ") values( "\
-        GET_BINDING_LIST(__VA_ARGS__) ")" \
-        GET_BINDING_VALUE_LIST(__VA_ARGS__); \
-    }
-
+    #define CONCAT_STRING(str)  #str
+    #define CREAT_STRING_LIST_HELPER(str, ...) \
+            CONCAT_STRING(str) \
+            __VA_OPT__(, CREAT_STRING_LIST_AGAIN PARENS (__VA_ARGS__))
+    #define CREAT_STRING_LIST_AGAIN() CREAT_STRING_LIST_HELPER
+    #define CREAT_STRING_LIST(...) \
+        __VA_OPT__(EXPAND(CREAT_STRING_LIST_HELPER(__VA_ARGS__)))
 
     /*
     Should be able to remove this once this in standardize in c++27 or higher
@@ -153,25 +99,13 @@ namespace  snap::reflex
         else if constexpr (numberOfMembers == 2) { auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27, m28, m29, m30] = object; return visitor(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27, m28, m29, m30); }
         */
          else { static_assert(std::is_void_v<Type>, "NUMBER_OF_MEMBERS maximum member is reached...fix me :(");}
-    }
+    } 
 
-    class SQL
-    {
-        auto getSqlOne(auto&& object)
-        {
-            if constexpr FieldData<decltype(object)>
-        }
+    #define MACRO_CONCAT(A, B) A##_##B
 
-        auto getSqlMany(auto& first, auto&& ... remains)
-        {
-            if (auto result = getSqlOne(first); failure(result))
-            {
-                return result;
-            }
+    #define MAKE_ARRAY_IMPL(STRUCT_NAME, N, ...) \
+        constexpr std::array<const char*, N> arr_##STRUCT_NAME = { CREAT_STRING_LIST(...)}
 
-            return getSqlMany(remains...);
-        }
-
-        auto getSqlMany() { return ""; }
-    }
+    #define MAKE_ARRAY(STRUCT_NAME, ...)\
+        MAKE_ARRAY_IMPL(STRUCT_NAME, NUMBER_OF_MEMBERS<STRUCT_NAME>, __VA_ARGS__)
 }

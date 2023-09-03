@@ -34,8 +34,8 @@ if(COV_BUILD)
   SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 endif()
 
-
 find_package(glog REQUIRED)
+find_package(SOCI REQUIRED)
 
 ############################################################################
 #Build Libraries
@@ -119,6 +119,7 @@ if (UNIT_TEST)
                             glog::glog
                             GTest::gtest
                             GTest::gmock
+                            SOCI::soci_core
                             )
 
 endif(UNIT_TEST)

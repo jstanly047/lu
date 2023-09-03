@@ -1,8 +1,8 @@
-#include<platform/socket/DataSocket.h>
-#include<platform/socket/IDataHandler.h>
-#include<platform/socket/IDataSocketCallback.h>
-#include<platform/thread/IClientThreadCallback.h>
-#include<platform/thread/IConnectionThreadCallback.h>
+#include <platform/socket/DataSocket.h>
+#include <platform/socket/IDataHandler.h>
+#include <platform/socket/IDataSocketCallback.h>
+#include <platform/thread/IClientThreadCallback.h>
+#include <platform/thread/IConnectionThreadCallback.h>
 #include <platform/defs.h>
 #include <utils/Utils.h>
 

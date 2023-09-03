@@ -48,6 +48,7 @@ class snapafwRecipe(ConanFile):
         if self.options.UNIT_TEST:
             self.test_requires("gtest/1.14.0")
         self.requires("glog/0.6.0")
+        self.requires("soci/4.0.3")
     
     def generate(self):
         cmake = CMakeDeps(self)
