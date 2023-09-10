@@ -35,6 +35,8 @@ if(COV_BUILD)
 endif()
 
 find_package(glog REQUIRED)
+find_package(gflags REQUIRED)
+find_package(libmysqlclient REQUIRED)
 find_package(SOCI REQUIRED)
 
 ############################################################################
@@ -54,7 +56,7 @@ target_include_directories(utils PUBLIC ${PROJ_INC_DIR})
 
 file(GLOB LU_PLATFORM_SRC  ./src/platform/*.cpp)
 add_library(luPlatform STATIC ${LU_PLATFORM_SRC})
-target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR} ${glog_INCLUDE_DIRS})
+target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR} ${glog_INCLUDE_DIRS} ${gflags_INCLUDE_DIRS})
 
 file(GLOB LU_SOCKET_DATAH_SRC  ./src/platform/socket/data_handler/*.cpp)
 add_library(luSocketDataHandler STATIC ${LU_SOCKET_DATAH_SRC} )
@@ -62,7 +64,7 @@ target_include_directories(luSocketDataHandler PUBLIC ${PROJ_INC_DIR})
 
 file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
 add_library(luSocket STATIC ${LU_SOCKET_SRC})
-target_link_libraries(luSocket luSocketDataHandler luPlatform)
+target_link_libraries(luSocket luSocketDataHandler luPlatform )
 
 file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
 add_library(luThread STATIC ${LU_THREAD_SRC})
@@ -73,6 +75,10 @@ target_link_libraries(luThread luSocket)
 #add_library(thread STATIC ${THREAD_SRC})
 #target_include_directories(thread PUBLIC ${PROJ_INC_DIR})
 
+add_executable(soci_test ./src/storage/db/Test.cpp)
+target_include_directories(soci_test PUBLIC ${SOCI_INCLUDE_DIRS} ${libmysqlclient_INCLUDE_DIRS})
+target_link_libraries(soci_test SOCI::soci_mysql_static
+                                )
 
 ############################################################################
 # Build unit tests

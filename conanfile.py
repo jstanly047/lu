@@ -49,6 +49,7 @@ class snapafwRecipe(ConanFile):
             self.test_requires("gtest/1.14.0")
         self.requires("glog/0.6.0")
         self.requires("soci/4.0.3")
+        self.requires("libmysqlclient/8.0.31")
     
     def generate(self):
         cmake = CMakeDeps(self)

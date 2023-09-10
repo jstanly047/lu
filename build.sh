@@ -61,7 +61,8 @@ else
     BUILD_CMD="$BUILD_CMD -s build_type=Release"
 fi
 
-BUILD_CMD="$BUILD_CMD -s g*:build_type=Release -s x*:build_type=Release -s z*:build_type=Release -s libu*:build_type=Release"
+#BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True -s g*:build_type=Release -s x*:build_type=Release -s z*:build_type=Release -s libu*:build_type=Release --build=soci/4.0.3 -o soci/4.0.3:with_mysql=True"
+BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True -s g*:build_type=Release -s x*:build_type=Release -s z*:build_type=Release -s libu*:build_type=Release --build=soci/4.0.3"
 
 RED='\033[0;31m'
 PURPLE='\033[0;35m'

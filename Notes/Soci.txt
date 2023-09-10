@@ -1,0 +1,41 @@
+sudo apt install mysql-server
+sudo apt install mysql-server mysql-client
+
+
+#mysqld in /usr/sbin is the mysql server binary
+
+#start service
+sudo service mysql start
+s
+# Configure and setup password
+sudo mysql_secure_installation
+
+# try login
+mysql -uroot -p
+
+
+#add users
+CREATE USER 'username'@'host' IDENTIFIED WITH authentication_plugin BY 'password';
+GRANT PRIVILEGE ON database.table TO 'username'@'host';
+GRANT CREATE, ALTER, DROP, INSERT, UPDATE, INDEX, DELETE, SELECT, REFERENCES, RELOAD on *.* TO 'sammy'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+exit
+
+#Global configuration
+/etc/mysql/my.cnf
+
+#Specific to the MySQL Daemon (mysqld):
+/etc/mysql/mysql.conf.d/mysqld.cnf
+
+sudo ls -ltr /var/run/mysqld/mysqld.sock
+
+
+#LOGS
+ /var/log/mysql/error.log
+
+# to remotely connect or to connect locally through tcp use this
+char const* const connectString = "db=lu_test user=sammy password='XXXXXX' host=127.0.0.1 port=3306";
+
+# if your SOCI client in localhost then you can use socket file to create connection
+char const* const connectString = "db=lu_test user=sammy password='XXXXXX' host=localhost unix_socket=/var/run/mysqld/mysqld.sock";
+
