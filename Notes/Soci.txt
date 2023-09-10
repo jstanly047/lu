@@ -6,7 +6,7 @@ sudo apt install mysql-server mysql-client
 
 #start service
 sudo service mysql start
-s
+
 # Configure and setup password
 sudo mysql_secure_installation
 
