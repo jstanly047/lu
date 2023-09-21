@@ -101,7 +101,8 @@ int main()
         stmt.alloc();
         stmt.prepare("INSERT INTO MyClass (name, age) VALUES (:name, :age)");
 
-        for (const MyClass& instance : data3) {
+        for (const MyClass& instance : data3) 
+        {
             // Bind values to the prepared statement in bulk
             stmt.exchange(soci::use(instance.name, "name"));
             stmt.exchange(soci::use(instance.age, "age"));
@@ -153,7 +154,6 @@ int main()
         end = std::chrono::high_resolution_clock::now(); 
         duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << "Read by bulk2: " << duration.count() << " milliseconds " << i << std::endl;
-
     } 
     catch (const soci::soci_error &e) 
     {
