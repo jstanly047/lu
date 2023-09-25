@@ -116,3 +116,6 @@ lu_platform/1.0@lu/stable
 
 [generators]
 CMakeToolchain
+
+Resolve Version Conflicts
+https://docs.conan.io/2/tutorial/versioning/conflicts.html

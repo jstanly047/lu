@@ -49,8 +49,11 @@ class snapafwRecipe(ConanFile):
             self.test_requires("gtest/1.14.0")
         self.requires("glog/0.6.0")
         self.requires("soci/4.0.3")
-        self.requires("libmysqlclient/8.0.31")
-    
+        self.requires("libmysqlclient/8.1.0")
+        # there is version conflict for this library so it override the requirement#
+        self.requires("zlib/1.2.13", override=True)
+        
+
     def generate(self):
         cmake = CMakeDeps(self)
         cmake.generate()

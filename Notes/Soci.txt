@@ -39,3 +39,16 @@ char const* const connectString = "db=lu_test user=sammy password='XXXXXX' host=
 # if your SOCI client in localhost then you can use socket file to create connection
 char const* const connectString = "db=lu_test user=sammy password='XXXXXX' host=localhost unix_socket=/var/run/mysqld/mysqld.sock";
 
+
+SQL Cmd
+SHOW DATABASES;
+USE database_name;
+DROP TABLE table_name;
+
+CREATE TABLE employees (
+    employee_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    hire_date DATE
+);

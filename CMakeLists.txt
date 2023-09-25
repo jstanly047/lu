@@ -26,6 +26,9 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 add_compile_options(-static-libstdc++)
+#Check macro expansion
+#add_compile_options(-static-libstdc++ -E)
+
 
 if(COV_BUILD)
   SET(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -coverage -fprofile-arcs -ftest-coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
@@ -50,10 +53,6 @@ file(GLOB UTILS_SRC  ./src/utils/*.cpp)
 add_library(utils STATIC ${UTILS_SRC})
 target_include_directories(utils PUBLIC ${PROJ_INC_DIR})
 
-#file(GLOB QUEUE_SRC  ./src/queue/*.cpp)
-#add_library(queue STATIC ${QUEUE_SRC})
-#target_include_directories(queue PUBLIC ${PROJ_INC_DIR})
-
 file(GLOB LU_PLATFORM_SRC  ./src/platform/*.cpp)
 add_library(luPlatform STATIC ${LU_PLATFORM_SRC})
 target_include_directories(luPlatform PUBLIC ${PROJ_INC_DIR} ${glog_INCLUDE_DIRS} ${gflags_INCLUDE_DIRS})
@@ -74,11 +73,6 @@ target_link_libraries(luThread luSocket)
 #file(GLOB THREAD_SRC  ./src/thread/*.cpp)
 #add_library(thread STATIC ${THREAD_SRC})
 #target_include_directories(thread PUBLIC ${PROJ_INC_DIR})
-
-add_executable(soci_test ./src/storage/db/Test.cpp)
-target_include_directories(soci_test PUBLIC ${SOCI_INCLUDE_DIRS} ${libmysqlclient_INCLUDE_DIRS})
-target_link_libraries(soci_test SOCI::soci_mysql_static
-                                )
 
 ############################################################################
 # Build unit tests
@@ -102,16 +96,21 @@ if (UNIT_TEST)
     file(GLOB TEST_SOCKET_SRC ./test/platform/socket/*.cpp)
     file(GLOB TEST_THREAD_SRC ./test/platform/thread/*.cpp)
     file(GLOB TEST_PlATFORM_SRC ./test/platform/*.cpp)
-    #file(GLOB TEST_THREAD ./test/thread/*.cpp)
+    file(GLOB TEST_REFLECTION_SRC ./test/reflection/*.cpp)
+    file(GLOB TEST_STORAGE_SRC ./test/storage/*.cpp)
 
     add_executable(LuTests ./test/TestMain.cpp 
                             ${TEST_UTILS_SRC}
                             ${TEST_QUEUE_SRC}
                             ${TEST_SOCKET_SRC}
                             ${TEST_THREAD_SRC}
-                            ${TEST_PlATFORM_SRC})
+                            ${TEST_PlATFORM_SRC}
+                            ${TEST_REFLECTION_SRC}
+                            ${TEST_STORAGE_SRC})
 
-    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS})
+    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS}
+                                               ${SOCI_INCLUDE_DIRS} 
+                                               ${libmysqlclient_INCLUDE_DIRS})
 
     target_link_libraries(LuTests
                             luPlatform
@@ -125,7 +124,7 @@ if (UNIT_TEST)
                             glog::glog
                             GTest::gtest
                             GTest::gmock
-                            SOCI::soci_core
+                            SOCI::soci_mysql_static
                             )
 
 endif(UNIT_TEST)
