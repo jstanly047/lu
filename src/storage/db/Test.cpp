@@ -8,7 +8,6 @@ struct MyClass
 {
     std::string name;
     int age;
-
 };
 
 namespace soci
@@ -67,7 +66,20 @@ int main()
         sql.commit();
 
         /////////////////////////////////////////////////////////////////////////////////////////
+        soci::transaction tr2(sql);
         auto start = std::chrono::high_resolution_clock::now(); 
+        for (const MyClass& instance : data2) 
+        {
+            sql << "INSERT INTO MyClass (name, age) VALUES (:name, :age)",
+                soci::use(instance);
+        }
+        tr2.commit();
+        auto end = std::chrono::high_resolution_clock::now(); 
+        std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Insertion by instance binding: " << duration.count() << " milliseconds" << std::endl;
+
+        /////////////////////////////////////////////////////////////////////////////////////////
+        start = std::chrono::high_resolution_clock::now(); 
         soci::transaction tr1(sql);
         for (const MyClass& instance : data1) 
         {
@@ -75,23 +87,11 @@ int main()
                 soci::use(instance.name), soci::use(instance.age);
         }
         tr1.commit();
-        auto end = std::chrono::high_resolution_clock::now(); 
+        end = std::chrono::high_resolution_clock::now(); 
 
-        std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << "Insertion by instance: " << duration.count() << " milliseconds" << std::endl;
         
-        /////////////////////////////////////////////////////////////////////////////////////////
-        soci::transaction tr2(sql);
-        start = std::chrono::high_resolution_clock::now(); 
-        for (const MyClass& instance : data2) 
-        {
-            sql << "INSERT INTO MyClass (name, age) VALUES (:name, :age)",
-                soci::use(instance);
-        }
-        tr2.commit();
-        end = std::chrono::high_resolution_clock::now(); 
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Insertion by instance binding: " << duration.count() << " milliseconds" << std::endl;
 
         /////////////////////////////////////////////////////////////////////////////////////////
         

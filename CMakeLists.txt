@@ -69,6 +69,14 @@ file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
 add_library(luThread STATIC ${LU_THREAD_SRC})
 target_link_libraries(luThread luSocket)
 
+file(GLOB LU_STORAGE_DB_SRC  ./src/storage/db/*.cpp)
+add_library(luStorageDB STATIC ${LU_STORAGE_DB_SRC})
+target_link_libraries(luStorageDB SOCI::soci_mysql_static)
+target_include_directories(luStorageDB PUBLIC ${PROJ_INC_DIR}
+                                              ${SOCI_INCLUDE_DIRS} 
+                                              ${libmysqlclient_INCLUDE_DIRS}
+                                              ${glog_INCLUDE_DIRS} 
+                                              ${gflags_INCLUDE_DIRS})
 
 #file(GLOB THREAD_SRC  ./src/thread/*.cpp)
 #add_library(thread STATIC ${THREAD_SRC})
@@ -108,9 +116,7 @@ if (UNIT_TEST)
                             ${TEST_REFLECTION_SRC}
                             ${TEST_STORAGE_SRC})
 
-    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS}
-                                               ${SOCI_INCLUDE_DIRS} 
-                                               ${libmysqlclient_INCLUDE_DIRS})
+    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS})
 
     target_link_libraries(LuTests
                             luPlatform
@@ -120,11 +126,11 @@ if (UNIT_TEST)
                             luSocket
                             luMockSocket
                             luThread
+                            luStorageDB
                             luMockThread
                             glog::glog
                             GTest::gtest
                             GTest::gmock
-                            SOCI::soci_mysql_static
                             )
 
 endif(UNIT_TEST)

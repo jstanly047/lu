@@ -4,9 +4,9 @@
 #include <soci/soci.h>
 #include <type_traits>
 
-namespace lu::storage
+namespace lu::storage::db
 {
-
+    
 }
 
 #define MAKE_NAMES(...) #__VA_ARGS__,
@@ -34,7 +34,7 @@ namespace lu::storage
     __VA_OPT__(EXPAND(POPULATE_SOCI_FROM_BASE_HELPER(values, obj, __VA_ARGS__)))
 
 #define POPULATE_SOCI_TO_BASE_HELPER(values, obj, member, ...)                       \
-        values.set(CONV_TO_STRING(member), obj.member);                                             \
+        values.set(CONV_TO_STRING(member), obj.member);                              \
         __VA_OPT__(POPULATE_SOCI_TO_BASE_AGAIN PARENS (values, obj, __VA_ARGS__))
 #define POPULATE_SOCI_TO_BASE_AGAIN() POPULATE_SOCI_TO_BASE_HELPER
 #define POPULATE_SOCI_TO_BASE(values, obj, ...)                                      \
@@ -44,7 +44,7 @@ namespace lu::storage
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-#define MAKE_META_DATA_IMPL(STRUCT_NAME, TABLE_NAME, N,...)                             \
+#define MAKE_META_DB_DATA_IMPL(STRUCT_NAME, TABLE_NAME, N,...)                          \
 namespace soci                                                                          \
 {                                                                                       \
     template<>                                                                          \
@@ -64,11 +64,11 @@ namespace soci                                                                  
     };                                                                                  \
 }                                                                                       \
                                                                                         \
-namespace lu::storage                                                                   \
+namespace lu::storage::db                                                               \
 {                                                                                       \
-    [[maybe_unused]] inline static auto lu_reflect_members(const STRUCT_NAME&)          \
+    [[maybe_unused]] inline static auto getDBReflection(STRUCT_NAME)             \
     {                                                                                   \
-        struct reflect_members {                                                        \
+        struct DBReflection {                                                           \
         constexpr const char* getInsertSQL()                                            \
         {                                                                               \
             return CONCAT_REC("INSERT INTO " , CONV_TO_STRING(TABLE_NAME) ,             \
@@ -76,7 +76,7 @@ namespace lu::storage                                                           
                 ") VALUES (" , CREAT_STRING_LIST(",",":","", __VA_ARGS__)  , ")");      \
         }                                                                               \
                                                                                         \
-        void writeToDB(soci::session& session, STRUCT_NAME & obj)                \
+        void writeToDB(soci::session& session, const STRUCT_NAME & obj)                 \
         {                                                                               \
             session << getInsertSQL() , POPULATE_SOCI_USE(obj, __VA_ARGS__);            \
         }                                                                               \
@@ -84,27 +84,23 @@ namespace lu::storage                                                           
         soci::rowset<STRUCT_NAME> getFromDB(soci::session& session)                     \
         {                                                                               \
             soci::rowset<STRUCT_NAME> retVal =                                          \
-            session.prepare << CONCAT_REC("select * from ",CONV_TO_STRING(TABLE_NAME));\
+            session.prepare << CONCAT_REC("SELECT * FROM ",CONV_TO_STRING(TABLE_NAME)); \
             return retVal;                                                              \
         }                                                                               \
+        void truncate(soci::session& session)                                           \
+        {                                                                               \
+            session << CONCAT_REC("TRUNCATE TABLE ",CONV_TO_STRING(TABLE_NAME));        \
+        }                                                                               \
         };                                                                              \
-        return reflect_members{};                                                       \
+        return DBReflection{};                                                          \
     }                                                                                   \
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#define MAKE_META_DATA(STRUCT_NAME, TABLE_NAME, N, ...)                                         \
-    namespace lu::storage                                                                       \
-    {                                                                                           \
-    constexpr std::array<const char*, N> arr_##STRUCT_NAME = { CREAT_LIST(__VA_ARGS__)};        \
-    static constexpr inline std::string_view fields_##STRUCT_NAME = {MAKE_NAMES(__VA_ARGS__)};  \
-    }                                                                                           \
-    MAKE_META_DATA_IMPL(STRUCT_NAME, TABLE_NAME, N, __VA_ARGS__)                                
+#define DB_REFLECTION_ALIAS(STRUCT_NAME, TABLE_NAME, ...)                                                      \
+    MAKE_META_DB_DATA_IMPL(STRUCT_NAME, TABLE_NAME, lu::reflection::number_of_members<STRUCT_NAME>(), __VA_ARGS__)
 
-#define REFLECTION_ALIAS(STRUCT_NAME, TABLE_NAME, ...)                                                  \
-    MAKE_META_DATA(STRUCT_NAME, TABLE_NAME, lu::reflection::number_of_members<STRUCT_NAME>(), __VA_ARGS__)
-
-#define REFLECTION(STRUCT_NAME, ...)                                                                        \
-    MAKE_META_DATA(STRUCT_NAME, STRUCT_NAME, lu::reflection::number_of_members<STRUCT_NAME>(), __VA_ARGS__)
+#define DB_REFLECTION(STRUCT_NAME, ...)                                                                        \
+    MAKE_META_DB_DATA_IMPL(STRUCT_NAME, STRUCT_NAME, lu::reflection::number_of_members<STRUCT_NAME>(), __VA_ARGS__)
 
 

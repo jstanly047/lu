@@ -1,60 +1,44 @@
-#include <storage/MetaData.h>
-#include <soci/mysql/soci-mysql.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <storage/db/DBTestStructs.h>
+#include <storage/db/DBManager.h>
 
-using namespace lu::storage;
-
-constexpr char const* const connectString = "db=lu_test user=stanly password='zoo9Ieho!1qaz' host=127.0.0.1 port=3306";
-
-struct GTestClass
-{
-    std::string name;
-    int age;
-    double salary;
-};
-REFLECTION_ALIAS(GTestClass, gtest_class, name, age, salary);
-
-struct MyClass
-{
-    std::string name;
-    int age;
-};
-REFLECTION(MyClass, name, age);
+using namespace lu::storage::db;
 
 class TestMetaData : public ::testing::Test
 {
 public:
-    TestMetaData():m_sql(soci::mysql, connectString){}
+    TestMetaData():
+            m_dbManger(connectString, 100)
+            {}
 
 protected:
     void SetUp() override 
     {
-        m_sql << "TRUNCATE TABLE gtest_class";
-        m_sql << "TRUNCATE TABLE MyClass";
-        m_sql.commit();
+        m_dbManger.truncate<GTestClass>();
+        m_dbManger.truncate<MyClass>();
+        m_dbManger.commit();
     }
 
     void TearDown() override 
     {
-        
     }
 
-    soci::session m_sql;
+    DBManager m_dbManger;
 };
 
 TEST_F(TestMetaData, checkReflectionAliasDB)
 {
     GTestClass obj = {"test1", 25, 500.0};
-    lu_reflect_members(obj).writeToDB(m_sql, obj);
-    auto rows = lu_reflect_members(obj).getFromDB(m_sql);
+    m_dbManger.store(obj);
+    auto rows = m_dbManger.load<GTestClass>();
     ASSERT_EQ(rows.begin()->name, obj.name);
 }
 
 TEST_F(TestMetaData, checkReflectionDB)
 {
     MyClass obj = {"test2", 25};
-    lu_reflect_members(obj).writeToDB(m_sql, obj);
-    auto rows = lu_reflect_members(obj).getFromDB(m_sql);
+    m_dbManger.store(obj);
+    auto rows = m_dbManger.load<MyClass>();
     ASSERT_EQ(rows.begin()->name, obj.name);
 }
