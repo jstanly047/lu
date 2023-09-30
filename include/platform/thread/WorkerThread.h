@@ -49,6 +49,8 @@ namespace  lu::platform::thread
             m_luThreadCallback.onExit();
         }
 
+        LuThreadCallback& getThreadCallback() { return m_luThreadCallback; }
+
         virtual ~WorkerThread(){}
 
     private:

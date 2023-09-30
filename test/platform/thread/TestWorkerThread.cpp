@@ -183,3 +183,134 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
     m_workerProducer.join();
     m_workerConsumer.join();
 }
+
+TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
+{
+
+    MockWorkerThread m_mockConsumerCallbackSecond;
+    WorkerThread<MockWorkerThread> m_workerConsumerSecond("TestConsumerSecond", m_mockConsumerCallbackSecond);
+    
+    unsigned int consumerExpectedValue = 1;
+    unsigned int consumerSecondExpectedValue = 2;
+    m_workerProducer.connect(m_workerConsumer);
+    m_workerProducer.connect(m_workerConsumerSecond);
+    m_workerConsumer.connect(m_workerProducer);
+    m_workerConsumerSecond.connect(m_workerProducer);
+
+    auto consumerIndx =  m_workerProducer.getThreadIndex(m_workerConsumer.getName());
+    auto producerIndx =  m_workerConsumer.getThreadIndex(m_workerProducer.getName());
+    auto consumerSecondIndx =  m_workerProducer.getThreadIndex(m_workerConsumerSecond.getName());
+    auto producerSecondIndx =  m_workerConsumerSecond.getThreadIndex(m_workerProducer.getName());
+
+    EXPECT_CALL(m_mockProducerCallback,  onInit()).WillOnce(::testing::Return(true));
+    EXPECT_CALL(m_mockProducerCallback,  onStart()).WillOnce(::testing::Invoke(
+        [&]()
+        {
+            for (unsigned int count= 1; count < 7u; count++)
+            {
+                if (count%2 == 0)
+                {
+                    m_workerProducer.transferMsg(consumerSecondIndx, new int(count));
+                }
+                else
+                {
+                    m_workerProducer.transferMsg(consumerIndx, new int(count));
+                }
+            }
+
+           
+        }));
+    EXPECT_CALL(m_mockProducerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
+        [&](channel::ChannelData channelData)
+        {
+            static unsigned int countMsg = 0;
+            static std::set<unsigned int> dataCache;
+            if (channelData.data == nullptr)
+            {
+                EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
+                EXPECT_THAT(dataCache, ::testing::ElementsAre(2u, 4u, 6u, 8u, 10u, 12u));
+                return;
+            }
+
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
+            dataCache.insert(*data);
+
+            if ((*data/2) % 2 == 0)
+            {
+                EXPECT_EQ(channelData.channelID, m_workerConsumerSecond.getChannelID());
+            }
+            else
+            {
+                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+            }
+
+            delete data;
+            countMsg++;
+            if (countMsg == 6u)
+            {
+                m_workerProducer.stop();
+            }
+        }));
+    EXPECT_CALL(m_mockProducerCallback,  onExit()).Times(1);
+    
+    EXPECT_CALL(m_mockConsumerCallback,  onInit()).WillOnce(::testing::Return(true));
+    EXPECT_CALL(m_mockConsumerCallback,  onStart());
+    EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
+        [&](channel::ChannelData channelData)
+        {
+            if (channelData.data == nullptr)
+            {
+                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+                return;
+            }
+
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
+            EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
+            EXPECT_EQ(consumerExpectedValue, *data);
+            m_workerConsumer.transferMsg(producerIndx, new int(*data  * 2));
+            consumerExpectedValue += 2;
+            delete data;
+
+            if (consumerExpectedValue == 7u)
+            {
+                m_workerConsumer.stop();
+            }
+        }));
+    EXPECT_CALL(m_mockConsumerCallback,  onExit()).Times(1);
+
+    EXPECT_CALL(m_mockConsumerCallbackSecond,  onInit()).WillOnce(::testing::Return(true));
+    EXPECT_CALL(m_mockConsumerCallbackSecond,  onStart());
+    EXPECT_CALL(m_mockConsumerCallbackSecond,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
+        [&](channel::ChannelData channelData)
+        {
+            if (channelData.data == nullptr)
+            {
+                EXPECT_EQ(channelData.channelID, m_workerConsumerSecond.getChannelID());
+                return;
+            }
+
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
+            EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
+            EXPECT_EQ(consumerSecondExpectedValue, *data);
+            m_workerConsumerSecond.transferMsg(producerSecondIndx, new int(*data  * 2));
+            consumerSecondExpectedValue += 2;
+            delete data;
+
+            if (consumerSecondExpectedValue == 8u)
+            {
+                m_workerConsumerSecond.stop();
+            }
+        }));
+    EXPECT_CALL(m_mockConsumerCallbackSecond,  onExit()).Times(1);
+
+    
+    m_workerConsumer.init();
+    m_workerConsumerSecond.init();
+    m_workerProducer.init();
+    m_workerConsumer.start();
+    m_workerConsumerSecond.start();
+    m_workerProducer.start();
+    m_workerProducer.join();
+    m_workerConsumer.join();
+    m_workerConsumerSecond.join();
+}

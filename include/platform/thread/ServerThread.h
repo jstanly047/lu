@@ -56,6 +56,7 @@ namespace lu::platform::thread
                 m_serverClientThreads.emplace_back(std::make_unique<ClientThread<BaseClientThreadCallback, DataHandler>>(static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), 
                                                 clientThreadName, eventThreadConfig));
                 m_serverClientThreadsCallbacksPtr.push_back(&m_serverClientThreadsCallbacks.back());
+                m_serverClientThreadsCallbacks.back().setThread(*m_serverClientThreads.back());
             }
         }
 
