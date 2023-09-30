@@ -16,20 +16,28 @@ namespace  lu::platform::thread
         LuThread& operator=(const LuThread&) = delete;
         LuThread(LuThread&& other) = delete;
         LuThread& operator=(LuThread&& other) = delete;
+        virtual ~LuThread() {}
 
         void init();
         void run();
         void join();
         void stop();
         void connect(LuThread& readerThread);
-        auto getChannelID() const { return m_outputChannel.getChannelID();}
+        auto getChannelID() const { return m_channelID;;}
         const std::string& getName() const { return m_name; }
+        void transferMsg(const std::string& threadName, void * msg);
+        void transferMsg(unsigned int threadIndex, void * msg);
+        unsigned int getThreadIndex(const std::string& threadName) const;
 
 
     protected:
         std::string m_name;
         std::thread m_thread;
-        channel::OutputChannel m_outputChannel;
         channel::InputChannel m_inputChannel;
+
+
+    private:
+        channel::OutputChannel m_outputChannel;
+        channel::ChannelID m_channelID;
     };
 } 

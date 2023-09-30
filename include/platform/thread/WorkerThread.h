@@ -40,7 +40,7 @@ namespace  lu::platform::thread
         {
             LuThread::stop();
             m_stop = true;
-            m_inputChannel.getTransferQueue().push({m_outputChannel.getChannelID(), nullptr});
+            m_inputChannel.getTransferQueue().push({getChannelID(), nullptr});
         }
 
         void join()
@@ -49,10 +49,7 @@ namespace  lu::platform::thread
             m_luThreadCallback.onExit();
         }
 
-        void transferMsg(const std::string& threadName, void * msg)
-        {
-            m_outputChannel.transferMsg(threadName, msg);
-        }
+        virtual ~WorkerThread(){}
 
     private:
 

@@ -49,11 +49,12 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadName)
         {
             if (channelData.data == nullptr)
             {
+                EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
                 return;
             }
 
-            static unsigned stopCount = 0;
-            //EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+            static unsigned stopCount = 1;
+            EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
 
             if (stopCount == 6u)
             {
@@ -77,19 +78,20 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadName)
         {
             if (channelData.data == nullptr)
             {
+                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
                 return;
             }
 
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
-            //EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
+            EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerExpectedValue, *data);
             m_workerConsumer.transferMsg(m_workerProducer.getName(), new int(*data  * 2));
             consumerExpectedValue++;
             delete data;
 
-            if (consumerExpectedValue == 12u)
+            if (consumerExpectedValue == 7u)
             {
-                m_workerProducer.stop();
+                m_workerConsumer.stop();
             }
         }));
     EXPECT_CALL(m_mockConsumerCallback,  onExit()).Times(1);
@@ -101,5 +103,83 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadName)
     m_workerConsumer.start();
     m_workerProducer.start();
     m_workerProducer.join();
+    m_workerConsumer.join();
+}
+
+TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
+{
+    unsigned int count = 0;
+    unsigned int consumerExpectedValue = 1;
+    unsigned int producerExpectedValue = 2;
+    m_workerProducer.connect(m_workerConsumer);
+    m_workerConsumer.connect(m_workerProducer);
+
+    auto consumerIndx =  m_workerProducer.getThreadIndex(m_workerConsumer.getName());
+    auto producerIndx =  m_workerConsumer.getThreadIndex(m_workerProducer.getName());
+
+    EXPECT_CALL(m_mockProducerCallback,  onInit()).WillOnce(::testing::Return(true));
+    EXPECT_CALL(m_mockProducerCallback,  onStart()).WillOnce(::testing::Invoke(
+        [&]()
+        {
+            m_workerProducer.transferMsg(consumerIndx, new int(++count));
+        }));
+    EXPECT_CALL(m_mockProducerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
+        [&](channel::ChannelData channelData)
+        {
+            if (channelData.data == nullptr)
+            {
+                EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
+                return;
+            }
+
+            static unsigned stopCount = 1;
+            EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+
+            if (stopCount == 6u)
+            {
+                m_workerProducer.stop();
+                return;
+            }
+
+            stopCount++;
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
+            EXPECT_EQ(producerExpectedValue, *data);
+            m_workerProducer.transferMsg(consumerIndx, new int(++count));
+            producerExpectedValue += 2;
+            delete data;
+        }));
+    EXPECT_CALL(m_mockProducerCallback,  onExit()).Times(1);
+    
+    EXPECT_CALL(m_mockConsumerCallback,  onInit()).WillOnce(::testing::Return(true));
+    EXPECT_CALL(m_mockConsumerCallback,  onStart());
+    EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
+        [&](channel::ChannelData channelData)
+        {
+            if (channelData.data == nullptr)
+            {
+                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+                return;
+            }
+
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
+            EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
+            EXPECT_EQ(consumerExpectedValue, *data);
+            m_workerConsumer.transferMsg(producerIndx, new int(*data  * 2));
+            consumerExpectedValue++;
+            delete data;
+
+            if (consumerExpectedValue == 7u)
+            {
+                m_workerConsumer.stop();
+            }
+        }));
+    EXPECT_CALL(m_mockConsumerCallback,  onExit()).Times(1);
+
+    
+    m_workerConsumer.init();
+    m_workerProducer.init();
+    m_workerConsumer.start();
+    m_workerProducer.start();
     m_workerProducer.join();
+    m_workerConsumer.join();
 }

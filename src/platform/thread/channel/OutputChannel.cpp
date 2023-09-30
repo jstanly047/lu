@@ -25,7 +25,7 @@ void OutputChannel::add(const std::string &threadName, TransferQueue &transferQu
     assert(itr.second);
 }
 
-unsigned int OutputChannel::getThreadIndx(const std::string &threadName)
+unsigned int OutputChannel::getThreadIndx(const std::string &threadName) const
 {
     auto itr = m_threadNameIndexMap.find(threadName);
     assert(itr != m_threadNameIndexMap.end());
