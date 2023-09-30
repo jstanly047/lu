@@ -65,9 +65,13 @@ file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
 add_library(luSocket STATIC ${LU_SOCKET_SRC})
 target_link_libraries(luSocket luSocketDataHandler luPlatform )
 
+file(GLOB LU_THREAD_CHANNEL_SRC  ./src/platform/thread/channel/*.cpp)
+add_library(luThreadChannel STATIC ${LU_THREAD_CHANNEL_SRC})
+target_include_directories(luThreadChannel PUBLIC ${PROJ_INC_DIR})
+
 file(GLOB LU_THREAD_SRC  ./src/platform/thread/*.cpp)
 add_library(luThread STATIC ${LU_THREAD_SRC})
-target_link_libraries(luThread luSocket)
+target_link_libraries(luThread luThreadChannel luSocket)
 
 file(GLOB LU_STORAGE_DB_SRC  ./src/storage/db/*.cpp)
 add_library(luStorageDB STATIC ${LU_STORAGE_DB_SRC})

@@ -29,8 +29,9 @@ namespace lu::platform::thread
     public:
         ConnectionThread(const ConnectionThread&) = delete;
         ConnectionThread& operator=(const ConnectionThread&) = delete;
-        ConnectionThread(ConnectionThread&& other);
-        ConnectionThread& operator=(ConnectionThread&& other);
+        ConnectionThread(ConnectionThread&& other)= delete;
+        ConnectionThread& operator=(ConnectionThread&& other) = delete;
+        
         ConnectionThread(const std::string& name,  ConnectionThreadCallback& connectionThreadCallback, EventThreadConfig threadConfig) 
             :
             EventThread<ConnectionThreadCallback>(connectionThreadCallback, name, threadConfig),

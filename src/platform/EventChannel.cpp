@@ -20,7 +20,7 @@ EventChannel<EventChannelHandler>::EventChannel(EventChannelHandler& eventChanne
 {
 
 }
-
+/*
 template<lu::common::NonPtrClassOrStruct EventChannelHandler>
 EventChannel<EventChannelHandler>::EventChannel(EventChannel<EventChannelHandler>&& other):
     m_eventChannelHandler(other.m_eventChannelHandler),
@@ -37,7 +37,7 @@ EventChannel<EventChannelHandler>& EventChannel<EventChannelHandler>::operator=(
     m_in = std::move(other.m_in);
     m_out = std::move(other.m_out);
     return *this;
-}
+}*/
 
 template<lu::common::NonPtrClassOrStruct EventChannelHandler>
 bool EventChannel<EventChannelHandler>::init()

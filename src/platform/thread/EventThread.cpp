@@ -8,31 +8,29 @@
 
 using namespace lu::platform::thread;
 
-thread_local std::string lu::platform::thread::gtlThreadName="None";
 
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 EventThread<EventThreadCallback>::EventThread(EventThreadCallback& severEventThreadCallback,
     const std::string& name, EventThreadConfig serverConfig)
     :
-    m_name(name),
+    LuThread(name),
     m_eventThreadCallback(severEventThreadCallback),
     m_clientThreadConfig(serverConfig),
     m_eventLoop(),
-    m_timer(m_eventThreadCallback, serverConfig.TIMER_NAME),
-    m_thread()
+    m_timer(m_eventThreadCallback, serverConfig.TIMER_NAME)
 {
 
 }
 
+/*
+
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 EventThread<EventThreadCallback>::EventThread(EventThread&& other):
-    m_name(std::move(other.m_name)),
+    LuThread(std::move(other)),
     m_eventThreadCallback(other.m_eventThreadCallback),
     m_clientThreadConfig(std::move(other.m_clientThreadConfig)),
     m_eventLoop(std::move(other.m_eventLoop)),
-    m_timer(std::move(other.m_timer)),
-    m_thread(std::move(other.m_thread))
-    
+    m_timer(std::move(other.m_timer))    
 {
 
 }
@@ -40,18 +38,18 @@ EventThread<EventThreadCallback>::EventThread(EventThread&& other):
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 EventThread<EventThreadCallback>& EventThread<EventThreadCallback>::operator=(EventThread<EventThreadCallback>&& other)
 {
-    m_name = std::move(other.m_name);
+    LuThread::operator=(std::move(other));
     m_eventThreadCallback = std::move(other.m_eventThreadCallback);
     m_clientThreadConfig = other.m_clientThreadConfig;
     m_eventLoop = std::move(other.m_eventLoop);
     m_timer = std::move(other.m_timer);
-    m_thread = std::move(other.m_thread);
     return *this;
-}
+}*/
 
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 bool EventThread<EventThreadCallback>::init()
 {
+    LuThread::init();
     if (m_eventLoop.init() == false)
     {
         LOG(ERROR) << "Thead[" << m_name << "] failed init FD event loop!";
@@ -72,9 +70,8 @@ bool EventThread<EventThreadCallback>::init()
 
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 void EventThread<EventThreadCallback>::run()
-{
-    LOG(INFO) << "Started " << m_name;
-    gtlThreadName = m_name;
+{    
+    LuThread::run();
     if (m_clientThreadConfig.TIMER_IN_MSEC != 0u)
     {
         m_timer.setToNonBlocking();
@@ -91,8 +88,7 @@ void EventThread<EventThreadCallback>::run()
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 void EventThread<EventThreadCallback>::stop()
 {
-    LOG(INFO) << "Stopping " << m_name;
-
+    LuThread::stop();
     if (m_clientThreadConfig.TIMER_IN_MSEC == 0u)
     {
         m_timer.init();
@@ -107,7 +103,7 @@ void EventThread<EventThreadCallback>::stop()
 template<lu::common::NonPtrClassOrStruct EventThreadCallback>
 void EventThread<EventThreadCallback>::join()
 {
-    m_thread.join();
+    LuThread::join();
     m_eventThreadCallback.onExit();
 }
 

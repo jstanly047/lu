@@ -1,16 +1,16 @@
 
 
 #pragma once
-#include <platform/FDTimer.h>
+#include <platform/thread/channel/TransferQueue.h>
 
 namespace lu::platform::thread
 {
-    class IEventThreadCallback
+    class IWorkerThreadCallback
     {
     public:
+        virtual void onMsg(channel::ChannelData channelData) = 0;
         virtual bool onInit() = 0;
         virtual void onStart() = 0;
         virtual void onExit() = 0;
-        virtual void onTimer(const lu::platform::FDTimer<IEventThreadCallback>&) = 0;
     };
 }

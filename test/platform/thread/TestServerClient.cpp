@@ -182,4 +182,3 @@ TEST_F(TestServerClient, TestPingPong)
     connectionThread.start(true);
     sleep(1);
 }
-

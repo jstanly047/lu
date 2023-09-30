@@ -27,9 +27,8 @@ namespace lu::platform
     public:
         EventChannel(const EventChannel&) = delete;
         EventChannel& operator=(const EventChannel&) = delete;
-
-        EventChannel(EventChannel&& other);
-        EventChannel& operator=(EventChannel&& other);
+        EventChannel(EventChannel&& other) = delete;
+        EventChannel& operator=(EventChannel&& other)  = delete;
 
         EventChannel(EventChannelHandler& eventChannelHandler);
         ~EventChannel() {}
