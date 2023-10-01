@@ -51,7 +51,7 @@ protected:
         serverClientThreadsCallbacks = serverThread.getClientThreadCallbacks();
 
         // Server thread expected callbacks
-        EXPECT_CALL(mockServerThreadCallback,  onInit()).WillOnce(::testing::Return(true));;
+        EXPECT_CALL(mockServerThreadCallback,  onInit()).WillOnce(::testing::Return(true));
         EXPECT_CALL(mockServerThreadCallback,  onStart()).WillOnce(::testing::Invoke([&]()
             { 
                 EXPECT_EQ(gtlThreadName,"TestServer");

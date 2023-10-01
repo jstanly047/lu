@@ -21,8 +21,8 @@ namespace lu::platform
         bool remove(IFDEventHandler &event);
         void start(int maxEvents);
         void stop();
-        int getFD() { return m_epollFD; }
 
+        int getFD() { return m_epollFD; }
     private:
         int m_epollFD = NULL_FD;
         bool m_stop;

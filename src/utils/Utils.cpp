@@ -32,3 +32,54 @@ std::string Utils::getDateTimeStr(std::time_t time, const std::string& fromat)
     return std::string(buffer);
 }
 
+bool Utils::readDataSocket(int socketId, uint8_t *buf, size_t size, int32_t &readCount)
+{
+    // TODO we can try replace this by ::readv (scatter/gather IO)
+    readCount = ::recv(socketId, buf, size, MSG_DONTWAIT);
+
+    if (readCount < 0)
+    {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            readCount = 0;
+            return true;
+        }
+        else
+        {
+            readCount = 0;
+            return false;
+        }
+    }
+    else if (readCount == 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Utils::readDataFile(int socketId, uint8_t *buf, size_t size, int32_t &readCount)
+{
+    // TODO we can try replace this by ::readv (scatter/gather IO)
+    readCount = ::read(socketId, buf, size);
+
+    if (readCount < 0)
+    {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            readCount = 0;
+            return true;
+        }
+        else
+        {
+            readCount = 0;
+            return false;
+        }
+    }
+    else if (readCount == 0)
+    {
+        return false;
+    }
+
+    return true;
+}

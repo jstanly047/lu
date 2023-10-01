@@ -32,7 +32,63 @@ namespace
     }
 }
 
-template class ServerThread<IServerThreadCallback, lu::platform::socket::data_handler::String, MockServerClientThreadCallback, IClientThreadCallback> ;
+class TestClientTheadCallback
+{
+public:
+    TestClientTheadCallback() : m_thread(nullptr), m_workerThread(nullptr) {}
+    
+    void connectWorkerThread(WorkerThread<MockWorkerThread>& workerThread)
+    {
+        m_workerThread = &workerThread;
+        m_thread->connect(workerThread);
+    }
+
+    bool onInit() { return true; }
+    void onStart(){}
+    void onExit() {}
+
+    void onNewConnection(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> *dataSocket)
+    {
+        std::cout << "New conenction rec" << m_thread->getName() << std::endl;
+    }
+
+    void onTimer(const lu::platform::FDTimer<TestClientTheadCallback> &)
+    {
+
+    }
+
+    void onClientClose(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> & dataSocket)
+    {
+        delete &dataSocket;
+    }
+
+    void onData(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> &dataSocket, void * message)
+    {
+        auto *strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message *>(message);
+
+        if (strMessage->getString() == "Ping")
+        {
+            lu::platform::socket::data_handler::String::Message reply("Pong");
+            dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
+            getThread().transferMsg(m_workerThread->getName(), strMessage);
+            std::cout << "Ping " << getThread().getChannelID() << " to Worker " << getThread().getName() << std::endl;
+        }
+        else if (strMessage->getString() == "GetName")
+        {
+            lu::platform::socket::data_handler::String::Message reply(gtlThreadName);
+            dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
+            delete strMessage;
+        }
+    }
+
+    void setThread(LuThread &thread) { m_thread = &thread; }
+    LuThread &getThread() { return *m_thread; }
+
+private:
+    LuThread *m_thread;
+    WorkerThread<MockWorkerThread>* m_workerThread;
+};
+
 template class ConnectionThread<IConnectionThreadCallback, lu::platform::socket::data_handler::String>;
 
 class TestServerClientWorker : public ::testing::Test
@@ -41,7 +97,8 @@ public:
     TestServerClientWorker() :
                     serverThread("TestServer", mockServerThreadCallback, "10000", getServerConfig()),
                     connectionThread("Client",mockConnectionThreadCallback, EventThreadConfig(getServerConfig())),
-                    workerConsumer("TestConsumer", mockConsumerCallback)
+                    workerConsumer("TestConsumer", mockConsumerCallback),
+                    synStart(1u)
     {
         connectionThread.connectTo("localhost", "10000");
         connectionThread.connectTo("localhost", "10000");
@@ -51,59 +108,14 @@ protected:
     void SetUp() override 
     {
         EXPECT_EQ(serverThread.getName(),"TestServer");
-        serverClientThreadsCallbacks = serverThread.getClientThreadCallbacks();
-
-        // Server thread expected callbacks
-        EXPECT_CALL(mockServerThreadCallback,  onInit()).WillOnce(::testing::Return(true));;
-        EXPECT_CALL(mockServerThreadCallback,  onStart()).WillOnce(::testing::Invoke([&]()
-            { 
-                EXPECT_EQ(gtlThreadName,"TestServer");
-                std::lock_guard<std::mutex> lock(startMutex);
-                serverStarted = true;
-                startCondition.notify_one();
-            }));
-        /*EXPECT_CALL(mockServerThreadCallback,  onStartComplete()).WillOnce(::testing::Invoke([&]()
-            { 
-                serverStarted.store(true); 
-            }));*/
+        EXPECT_CALL(mockServerThreadCallback,  onInit()).WillOnce(::testing::Return(true));
+        EXPECT_CALL(mockServerThreadCallback,  onStart()).Times(1);
         EXPECT_CALL(mockServerThreadCallback,  onExit()).Times(1);
         EXPECT_CALL(mockServerThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
 
-        // Server's client handling threads expected callbacks
-        for (auto serverClientThread: serverClientThreadsCallbacks)
+        for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {
-            MockServerClientThreadCallback* mockServerClientCallback = reinterpret_cast<MockServerClientThreadCallback*>(serverClientThread);
-            mockServerClientCallback->getThread().connect(workerConsumer);
-            EXPECT_CALL(*mockServerClientCallback,  onInit()).WillOnce(::testing::Return(true));
-            EXPECT_CALL(*mockServerClientCallback,  onStart());
-            //EXPECT_CALL(*mockServerClientCallback,  onStartComplete());
-            EXPECT_CALL(*mockServerClientCallback,  onNewConnection(::testing::_)).WillRepeatedly(::testing::Invoke(
-                [&](lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>* dataSocket)
-                {
-                    
-                    serverClientDataSockets.insert(std::unique_ptr<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>>(dataSocket));
-                }));
-
-            EXPECT_CALL(*mockServerClientCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
-                [&]( lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket, void* message)
-                { 
-                    auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
-
-                    if (strMessage->getString() == "Ping")
-                    {
-                        lu::platform::socket::data_handler::String::Message reply("Pong");
-                        dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
-                        mockServerClientCallback->getThread().transferMsg(workerConsumer.getName(), strMessage);
-                    }
-                    else if (strMessage->getString() == "GetName")
-                    {
-                        lu::platform::socket::data_handler::String::Message reply(gtlThreadName);
-                        dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
-                        delete strMessage;
-                    }
-                }));
-            EXPECT_CALL(*mockServerClientCallback,  onExit()).Times(1);
-            EXPECT_CALL(*mockServerClientCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
+            callbacks->connectWorkerThread(workerConsumer);
         }
 
         serverThread.init();
@@ -114,11 +126,6 @@ protected:
         EXPECT_CALL(mockConsumerCallback,  onExit()).Times(1);
         workerConsumer.init();
         workerConsumer.start();
-
-        {
-            std::unique_lock<std::mutex> lock(startMutex);
-            startCondition.wait(lock, [&] { return serverStarted.load(); });
-        }
     }
 
     void TearDown() override 
@@ -130,21 +137,15 @@ protected:
         workerConsumer.join();
     }
 
+
     MockServerThreadCallback mockServerThreadCallback;
-    ServerThread<IServerThreadCallback, lu::platform::socket::data_handler::String, MockServerClientThreadCallback, IClientThreadCallback> serverThread;
-    std::vector<IClientThreadCallback*> serverClientThreadsCallbacks;
-
-    std::set<std::unique_ptr<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>>> serverClientDataSockets;
-
+    ServerThread<IServerThreadCallback, lu::platform::socket::data_handler::String, TestClientTheadCallback> serverThread;
     MockConnectionThreadCallback mockConnectionThreadCallback;
     ConnectionThread<IConnectionThreadCallback, lu::platform::socket::data_handler::String> connectionThread;
 
     MockWorkerThread mockConsumerCallback;
     WorkerThread<MockWorkerThread> workerConsumer;
-
-    std::mutex startMutex;
-    std::condition_variable startCondition;
-    std::atomic<bool> serverStarted = false;
+    lu::utils::WaitForCount synStart;
 };
 
 TEST_F(TestServerClientWorker, TestPingPong)
@@ -198,18 +199,17 @@ TEST_F(TestServerClientWorker, TestPingPong)
         {
             if (channelData.data == nullptr)
             {
+                synStart.increment();
                 EXPECT_EQ(channelData.channelID, workerConsumer.getChannelID());
                 return;
             }
 
-            static unsigned stopCount = 1;
-
-            
-
+            static unsigned stopCount = 0;
             stopCount++;
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(channelData.data);
             ASSERT_EQ(strMessage->getString(), "Ping");
             delete strMessage;
+            std::cout << "Ping " << channelData.channelID << " from Worker " << stopCount << std::endl;
 
             if (stopCount == 3u)
             {
@@ -219,5 +219,5 @@ TEST_F(TestServerClientWorker, TestPingPong)
 
     connectionThread.init();
     connectionThread.start(true);
-    sleep(1);
+    synStart.wait();
 }

@@ -54,11 +54,6 @@ namespace lu::platform::thread
 
         void start(bool createThread = false)
         {
-            for (Service& service : m_services)
-            {
-                service.connection->connectToTCP(m_connectionThreadCallback);
-            }
-
             if (createThread == false)
             {
                 run();
@@ -70,6 +65,11 @@ namespace lu::platform::thread
 
         void run()
         {
+            for (Service& service : m_services)
+            {
+                service.connection->connectToTCP(m_connectionThreadCallback);
+            }
+            
             for (Service& service : m_services)
             {
                 if (service.connection->getDataSocket() == nullptr)

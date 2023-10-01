@@ -3,6 +3,7 @@
 #include <platform/thread/EventThread.h>
 #include <platform/socket/DataSocket.h>
 #include <platform/socket/data_handler/String.h>
+#include <utils/WaitForCount.h>
 #include <glog/logging.h>
 
 namespace lu::platform::thread
@@ -16,10 +17,12 @@ namespace lu::platform::thread
         ClientThread(ClientThread&& other) = delete;
         ClientThread& operator=(ClientThread&& other) = delete;
 
-        ClientThread(ClientThreadCallback &clientThreadCallback, const std::string &name, 
-                      EventThreadConfig threadConfig) : EventThread<ClientThreadCallback>(clientThreadCallback, name, threadConfig),
-                                                        m_clientThreadCallback(clientThreadCallback),
-                                                        m_eventChannel(*this)
+        ClientThread(ClientThreadCallback &clientThreadCallback, const std::string &name,
+                     EventThreadConfig threadConfig, lu::utils::WaitForCount &syncStart)
+            : EventThread<ClientThreadCallback>(clientThreadCallback, name, threadConfig),
+              m_clientThreadCallback(clientThreadCallback),
+              m_eventChannel(*this, name),
+              m_syncStart(syncStart)
         {
         }
         
@@ -29,7 +32,7 @@ namespace lu::platform::thread
         {
             if (m_eventChannel.init() == false)
             {
-                LOG(ERROR) << "Thead[" << this->m_name << "] failed to create event channel!";
+                LOG(ERROR) << "[" << this->m_name << "] Failed to create event channel!";
                 return false;
             }
 
@@ -44,6 +47,7 @@ namespace lu::platform::thread
         void run()
         {
             this->m_eventLoop.add(m_eventChannel);
+            m_syncStart.increment();
             EventThread<ClientThreadCallback>::run();
         }
 
@@ -54,6 +58,7 @@ namespace lu::platform::thread
             dataSocket->getBaseSocket().setNonBlocking();
             this->m_eventLoop.add(*dataSocket);
             delete baseSocket;
+            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket << "]";
         }
 
         const lu::platform::EventChannel<ClientThread>& getEventChannel() const { return m_eventChannel; }
@@ -62,5 +67,6 @@ namespace lu::platform::thread
     private:
         ClientThreadCallback& m_clientThreadCallback;
         lu::platform::EventChannel<ClientThread> m_eventChannel;
+        lu::utils::WaitForCount& m_syncStart;
     };
 }

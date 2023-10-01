@@ -19,17 +19,17 @@ void LuThread::run()
 {
     gtlThreadName = m_name;
     m_channelID = m_outputChannel.getChannelID();
-    LOG(INFO) << "Started " << m_name << ", channelID:" << m_channelID;
+    LOG(INFO) << "[" << m_name << "] Started channelID:" << m_channelID;
 }
 
 void LuThread::stop()
 {
-    LOG(INFO) << "Stopping " << m_name;
+    LOG(INFO) << "[" << m_name << "] Stopping ";
 }
 
 void LuThread::join()
 {
-    LOG(INFO) << "Join " << m_name;
+    LOG(INFO) << "[" << m_name << "] Join";
     m_thread.join(); 
 }
 

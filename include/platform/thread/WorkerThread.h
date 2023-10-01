@@ -2,6 +2,7 @@
 
 #include <common/TemplateConstraints.h>
 #include <platform/thread/LuThread.h>
+#include <platform/thread/channel/TransferQueue.h>
 
 namespace  lu::platform::thread
 {
@@ -30,16 +31,21 @@ namespace  lu::platform::thread
             LuThread::run();
             m_luThreadCallback.onStart();
 
-            while (m_stop == false)
+            for(;;) 
             {
-                 m_luThreadCallback.onMsg(m_inputChannel.getTransferQueue().pop());
-            };
+                channel::ChannelData channelData = m_inputChannel.getTransferQueue().pop();
+                m_luThreadCallback.onMsg(channelData);
+
+                if (UNLIKELY(channelData.data == nullptr))
+                {
+                    break;
+                }
+            }
         }
 
         void stop()
         {
             LuThread::stop();
-            m_stop = true;
             m_inputChannel.getTransferQueue().push({getChannelID(), nullptr});
         }
 
@@ -56,6 +62,5 @@ namespace  lu::platform::thread
     private:
 
         LuThreadCallback& m_luThreadCallback;
-        bool m_stop = false;
     };
 } 
