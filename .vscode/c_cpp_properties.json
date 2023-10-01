@@ -5,7 +5,11 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/include",
-                "${workspaceFolder}/test/mock"
+                "${workspaceFolder}/test/mock",
+                "~/.conan2/p/gtestf28c74556dabb/p/include",
+                "~/.conan2/p/glog247eb20ee87bb/p/include",
+                "~/.conan2/p/b/soci04f368c40495a/p/include",
+                "~/.conan2/p/gflagfd83e6ec61b29/p/include"
             ],
             "cStandard": "gnu20",
             "cppStandard": "gnu++20"

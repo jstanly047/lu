@@ -63,6 +63,16 @@
         "stop_token": "cpp",
         "variant": "cpp",
         "cinttypes": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "socket": "cpp",
+        "reflex": "cpp",
+        "forward_list": "cpp",
+        "buffer": "cpp",
+        "executor": "cpp",
+        "io_context": "cpp",
+        "netfwd": "cpp",
+        "future": "cpp",
+        "coroutine": "cpp",
+        "span": "cpp"
     }
 }
