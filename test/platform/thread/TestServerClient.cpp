@@ -85,8 +85,21 @@ protected:
                 { 
                     auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
 
-                    if (strMessage->getString() == "Ping")
+                    if (strMessage->getString() == "Ping_1")
                     {
+                        countReceivedPing[0] += 1;
+                        lu::platform::socket::data_handler::String::Message reply("Pong");
+                        dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
+                    }
+                    else if (strMessage->getString() == "Ping_2")
+                    {
+                        countReceivedPing[1] += 1;
+                        lu::platform::socket::data_handler::String::Message reply("Pong");
+                        dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
+                    }
+                    else if (strMessage->getString() == "Ping_3")
+                    {
+                        countReceivedPing[2] += 1;
                         lu::platform::socket::data_handler::String::Message reply("Pong");
                         dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
                     }
@@ -131,6 +144,7 @@ protected:
     std::mutex startMutex;
     std::condition_variable startCondition;
     std::atomic<bool> serverStarted = false;
+    std::array<std::atomic<int>, 3> countReceivedPing = {0, 0, 0}; 
 };
 
 TEST_F(TestServerClient, TestPingPong)
@@ -143,9 +157,11 @@ TEST_F(TestServerClient, TestPingPong)
     EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::_)).Times(3).WillRepeatedly(::testing::Invoke(
         [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& dataSocket)
         { 
-            lu::platform::socket::data_handler::String::Message request("Ping");
+            static int pingNumber = 1;
+            lu::platform::socket::data_handler::String::Message request("Ping_" + std::to_string(pingNumber));
             dataSocket.sendMsg(&request, sizeof(lu::platform::socket::data_handler::String::Message));
             clientSideDataSocket.push_back({&dataSocket, 0});
+            pingNumber++;
         }));
 
     EXPECT_CALL(mockConnectionThreadCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
@@ -180,5 +196,9 @@ TEST_F(TestServerClient, TestPingPong)
     EXPECT_CALL(mockConnectionThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
     connectionThread.init();
     connectionThread.start(true);
+    
     sleep(1);
+    for (const auto& element : countReceivedPing) {
+        EXPECT_EQ(element, 1);
+    }
 }

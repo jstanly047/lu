@@ -45,7 +45,7 @@ namespace lu::platform::socket
         {
             int numberOfBytesRead = 0;
 
-            if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_dataHandler.getReceiveBufferToFill() + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+            if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_dataHandler.getReceiveBufferToFill() + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
             {
                 return false;
             }

@@ -105,7 +105,7 @@ namespace lu::platform
         {
             int numberOfBytesRead = 0;
 
-            if (lu::utils::Utils::readDataFile(*m_in, m_buffer + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+            if (lu::utils::Utils::readDataFile(*m_in, m_buffer + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
             {
                 return false;
             }
