@@ -145,7 +145,11 @@ namespace lu::platform::socket
 
             if (fd < 0)
             {
-                LOG(ERROR) << "Accept failed!!";
+                if (errno != EAGAIN)
+                {
+                    LOG(ERROR) << "Accept failed!!";
+                }
+                
                 return nullptr;
             }
 
@@ -180,7 +184,17 @@ namespace lu::platform::socket
                 return;
             }
             
-            m_serverSocketCallback.onNewConnection(acceptDataSocket());
+            for (;;)
+            {
+                auto dataSocket = acceptDataSocket();
+
+                if (dataSocket == nullptr)
+                {
+                    break;
+                }
+                
+                m_serverSocketCallback.onNewConnection(dataSocket);
+            }
         }
 
         BaseSocket m_baseSocket;

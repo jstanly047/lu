@@ -49,7 +49,6 @@ public:
 
     void onNewConnection(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> *dataSocket)
     {
-        std::cout << "New conenction rec" << m_thread->getName() << std::endl;
     }
 
     void onTimer(const lu::platform::FDTimer<TestClientTheadCallback> &)
@@ -71,7 +70,6 @@ public:
             lu::platform::socket::data_handler::String::Message reply("Pong");
             dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
             getThread().transferMsg(m_workerThread->getName(), strMessage);
-            std::cout << "Ping " << getThread().getChannelID() << " to Worker " << getThread().getName() << std::endl;
         }
         else if (strMessage->getString() == "GetName")
         {
@@ -217,7 +215,6 @@ TEST_F(TestServerClientWorker, TestPingPong)
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(channelData.data);
             ASSERT_EQ(strMessage->getString(), "Ping");
             delete strMessage;
-            std::cout << "Ping " << channelData.channelID << " from Worker " << stopCount << std::endl;
 
             if (stopCount == 3u)
             {
