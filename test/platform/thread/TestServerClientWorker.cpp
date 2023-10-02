@@ -98,7 +98,7 @@ public:
                     serverThread("TestServer", mockServerThreadCallback, "10000", getServerConfig()),
                     connectionThread("Client",mockConnectionThreadCallback, EventThreadConfig(getServerConfig())),
                     workerConsumer("TestConsumer", mockConsumerCallback),
-                    synStart(1u)
+                    waitForCount(1u)
     {
         connectionThread.connectTo("localhost", "10000");
         connectionThread.connectTo("localhost", "10000");
@@ -145,11 +145,12 @@ protected:
 
     MockWorkerThread mockConsumerCallback;
     WorkerThread<MockWorkerThread> workerConsumer;
-    lu::utils::WaitForCount synStart;
+    lu::utils::WaitForCount waitForCount;
 };
 
 TEST_F(TestServerClientWorker, TestPingPong)
 {
+    waitForCount.update(2u);
     EXPECT_CALL(mockConnectionThreadCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockConnectionThreadCallback,  onStart());
     std::vector<std::pair<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>*, int>> clientSideDataSocket;
@@ -183,6 +184,13 @@ TEST_F(TestServerClientWorker, TestPingPong)
                     else
                     {
                         ASSERT_EQ(strMessage->getString(), expected[i]);
+                        static unsigned int nameReplyCount = 0u;
+                        ++nameReplyCount;
+                        if (nameReplyCount == 3u)
+                        {
+                            waitForCount.increment();
+                        }
+
                     }
 
                     break;
@@ -199,8 +207,8 @@ TEST_F(TestServerClientWorker, TestPingPong)
         {
             if (channelData.data == nullptr)
             {
-                synStart.increment();
                 EXPECT_EQ(channelData.channelID, workerConsumer.getChannelID());
+                waitForCount.increment();
                 return;
             }
 
@@ -219,5 +227,5 @@ TEST_F(TestServerClientWorker, TestPingPong)
 
     connectionThread.init();
     connectionThread.start(true);
-    synStart.wait();
+    waitForCount.wait();
 }
