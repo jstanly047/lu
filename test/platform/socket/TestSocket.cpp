@@ -1,5 +1,6 @@
 #include <platform/socket/ServerSocket.h>
 #include <platform/socket/ConnectSocket.h>
+#include <platform/socket/DataSocket.h>
 #include <platform/socket/IDataHandler.h>
 #include <platform/socket/IServerSocketCallback.h>
 #include <platform/socket/IDataSocketCallback.h>
@@ -72,7 +73,7 @@ protected:
 
     MockSeverSocketCallback m_mockServerSocketCallback;
     IDataSocketCallback<IDataHandler> m_clientDataSocketCallback;
-    ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler> connectSocket;
+    ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>> connectSocket;
     ServerSocket<IServerSocketCallback> serverSocket;
     std::thread serverThead;
     BaseSocket* dataSocket = nullptr;
@@ -146,7 +147,7 @@ TEST_F(TestSocket, DISABLED_setMaxSendDataWaitThreshold)
 
 TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 {
-    auto connectSocketTemp = new ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler>("localhost", "10000");
+    auto connectSocketTemp = new ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>>("localhost", "10000");
     connectSocketTemp->connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp->getBaseSocket(), nullptr);
     int fd = connectSocketTemp->getBaseSocket()->getFD();
@@ -157,7 +158,7 @@ TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 
 TEST_F(TestSocket, checkOnReconnectCloseAlreadyOpenedDataSocket)
 {
-    ConnectSocket<IDataSocketCallback<IDataHandler>, IDataHandler> connectSocketTemp("localhost", "10000");
+    ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>> connectSocketTemp("localhost", "10000");
     connectSocketTemp.connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
     int fd = connectSocketTemp.getBaseSocket()->getFD();

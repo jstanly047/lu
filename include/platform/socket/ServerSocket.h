@@ -3,7 +3,6 @@
 #include <common/TemplateConstraints.h>
 #include <platform/IFDEventHandler.h>
 #include <platform/defs.h>
-#include <glog/logging.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -11,6 +10,10 @@
 #include <sys/epoll.h>
 #include <netdb.h>
 #include <csignal>
+
+#include <glog/logging.h>
+
+
 
 namespace lu::platform::socket
 {

@@ -103,7 +103,7 @@ namespace lu::platform
 
         bool Receive()
         {
-            int numberOfBytesRead = 0;
+            ssize_t numberOfBytesRead = 0;
 
             if (lu::utils::Utils::readDataFile(*m_in, m_buffer + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
             {

@@ -30,8 +30,8 @@ namespace
     }
 }
 
-template class ServerThread<IServerThreadCallback, lu::platform::socket::data_handler::String, MockServerClientThreadCallback, IClientThreadCallback> ;
-template class ConnectionThread<IConnectionThreadCallback, lu::platform::socket::data_handler::String>;
+template class ServerThread<IServerThreadCallback, lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>, MockServerClientThreadCallback, IClientThreadCallback> ;
+template class ConnectionThread<IConnectionThreadCallback, lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>>;
 
 class TestServerClient : public ::testing::Test
 {
@@ -133,13 +133,13 @@ protected:
     }
 
     MockServerThreadCallback mockServerThreadCallback;
-    ServerThread<IServerThreadCallback, lu::platform::socket::data_handler::String, MockServerClientThreadCallback, IClientThreadCallback> serverThread;
+    ServerThread<IServerThreadCallback, lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>, MockServerClientThreadCallback, IClientThreadCallback> serverThread;
     std::vector<IClientThreadCallback*> serverClientThreadsCallbacks;
 
     std::set<std::unique_ptr<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>>> serverClientDataSockets;
 
     MockConnectionThreadCallback mockConnectionThreadCallback;
-    ConnectionThread<IConnectionThreadCallback, lu::platform::socket::data_handler::String> connectionThread;
+    ConnectionThread<IConnectionThreadCallback, lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>> connectionThread;
 
     std::mutex startMutex;
     std::condition_variable startCondition;

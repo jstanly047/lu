@@ -2,10 +2,12 @@
 #include <platform/socket/DataSocket.h>
 #include <common/TemplateConstraints.h>
 #include <cstring>
+#include <sys/uio.h>
+
 
 namespace lu::platform::socket::data_handler
 {
-    class String
+    class StringV
     {
     public:
         class Header
@@ -34,23 +36,30 @@ namespace lu::platform::socket::data_handler
             char m_data[64];
         };
 
-        String(const String&)               = delete;
-        String& operator=(const String&)    = delete;
-        String(String&& other)              = delete;
-        String& operator=(String&& other)   = delete;
+        StringV(const StringV&)               = delete;
+        StringV& operator=(const StringV&)    = delete;
+        StringV(StringV&& other)              = delete;
+        StringV& operator=(StringV&& other)   = delete;
         
-        String();
-        ~String() {}
+        StringV();
+        ~StringV() {}
 
         
-        uint8_t* getReceiveBufferToFill() { return m_buffer.get(); }
-        ssize_t getReceiveBufferSize() { return m_bufferSize; }
-        ssize_t getHeaderSize() { return sizeof(Header); };
+        uint8_t* getReceiveBufferToFill() { return m_buffer1.get(); }
+        ssize_t getReceiveBufferSize() { return m_bufferSize * 2; }
+        ssize_t getSingleBufferSize() { return m_bufferSize; }
+        ssize_t getHeaderSize() { return sizeof(Header); }
+        struct iovec* getIOVect() { return m_readIOVec; }
+        void swap() { m_buffer1.swap(m_buffer2);}
         ssize_t readHeader(ssize_t offset);
         void* readMessage(ssize_t offset, ssize_t size);
+        int getNumberOfBuffers(ssize_t writeableOffset);
+        
 
     private:
-        ssize_t m_bufferSize = 1000;
-        std::unique_ptr<uint8_t> m_buffer;
+        const ssize_t m_bufferSize;
+        std::unique_ptr<uint8_t> m_buffer1;
+        std::unique_ptr<uint8_t> m_buffer2;
+        struct iovec m_readIOVec[2];
     };
 }

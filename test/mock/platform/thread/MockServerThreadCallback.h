@@ -1,5 +1,6 @@
 #pragma once
 #include <platform/thread/ServerThread.h>
+#include <platform/thread/IServerThreadCallback.h>
 #include <platform/socket/data_handler/String.h>
 #include <platform/thread/MockServerThreadCallback.h>
 #include <platform/thread/MockServerClientThreadCallback.h>

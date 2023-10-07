@@ -1,6 +1,5 @@
 #pragma once
 #include <platform/thread/EventThread.h>
-#include <platform/socket/DataSocket.h>
 #include <platform/socket/ConnectSocket.h>
 
 #include <memory>
@@ -8,7 +7,7 @@
 
 namespace lu::platform::thread
 {
-    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataHandler>
+    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
     class ConnectionThread : public EventThread<ConnectionThreadCallback>
     {
         struct Service
@@ -23,7 +22,7 @@ namespace lu::platform::thread
 
             std::string host;
             std::string service;
-            std::unique_ptr<lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataHandler>> connection;
+            std::unique_ptr<lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>> connection;
         };
 
     public:
@@ -46,7 +45,7 @@ namespace lu::platform::thread
         {
             for (Service& service : m_services)
             {
-                service.connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataHandler>(service.host, service.service));
+                service.connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>(service.host, service.service));
             }
 
             return EventThread<ConnectionThreadCallback>::init();
@@ -82,6 +81,8 @@ namespace lu::platform::thread
             }
 
             EventThread<ConnectionThreadCallback>::run();
+
+            m_connectionThreadCallback.onExit();
         }
 
         void connectTo(const std::string& host, const std::string& service)

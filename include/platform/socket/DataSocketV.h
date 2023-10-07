@@ -3,6 +3,7 @@
 #include "BaseSocket.h"
 #include <common/TemplateConstraints.h>
 #include <platform/IFDEventHandler.h>
+#include <string>
 #include <platform/defs.h>
 #include <utils/Utils.h>
 
@@ -18,16 +19,16 @@
 
 namespace lu::platform::socket
 {
-    template <lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
-    class DataSocket : public lu::platform::IFDEventHandler
+    template <lu::common::NonPtrClassOrStruct DataSocketVCallback, lu::common::NonPtrClassOrStruct DataHandler>
+    class DataSocketV : public lu::platform::IFDEventHandler
     {
     public:
-        DataSocket(const DataSocket &) = delete;
-        DataSocket &operator=(const DataSocket &) = delete;
-        DataSocket(DataSocket &&other) = delete;
-        DataSocket &operator=(DataSocket &&other) = delete;
+        DataSocketV(const DataSocketV &) = delete;
+        DataSocketV &operator=(const DataSocketV &) = delete;
+        DataSocketV(DataSocketV &&other) = delete;
+        DataSocketV &operator=(DataSocketV &&other) = delete;
 
-        DataSocket(DataSocketCallback &dataSocketCallback, BaseSocket &&baseSocket) : m_baseSocket(std::move(baseSocket)),
+        DataSocketV(DataSocketVCallback &dataSocketCallback, BaseSocket &&baseSocket) : m_baseSocket(std::move(baseSocket)),
                                                                                       m_dataSocketCallback(dataSocketCallback),
                                                                                       m_dataHandler(),
                                                                                       m_headerSize(m_dataHandler.getHeaderSize()),
@@ -37,25 +38,29 @@ namespace lu::platform::socket
         {
         }
 
-        virtual ~DataSocket() {}
+        virtual ~DataSocketV() {}
 
         bool Receive()
         {
-            for(;;)
+            for (;;)
             {
                 ssize_t numberOfBytesRead = 0;
+                //m_dataHandler.getReceiveBufferToFill() + m_readOffset + m_numberOfBytesLeftToRead;
+                auto writeableOffset = m_readOffset + m_numberOfBytesLeftToRead;
+                int numbOfDataBuffer = m_dataHandler.getNumberOfBuffers(writeableOffset);
 
-                if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_dataHandler.getReceiveBufferToFill() + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+                if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_dataHandler.getIOVect(), numbOfDataBuffer, numberOfBytesRead) == false)
                 {
                     return false;
                 }
 
                 if (numberOfBytesRead == 0)
                 {
-                    break;
+                    return true;
                 }
 
                 m_numberOfBytesLeftToRead += numberOfBytesRead;
+                
                 readMessages();
 
                 if (m_numberOfBytesLeftToRead == 0)
@@ -63,12 +68,12 @@ namespace lu::platform::socket
                     m_readOffset = 0;
                     m_numberOfBytesLeftToRecv = m_dataHandler.getReceiveBufferSize();
                 }
-                else if (m_numberOfBytesLeftToRead <= m_receiveBufferShiftSize)
+                else if (m_readOffset >=  m_dataHandler.getSingleBufferSize())
                 {
-                    std::memcpy(m_dataHandler.getReceiveBufferToFill(), m_dataHandler.getReceiveBufferToFill() + m_readOffset, m_numberOfBytesLeftToRead);
-                    m_readOffset = 0;
+                    m_dataHandler.swap();
+                    m_readOffset -= m_dataHandler.getSingleBufferSize();
                     m_numberOfBytesLeftToRecv = m_dataHandler.getReceiveBufferSize() - m_numberOfBytesLeftToRead;
-                    assert(m_numberOfBytesLeftToRecv > 0u);
+                    assert(m_numberOfBytesLeftToRecv >= 0u);
                 }
             }
 
@@ -117,7 +122,7 @@ namespace lu::platform::socket
             return totalSent;
         }
 
-        int sendFile(int fileDescriptor, ssize_t size)
+        int sendFile(int fileDescriptor, int size)
         {
             off_t offset = 0;
             ssize_t sendBytes = ::sendfile(m_baseSocket.getFD(), fileDescriptor, &offset, size);
@@ -127,7 +132,7 @@ namespace lu::platform::socket
                 return false;
             }
 
-            ssize_t totalSent = 0;
+            int totalSent = 0;
 
             while (totalSent < size)
             {
@@ -142,7 +147,7 @@ namespace lu::platform::socket
 
                     return totalSent;
                 }
-                else if (numBytesSend != size)
+                else if (numBytesSend != (ssize_t)size)
                 {
                     if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
                     {
@@ -167,7 +172,7 @@ namespace lu::platform::socket
     private:
         inline void readMessages()
         {
-            unsigned int expectedMsgSize = 0;
+            ssize_t expectedMsgSize = 0;
 
             for (;;)
             {
@@ -213,7 +218,7 @@ namespace lu::platform::socket
 
             if (Receive() == false)
             {
-                // TODO : May be different callback since this some IO read error
+                // TODO : Instead of calling close better call different callback
                 m_dataSocketCallback.onClientClose(*this);
             }
         }
@@ -222,7 +227,7 @@ namespace lu::platform::socket
 
     protected:
         BaseSocket m_baseSocket;
-        DataSocketCallback &m_dataSocketCallback;
+        DataSocketVCallback &m_dataSocketCallback;
         DataHandler m_dataHandler;
         ssize_t m_headerSize{};
         ssize_t m_receiveBufferShiftSize{};

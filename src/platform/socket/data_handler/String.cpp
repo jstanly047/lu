@@ -9,13 +9,13 @@ String::String() :
 {
 }
 
-unsigned int String::readHeader(std::size_t offset)
+ssize_t String::readHeader(ssize_t offset)
 {
     Header* header = reinterpret_cast<Header*>(m_buffer.get() + offset);
     return header->getSize();
 }
 
-void* String::readMessage(std::size_t offset, std::size_t size)
+void* String::readMessage(ssize_t offset, ssize_t size)
 {
     auto newMessage = new Message();
     std::memcpy(newMessage, (void*) (m_buffer.get() + offset), size);

@@ -32,9 +32,13 @@ namespace
     }
 }
 
+using StringDataSocket=lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>;
+
+
 class TestClientTheadCallback
 {
 public:
+    using StringDataSocket=lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String>;
     TestClientTheadCallback() : m_thread(nullptr), m_workerThread(nullptr) {}
     
     void connectWorkerThread(WorkerThread<MockWorkerThread>& workerThread)
@@ -47,7 +51,7 @@ public:
     void onStart(){}
     void onExit() {}
 
-    void onNewConnection(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> *dataSocket)
+    void onNewConnection(StringDataSocket *dataSocket)
     {
     }
 
@@ -56,12 +60,12 @@ public:
 
     }
 
-    void onClientClose(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> & dataSocket)
+    void onClientClose(StringDataSocket & dataSocket)
     {
         delete &dataSocket;
     }
 
-    void onData(lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String> &dataSocket, void * message)
+    void onData(StringDataSocket &dataSocket, void * message)
     {
         auto *strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message *>(message);
 
@@ -86,8 +90,6 @@ private:
     LuThread *m_thread;
     WorkerThread<MockWorkerThread>* m_workerThread;
 };
-
-template class ConnectionThread<IConnectionThreadCallback, lu::platform::socket::data_handler::String>;
 
 class TestServerClientWorker : public ::testing::Test
 {
@@ -137,9 +139,9 @@ protected:
 
 
     MockServerThreadCallback mockServerThreadCallback;
-    ServerThread<IServerThreadCallback, lu::platform::socket::data_handler::String, TestClientTheadCallback> serverThread;
+    ServerThread<IServerThreadCallback, TestClientTheadCallback::StringDataSocket, TestClientTheadCallback> serverThread;
     MockConnectionThreadCallback mockConnectionThreadCallback;
-    ConnectionThread<IConnectionThreadCallback, lu::platform::socket::data_handler::String> connectionThread;
+    ConnectionThread<IConnectionThreadCallback, StringDataSocket> connectionThread;
 
     MockWorkerThread mockConsumerCallback;
     WorkerThread<MockWorkerThread> workerConsumer;
@@ -151,11 +153,11 @@ TEST_F(TestServerClientWorker, TestPingPong)
     waitForCount.update(2u);
     EXPECT_CALL(mockConnectionThreadCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockConnectionThreadCallback,  onStart());
-    std::vector<std::pair<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>*, int>> clientSideDataSocket;
+    std::vector<std::pair<StringDataSocket*, int>> clientSideDataSocket;
     std::vector<std::string> expected = {"TestServer_1", "TestServer_2", "TestServer_1"};
     //EXPECT_CALL(mockConnectionThreadCallback,  onStartComplete());
     EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::_)).Times(3).WillRepeatedly(::testing::Invoke(
-        [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& dataSocket)
+        [&]( StringDataSocket& dataSocket)
         { 
             lu::platform::socket::data_handler::String::Message request("Ping");
             dataSocket.sendMsg(&request, sizeof(lu::platform::socket::data_handler::String::Message));
@@ -163,7 +165,7 @@ TEST_F(TestServerClientWorker, TestPingPong)
         }));
 
     EXPECT_CALL(mockConnectionThreadCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
-        [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& dataSocket, void* message)
+        [&]( StringDataSocket& dataSocket, void* message)
         { 
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
 

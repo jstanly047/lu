@@ -1,10 +1,6 @@
 #pragma once
-#include <platform/thread/IServerThreadCallback.h>
-#include <platform/thread/IClientThreadCallback.h>
 #include <platform/socket/ServerSocket.h>
 #include <platform/thread/ClientThread.h>
-#include <platform/thread/Config.h>
-#include <glog/logging.h>
 
 #include <thread>
 #include <vector>
@@ -15,7 +11,7 @@ namespace lu::platform::thread
     concept BaseOrSameClass = std::is_base_of_v<Base, Derived> || std::is_same_v<Base, Derived>;
 
 
-    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataHandler, 
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType, 
             lu::common::NonPtrClassOrStruct ClientThreadCallback, 
             lu::common::NonPtrClassOrStruct BaseClientThreadCallback=ClientThreadCallback>
     class ServerThread : public EventThread<ServerThreadCallback>
@@ -59,7 +55,7 @@ namespace lu::platform::thread
                 std::string clientThreadName = this->m_name + "_" + std::to_string(i+1);
                 eventThreadConfig.TIMER_NAME += std::to_string(i+1);
                 m_serverClientThreadsCallbacks.emplace_back(ClientThreadCallback());
-                m_serverClientThreads.emplace_back(std::make_unique<ClientThread<BaseClientThreadCallback, DataHandler>>(static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), 
+                m_serverClientThreads.emplace_back(std::make_unique<ClientThread<BaseClientThreadCallback, DataSocketType>>(static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), 
                                                 clientThreadName, eventThreadConfig, m_syncStart));
                 m_serverClientThreadsCallbacksPtr.push_back(&m_serverClientThreadsCallbacks.back());
                 m_serverClientThreadsCallbacks.back().setThread(*m_serverClientThreads.back());
@@ -155,7 +151,7 @@ namespace lu::platform::thread
         unsigned int m_currentClientHandler{};
         std::vector<ClientThreadCallback> m_serverClientThreadsCallbacks;
         std::vector<BaseClientThreadCallback*> m_serverClientThreadsCallbacksPtr;
-        std::vector<std::unique_ptr<ClientThread<BaseClientThreadCallback, DataHandler>>> m_serverClientThreads;
+        std::vector<std::unique_ptr<ClientThread<BaseClientThreadCallback, DataSocketType>>> m_serverClientThreads;
         SeverConfig m_serverConfig;
         lu::utils::WaitForCount m_syncStart;
     };

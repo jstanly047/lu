@@ -37,6 +37,8 @@ namespace
     }
 }
 
+struct iovec;
+
 
 namespace lu::utils
 {
@@ -76,7 +78,9 @@ namespace lu::utils
         static  void DieWithUserMessage(const char *msg, const char *detail);
         static void DieWithSystemMessage(const char *msg);
         static void PrintSocketAddress(const struct sockaddr &address, FILE *stream);
-        static bool readDataSocket(int socketId, uint8_t *buf, size_t size, int32_t &readCount);
-        static bool readDataFile(int socketId, uint8_t *buf, size_t size, int32_t &readCount);
+        static bool readDataSocket(int socketId, uint8_t *buf, size_t size, ssize_t &readCount);
+        static bool readDataFile(int socketId, uint8_t *buf, size_t size, ssize_t &readCount);
+
+        static bool readDataSocket(int socketId,struct iovec* dataBufferVec, int numOfVBuffers, ssize_t &readCount);
     };
 }

@@ -1,17 +1,19 @@
 #pragma once
 #include  <platform/socket/DataSocket.h>
 #include <common/TemplateConstraints.h>
-#include <glog/logging.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdlib.h>
 
+#include <glog/logging.h>
+
 // TODO Revisit and change the callbacks
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+    template<lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataSocketType>
     class ConnectSocket 
     {
     public:
@@ -89,7 +91,7 @@ namespace lu::platform::socket
                 return false;
             }
 
-            m_dataSocket.reset(new DataSocket<DataSocketCallback, DataHandler>(dataSocketCallback, BaseSocket(fd, *connectAddr->ai_addr)));
+            m_dataSocket.reset(new DataSocketType(dataSocketCallback, BaseSocket(fd, *connectAddr->ai_addr)));
             DLOG(INFO) << "Connecting to " << m_dataSocket->getIP() << ":" << m_dataSocket->getPort();
             ::freeaddrinfo(servAddr);
             return true;
@@ -98,10 +100,10 @@ namespace lu::platform::socket
         const std::string& getHost() const { return m_host;}
         const std::string& getService() const { return m_service; }
         BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
-        std::unique_ptr<DataSocket<DataSocketCallback, DataHandler> >& getDataSocket() { return m_dataSocket; }
+        std::unique_ptr<DataSocketType>& getDataSocket() { return m_dataSocket; }
 
     private:
-        std::unique_ptr<DataSocket<DataSocketCallback, DataHandler> > m_dataSocket = nullptr;
+        std::unique_ptr<DataSocketType> m_dataSocket = nullptr;
         std::string m_host{};
         std::string m_service{};
     };

@@ -1,14 +1,11 @@
 #pragma once
 
 #include <platform/thread/EventThread.h>
-#include <platform/socket/DataSocket.h>
-#include <platform/socket/data_handler/String.h>
 #include <utils/WaitForCount.h>
-#include <glog/logging.h>
 
 namespace lu::platform::thread
 {
-    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataHandler>
+    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
     class ClientThread : public EventThread<ClientThreadCallback>
     {
     public:
@@ -53,7 +50,7 @@ namespace lu::platform::thread
 
         void onNewConnection(lu::platform::socket::BaseSocket *baseSocket)
         {
-            auto dataSocket = new lu::platform::socket::DataSocket<ClientThreadCallback, DataHandler>(this->m_clientThreadCallback, std::move(*baseSocket));
+            auto dataSocket = new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket));
             this->m_clientThreadCallback.onNewConnection(dataSocket);
             dataSocket->getBaseSocket().setNonBlocking();
             this->m_eventLoop.add(*dataSocket);
