@@ -5,7 +5,7 @@ cleanBuild=""
 buildunittest=false
 
 function display_usage() {
-    echo "Usage: $0 [-t <Debug/Release/Coverage>] [-c] [-u]"
+    echo "Usage: $0 [-t <Debug/Release/Coverage/ClangTidy>] [-c] [-u] [-ct]"
     echo "Options:"
     echo "  -t <type> : Specify the build type (Debug/Release/Coverage). Default is Debug."
     echo "  -c        : Clean the build before starting the build process."
@@ -16,7 +16,7 @@ while getopts ":t:cu" opt; do
     case $opt in
         t)
             case "$OPTARG" in
-                Debug|Release|Coverage)
+                Debug|Release|Coverage|ClangTidy)
                     buildType="$OPTARG"
                     ;;
                 *)
@@ -57,6 +57,8 @@ if [ "$buildType" = "Debug" ]; then
     BUILD_CMD="$BUILD_CMD -s build_type=Debug"
 elif [ "$buildType" = "Coverage" ]; then
     BUILD_CMD="$BUILD_CMD -o COV_BUILD=True -s build_type=Debug"
+elif [ "$buildType" = "ClangTidy" ]; then
+    BUILD_CMD="$BUILD_CMD -o CLANG_CHECK=True -s build_type=Release"
 else
     BUILD_CMD="$BUILD_CMD -s build_type=Release"
 fi

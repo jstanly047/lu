@@ -19,13 +19,15 @@ class snapafwRecipe(ConanFile):
     options = {
     "shared": [True, False],
     "UNIT_TEST": [True, False],
-    "COV_BUILD": [True, False]
+    "COV_BUILD": [True, False],
+    "CLANG_CHECK":[True, False]
     }
 
     default_options = {
     "shared": False,
     "UNIT_TEST": False,
-    "COV_BUILD": False
+    "COV_BUILD": False,
+    "CLANG_CHECK":False
     }
 
     def config_options(self):
@@ -62,6 +64,8 @@ class snapafwRecipe(ConanFile):
             tc.variables["UNIT_TEST"] = True
         if self.options.COV_BUILD:
             tc.variables["COV_BUILD"] = True
+        if self.options.CLANG_CHECK:
+            tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = True
         tc.generate()
 
     def build(self):
@@ -69,7 +73,11 @@ class snapafwRecipe(ConanFile):
         cmake.parallel = True
         cmake.configure()
         cmake.build()
-        self.run_tests()
+
+        if self.options.CLANG_CHECK:
+            self.runClangTidy()
+        else:
+            self.run_tests()
 
     def package(self):
         copy(self, "*.h", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"), keep_path=True)
@@ -111,3 +119,12 @@ class snapafwRecipe(ConanFile):
             self.run("lcov -a " + coverageBaseLineFile + " -a " + coverageOutFile + "  -o  " + coverageCombinedFile)
             self.run("lcov -r " + coverageCombinedFile + " '/usr/include/*' '*usr/lib/*' '*test*' -o " + coverageCombinedFile)
             self.run("genhtml -o " + coverageReportPath + coverageCombinedFile)
+
+    
+    #################Custom private functions##################
+    def runClangTidy(self):
+        unitTestResultPath=os.path.join(self.build_folder, "clangTidyReport.html")
+        srcFiles=self.source_folder + "/src"
+        include=self.source_folder + "/include"
+        print(self.source_folder)
+        self.run("clang-tidy -p " + self.build_folder + " -output-format html -checks=* " + srcFiles + " " + include + " -output " + unitTestResultPath)

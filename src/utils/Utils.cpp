@@ -1,11 +1,11 @@
 #include <utils/Utils.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -88,8 +88,6 @@ bool Utils::readDataSocket(int socketId,struct ::iovec* dataBufferVec, int numOf
 
     return true;
 }
-
-struct iovec vec[2];
 
 bool Utils::readDataFile(int socketId, uint8_t *buf, size_t size, ssize_t &readCount)
 {

@@ -2,7 +2,6 @@
 #include <platform/socket/ServerSocket.h>
 #include <platform/thread/ClientThread.h>
 
-#include <thread>
 #include <vector>
 
 namespace lu::platform::thread
