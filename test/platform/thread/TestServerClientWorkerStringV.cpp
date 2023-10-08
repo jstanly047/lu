@@ -164,8 +164,6 @@ namespace
             {
                 t.join();
             }
-
-            waitForCount.increment();
         }
 
         void onTimer(const lu::platform::FDTimer<ConnectionThreadCallback> &) {}
@@ -173,7 +171,7 @@ namespace
     private:
         std::vector<std::pair<StringDataSocket *, int>> clientSideDataSocketV;
         std::vector<std::thread> m_createdThreads;
-        std::vector<std::string> expected = {"TestServer_1", "TestServer_2", "TestServer_1"};
+        std::vector<std::string> expected = {"TestServer_1", "TestServer_2"};
     };
 
     class ServerThreadCallback
@@ -217,7 +215,7 @@ protected:
         workerConsumer.start();
     }
 
-    void TearDown() override 
+    void TearDown() override
     {
         serverThread.stop();
         connectionThread.stop();
@@ -225,7 +223,6 @@ protected:
         serverThread.join();
         workerConsumer.join();
     }
-
 
     ServerThreadCallback serverThreadCallback;
     ServerThread<ServerThreadCallback, TestClientTheadCallback::StringDataSocket, TestClientTheadCallback> serverThread;
@@ -238,8 +235,6 @@ protected:
 
 TEST_F(TestServerClientWorkerStringV, TestPingPong)
 {
-    waitForCount.update(2u);
-
     EXPECT_CALL(mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {

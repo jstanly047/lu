@@ -51,6 +51,7 @@ namespace lu::platform::thread
         void onNewConnection(lu::platform::socket::BaseSocket *baseSocket)
         {
             auto dataSocket = new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket));
+            // TODO check onNewCOnnection used should be able to send an data
             this->m_clientThreadCallback.onNewConnection(dataSocket);
             dataSocket->getBaseSocket().setNonBlocking();
             this->m_eventLoop.add(*dataSocket);

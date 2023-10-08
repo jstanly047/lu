@@ -17,12 +17,12 @@ StringV::StringV() :
 
 ssize_t StringV::readHeader(ssize_t offset)
 {
-    if ((offset < m_bufferSize) && (offset + (ssize_t) sizeof(Header) >  m_bufferSize))
+    if ((offset < m_bufferSize) && (offset + (ssize_t) sizeof(Header) >=  m_bufferSize))
     {
         auto bytesInFirstBuffer = m_bufferSize - offset;
         Header header;
         std::memcpy(&header, m_buffer1.get() + offset, bytesInFirstBuffer);
-        std::memcpy(&header, m_buffer2.get(), (ssize_t) sizeof(Header) - bytesInFirstBuffer);
+        std::memcpy(reinterpret_cast<uint8_t*>(&header) + bytesInFirstBuffer, m_buffer2.get(), (ssize_t) sizeof(Header) - bytesInFirstBuffer);
         return header.getSize();
     }
     else if (offset < m_bufferSize)
@@ -31,7 +31,7 @@ ssize_t StringV::readHeader(ssize_t offset)
         return header->getSize();
     }
 
-    Header* header = reinterpret_cast<Header*>(m_buffer2.get() + offset);
+    Header* header = reinterpret_cast<Header*>(m_buffer2.get() + offset - m_bufferSize);
     return header->getSize();
 }
 
@@ -39,11 +39,11 @@ void* StringV::readMessage(ssize_t offset, ssize_t size)
 {
     auto newMessage = new Message();
 
-    if ((offset < m_bufferSize) && (offset + size > m_bufferSize))
-    {
+    if ((offset < m_bufferSize) && (offset + size >= m_bufferSize))
+    {        
         auto bytesInFirstBuffer = m_bufferSize - offset;
         std::memcpy(newMessage, m_buffer1.get() + offset, bytesInFirstBuffer);
-        std::memcpy(newMessage, m_buffer2.get(), size - bytesInFirstBuffer);
+        std::memcpy(reinterpret_cast<uint8_t*>(newMessage) + bytesInFirstBuffer, m_buffer2.get(), size - bytesInFirstBuffer);
     }
     else if (offset < m_bufferSize)
     {
@@ -51,7 +51,7 @@ void* StringV::readMessage(ssize_t offset, ssize_t size)
     }
     else
     {
-        std::memcpy(newMessage, m_buffer2.get() + offset, size);
+        std::memcpy(newMessage, m_buffer2.get() + offset - m_bufferSize, size);
     }
 
     return newMessage;
