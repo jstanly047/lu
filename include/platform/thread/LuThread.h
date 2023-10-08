@@ -38,6 +38,6 @@ namespace  lu::platform::thread
 
     private:
         channel::OutputChannel m_outputChannel;
-        channel::ChannelID m_channelID;
+        channel::ChannelID m_channelID{};
     };
 } 

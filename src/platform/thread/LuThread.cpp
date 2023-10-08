@@ -6,7 +6,6 @@ using namespace  lu::platform::thread;
 
 thread_local std::string lu::platform::thread::gtlThreadName="None";
 
-
 LuThread::LuThread(const std::string &name) : m_name(name)
 {
 }

@@ -1,15 +1,19 @@
 #include <utils/Utils.h>
+#include <array>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+
 
 using namespace lu::utils;
+constexpr size_t MAX_TIME_STRING_SIZE = 64;
 
 std::time_t Utils::getDateTime(const std::string &dateTimeStr, const std::string& format)
 {
@@ -25,12 +29,13 @@ std::time_t Utils::getDateTime(const std::string &dateTimeStr, const std::string
     return std::mktime(&tm);
 }
 
-std::string Utils::getDateTimeStr(std::time_t time, const std::string& fromat)
+std::string Utils::getDateTimeStr(std::time_t time, const std::string& format)
 {
     std::tm *tm = std::localtime(&time);
-    char buffer[64];
-    std::strftime(buffer, 64, fromat.c_str(), tm);
-    return std::string(buffer);
+    std::string buffer;
+    buffer.reserve(MAX_TIME_STRING_SIZE);
+    std::strftime(buffer.data(), MAX_TIME_STRING_SIZE, format.c_str(), tm);
+    return buffer;
 }
 
 bool Utils::readDataSocket(int socketId, uint8_t *buf, size_t size, ssize_t &readCount)

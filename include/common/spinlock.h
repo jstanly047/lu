@@ -22,7 +22,7 @@ namespace lu::common
         void unlock() noexcept;
 
     private:
-        pthread_spinlock_t m_pthreadSpinlockT;
+        pthread_spinlock_t m_pthreadSpinlockT{};
     };
 
     class TicketSpinlock 

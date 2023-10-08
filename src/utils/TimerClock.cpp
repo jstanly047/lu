@@ -5,14 +5,16 @@ using namespace lu::utils;
 
 namespace
 {
+    constexpr double NANO_TO_MILLI_SEC = 1'000'000.0;
+    constexpr double NANO_TO_SEC = 1'000'000'000.0;
     constexpr double getMilliSec(int long long nanoSec)
     {
-        return nanoSec / (1'000'000);
+        return static_cast<double>(nanoSec) / NANO_TO_MILLI_SEC;
     }
 
     constexpr double getSec(int long long nanoSec)
     {
-        return nanoSec / (1'000'000'000);
+        return static_cast<double>(nanoSec) / NANO_TO_SEC;
     }
 }
 
@@ -44,24 +46,24 @@ void AccumulateAndAverage::end(unsigned long long int qty)
 
 long long int AccumulateAndAverage::getTotalElapsedTimeMSec() const
 {
-    return getMilliSec(m_totalTimeSpendInNanoSec);
+    return static_cast<long long int>(getMilliSec(m_totalTimeSpendInNanoSec));
 }
 
 long long int AccumulateAndAverage::getTotalElapsedTimeSec() const
 {
-    return getSec(m_totalTimeSpendInNanoSec);
+    return static_cast<long long int>(getSec(m_totalTimeSpendInNanoSec));
 }
 
 std::string AccumulateAndAverage::getStatInMilliSec() const
 {
     return "Total Time (ms): " + std::to_string(getMilliSec(m_totalTimeSpendInNanoSec)) +
                             " Total Qty : " + std::to_string(m_totalQty) +
-                            " PerMSAvg : " + std::to_string(m_totalQty / getMilliSec(m_totalTimeSpendInNanoSec) );
+                            " PerMSAvg : " + std::to_string(static_cast<double>(m_totalQty) / getMilliSec(m_totalTimeSpendInNanoSec) );
 }
 
 std::string AccumulateAndAverage::getStatInSec() const
 {
     return "Total Time (sec): " + std::to_string(getSec(m_totalTimeSpendInNanoSec)) +
                             " Total Qty : " + std::to_string(m_totalQty) +
-                            " PerSecAvg : " + std::to_string(m_totalQty / getSec(m_totalTimeSpendInNanoSec) );
+                            " PerSecAvg : " + std::to_string(static_cast<double>(m_totalQty) / getSec(m_totalTimeSpendInNanoSec) );
 }

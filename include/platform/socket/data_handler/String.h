@@ -8,6 +8,8 @@ namespace lu::platform::socket::data_handler
     class String
     {
     public:
+        static constexpr ssize_t BUFFER_SIZE=1000;
+
         class Header
         {
         public:
@@ -44,13 +46,13 @@ namespace lu::platform::socket::data_handler
 
         
         uint8_t* getReceiveBufferToFill() { return m_buffer.get(); }
-        ssize_t getReceiveBufferSize() { return m_bufferSize; }
+        ssize_t getReceiveBufferSize() { return BUFFER_SIZE; }
         ssize_t getHeaderSize() { return sizeof(Header); };
         ssize_t readHeader(ssize_t offset);
         void* readMessage(ssize_t offset, ssize_t size);
 
     private:
-        ssize_t m_bufferSize = 1000;
+        
         std::unique_ptr<uint8_t> m_buffer;
     };
 }

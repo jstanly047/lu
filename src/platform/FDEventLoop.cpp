@@ -55,7 +55,7 @@ bool FDEventLoop::init()
 bool FDEventLoop::add(IFDEventHandler &event)
 {
     assert(event.getFD() != nullptr);
-    struct epoll_event epollEvent;
+    struct epoll_event epollEvent{};
     epollEvent.events = EPOLLIN | EPOLLET;
     epollEvent.data.ptr = &event;
     return ::epoll_ctl(m_epollFD, EPOLL_CTL_ADD, event.getFD(), &epollEvent) == 0;
@@ -78,6 +78,7 @@ void FDEventLoop::start(int maxEvents)
 
         for (int i = 0; i < n; ++i) 
         {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             (reinterpret_cast<IFDEventHandler*>(events[i].data.ptr))->onEvent(events[i]);
 
             if ((events[i].events & EPOLLHUP || events[i].events & EPOLLERR))

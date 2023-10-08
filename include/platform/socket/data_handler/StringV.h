@@ -10,6 +10,7 @@ namespace lu::platform::socket::data_handler
     class StringV
     {
     public:
+        static constexpr ssize_t BUFFER_SIZE=1000;
         class Header
         {
         public:
@@ -46,8 +47,8 @@ namespace lu::platform::socket::data_handler
 
         
         uint8_t* getReceiveBufferToFill() { return m_buffer1.get(); }
-        ssize_t getReceiveBufferSize() { return m_bufferSize * 2; }
-        ssize_t getSingleBufferSize() { return m_bufferSize; }
+        ssize_t getReceiveBufferSize() { return BUFFER_SIZE * 2; }
+        ssize_t getSingleBufferSize() { return BUFFER_SIZE; }
         ssize_t getHeaderSize() { return sizeof(Header); }
         struct iovec* getIOVect() { return m_readIOVec; }
         void swap() { m_buffer1.swap(m_buffer2);}
@@ -57,9 +58,8 @@ namespace lu::platform::socket::data_handler
         
 
     private:
-        const ssize_t m_bufferSize;
         std::unique_ptr<uint8_t> m_buffer1;
         std::unique_ptr<uint8_t> m_buffer2;
-        struct iovec m_readIOVec[2];
+        struct iovec m_readIOVec[2]{};
     };
 }

@@ -1,7 +1,8 @@
 #include <platform/socket/BaseSocket.h>
 #include <platform/defs.h>
 #include <utils/Utils.h>
-#include <glog/logging.h>
+
+#include <array>
 
 #include <unistd.h>
 #include <sys/epoll.h>
@@ -12,11 +13,13 @@
 #include <arpa/inet.h>
 #include <assert.h>
 
+#include <glog/logging.h>
+
 using namespace lu::platform::socket;
 
 namespace
 {
-    lu::platform::FileDescriptor nullFileDescriptor(nullptr);
+    const lu::platform::FileDescriptor nullFileDescriptor(nullptr);
 }
 
 BaseSocket::BaseSocket(int fd) : m_fd(new FileDescriptor(fd))
@@ -140,7 +143,7 @@ bool BaseSocket::setMinimumDataToReturnSend(int numberOfBytes)
 // Wait for unsent data to be sent on close
 bool BaseSocket::setDataFlushTimeoutOnClose(int waitTimeInSec)
 {
-    struct linger soLinger;
+    struct linger soLinger{};
     soLinger.l_onoff = 1;
     soLinger.l_linger = waitTimeInSec;
     return setSocketOption(SOL_SOCKET, SO_LINGER, soLinger);
@@ -202,18 +205,20 @@ void BaseSocket::getIPAndPort(const struct sockaddr &address)
     
     if (address.sa_family == AF_INET) 
     {
-        char ip[INET_ADDRSTRLEN];
-        struct sockaddr_in& ipv4 = (struct sockaddr_in &)address;
-        ::inet_ntop(AF_INET, &(ipv4.sin_addr), ip, INET_ADDRSTRLEN );
-        m_ip = std::string(ip);
+        std::array<char, INET_ADDRSTRLEN> ip{};
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,)
+        const struct sockaddr_in& ipv4 = reinterpret_cast<const struct sockaddr_in &>(address);
+        ::inet_ntop(AF_INET, &(ipv4.sin_addr), ip.data(), INET_ADDRSTRLEN );
+        m_ip = std::string(ip.data());
         m_port = ::ntohs(ipv4.sin_port);
     } 
     else if (address.sa_family == AF_INET6) 
     {
-        char ip[INET6_ADDRSTRLEN];
-        struct sockaddr_in6 &ipv6 = (struct sockaddr_in6 &)address;
-        ::inet_ntop(AF_INET6, &(ipv6.sin6_addr), ip, INET6_ADDRSTRLEN);
-        m_ip = std::string(ip);
+        std::array<char, INET6_ADDRSTRLEN> ip{};
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        const struct sockaddr_in6 &ipv6 = reinterpret_cast<const struct sockaddr_in6 &>(address);
+        ::inet_ntop(AF_INET6, &(ipv6.sin6_addr), ip.data(), INET6_ADDRSTRLEN);
+        m_ip = std::string(ip.data());
         m_port = ::ntohs(ipv6.sin6_port);
     } 
     else 
@@ -242,7 +247,7 @@ template<typename T>
 T BaseSocket::getSocketOption(int level, int option) const
 {
     assert(*m_fd != nullptr);
-    T value;
+    T value{};
     socklen_t len = sizeof(value);
     if (::getsockopt(*m_fd, level, option, &value, &len) == -1)
     {

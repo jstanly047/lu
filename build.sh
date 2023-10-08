@@ -5,7 +5,7 @@ cleanBuild=""
 buildunittest=false
 
 function display_usage() {
-    echo "Usage: $0 [-t <Debug/Release/Coverage/ClangTidy>] [-c] [-u] [-ct]"
+    echo "Usage: $0 [-t <Debug/Release/Coverage/ClangTidy>] [-c] [-u]"
     echo "Options:"
     echo "  -t <type> : Specify the build type (Debug/Release/Coverage). Default is Debug."
     echo "  -c        : Clean the build before starting the build process."

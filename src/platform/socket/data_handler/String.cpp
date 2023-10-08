@@ -4,13 +4,13 @@
 using namespace lu::platform::socket::data_handler;
 
 String::String() : 
-    m_bufferSize(1000),
-    m_buffer(new uint8_t[m_bufferSize])
+    m_buffer(new uint8_t[BUFFER_SIZE])
 {
 }
 
 ssize_t String::readHeader(ssize_t offset)
 {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     Header* header = reinterpret_cast<Header*>(m_buffer.get() + offset);
     return header->getSize();
 }

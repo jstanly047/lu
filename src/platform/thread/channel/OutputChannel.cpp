@@ -2,7 +2,7 @@
 
 namespace
 {
-    thread_local lu::platform::thread::channel::ChannelID chanelID =  std::hash<std::thread::id>{}(std::this_thread::get_id());
+    thread_local const lu::platform::thread::channel::ChannelID chanelID =  std::hash<std::thread::id>{}(std::this_thread::get_id());
 }
 
 using namespace lu::platform::thread::channel;

@@ -25,6 +25,6 @@ namespace lu::platform
         int getFD() { return m_epollFD; }
     private:
         int m_epollFD = NULL_FD;
-        bool m_stop;
+        bool m_stop{};
     };
 }

@@ -6,20 +6,29 @@
 
 using namespace lu::platform;
 
+constexpr int FLAG_SET_OR_GET_FAILED = -1;
 namespace 
 {
-    bool setFDFlags(int fd, int Flags)
+    struct FileDescriptorAndFlags
     {
-        int fdFlags = fcntl(fd, F_GETFL, 0);
+        int fileDescriptor;
+        int flags;
+    };
+    
+    bool setFDFlags(FileDescriptorAndFlags fileDescriptorAndFlags)
+    {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+        int fdFlags = ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_GETFL, 0);
 
-        if (fdFlags == -1) 
+        if (fdFlags == FLAG_SET_OR_GET_FAILED) 
         {
             return false;
         }
 
-        fdFlags |= Flags;
+        fdFlags |= fileDescriptorAndFlags.flags;
 
-        if (fcntl(fd, F_SETFL, fdFlags) == -1) 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+        if (::fcntl(fileDescriptorAndFlags.fileDescriptor, F_SETFL, fdFlags) == FLAG_SET_OR_GET_FAILED) 
         {
             return false;
         }
@@ -27,18 +36,20 @@ namespace
         return true;
     }
 
-    bool removeFDFlags(int fd, int Flags)
+    bool removeFDFlags(FileDescriptorAndFlags fileDescriptorAndFlags)
     {
-        int fdFlags = fcntl(fd, F_GETFL, 0);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+        int fdFlags = ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_GETFL, 0);
 
-        if (fdFlags == -1) 
+        if (fdFlags == FLAG_SET_OR_GET_FAILED) 
         {
             return false;
         }
 
-        fdFlags &= ~Flags;
+        fdFlags &= ~fileDescriptorAndFlags.flags;
 
-        if (fcntl(fd, F_SETFL, fdFlags) == -1) 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+        if (::fcntl(fileDescriptorAndFlags.fileDescriptor, F_SETFL, fdFlags) == FLAG_SET_OR_GET_FAILED) 
         {
             return false;
         }
@@ -78,12 +89,12 @@ bool FileDescriptor::operator !=(std::nullptr_t) const
 
 bool FileDescriptor::setToNonBlocking()
 {
-    return setFDFlags(m_fd, O_NONBLOCK);
+    return setFDFlags({m_fd, O_NONBLOCK});
 }
 
 bool FileDescriptor::setBlocking()
 {
-    return removeFDFlags(m_fd, O_NONBLOCK);
+    return removeFDFlags({m_fd, O_NONBLOCK});
 }
 
 FileDescriptor::~FileDescriptor()

@@ -72,12 +72,13 @@ class snapafwRecipe(ConanFile):
         cmake = CMake(self)
         cmake.parallel = True
         cmake.configure()
-        cmake.build()
-
+        
         if self.options.CLANG_CHECK:
             self.runClangTidy()
-        else:
-            self.run_tests()
+            return
+        
+        cmake.build()
+        self.run_tests()
 
     def package(self):
         copy(self, "*.h", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"), keep_path=True)
@@ -123,8 +124,8 @@ class snapafwRecipe(ConanFile):
     
     #################Custom private functions##################
     def runClangTidy(self):
-        unitTestResultPath=os.path.join(self.build_folder, "clangTidyReport.html")
+        unitTestResultPath=os.path.join(self.build_folder, "clangTidyReport.out")
         srcFiles=self.source_folder + "/src"
         include=self.source_folder + "/include"
         print(self.source_folder)
-        self.run("clang-tidy -p " + self.build_folder + " -output-format html -checks=* " + srcFiles + " " + include + " -output " + unitTestResultPath)
+        self.run("run-clang-tidy -p " + self.build_folder + " -checks=bugprone*,cppcoreguidelines* " + srcFiles + " " + include + " -fix > " + unitTestResultPath )
