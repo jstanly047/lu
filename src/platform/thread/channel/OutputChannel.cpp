@@ -32,7 +32,7 @@ unsigned int OutputChannel::getThreadIndx(const std::string &threadName) const
     return itr->second;
 }
 
-ChannelID OutputChannel::getChannelID() const
+ChannelID OutputChannel::getChannelID() 
 {
     return chanelID;
 }

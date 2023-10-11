@@ -6,7 +6,7 @@ using namespace lu::common;
 void Barrier::wait() noexcept 
 {
     m_counter.fetch_add(1, std::memory_order_acquire);
-    while(m_counter.load(std::memory_order_relaxed))
+    while(m_counter.load(std::memory_order_relaxed) != 0U)
     {
         spinLoopPause();
     }

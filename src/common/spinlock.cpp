@@ -6,8 +6,10 @@ using namespace lu::common;
 
 Spinlock::Spinlock() noexcept 
 {
-    if(UNLIKELY(::pthread_spin_init(&m_pthreadSpinlockT, 0)))
+    if(UNLIKELY(::pthread_spin_init(&m_pthreadSpinlockT, 0))) 
+    {
         std::abort();
+    }
 }
 
 Spinlock::~Spinlock() noexcept 
@@ -17,14 +19,18 @@ Spinlock::~Spinlock() noexcept
 
 void Spinlock::lock() noexcept 
 {
-    if(UNLIKELY(::pthread_spin_lock(&m_pthreadSpinlockT)))
+    if(UNLIKELY(::pthread_spin_lock(&m_pthreadSpinlockT))) 
+    {
         std::abort();
+    }
 }
 
 void Spinlock::unlock() noexcept 
 {
-    if(UNLIKELY(::pthread_spin_unlock(&m_pthreadSpinlockT)))
+    if(UNLIKELY(::pthread_spin_unlock(&m_pthreadSpinlockT))) 
+    {
         std::abort();
+    }
 }
 
 
@@ -58,7 +64,7 @@ NOINLINE unsigned TicketSpinlock::lock() noexcept
         do
         {
             spinLoopPause();
-        }while(--position);
+        }while(--position != 0U);
     }
     return ticket;
 }
@@ -78,8 +84,8 @@ void UnfairSpinlock::lock() noexcept
 {
     for(;;) 
     {
-        if(!m_lock.load(std::memory_order_relaxed) && 
-            !m_lock.exchange(1, std::memory_order_acquire))
+        if((m_lock.load(std::memory_order_relaxed) == 0U) && 
+            (m_lock.exchange(1, std::memory_order_acquire) == 0U))
         {
             return;
         }

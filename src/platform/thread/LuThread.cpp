@@ -4,7 +4,8 @@
 
 using namespace  lu::platform::thread;
 
-thread_local std::string lu::platform::thread::gtlThreadName="None";
+thread_local std::string LuThread::m_sThreadLocalName="None";
+
 
 LuThread::LuThread(const std::string &name) : m_name(name)
 {
@@ -16,7 +17,7 @@ void LuThread::init()
 
 void LuThread::run()
 {
-    gtlThreadName = m_name;
+    m_sThreadLocalName = m_name;
     m_channelID = m_outputChannel.getChannelID();
     LOG(INFO) << "[" << m_name << "] Started channelID:" << m_channelID;
 }

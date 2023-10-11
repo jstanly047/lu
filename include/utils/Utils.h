@@ -73,7 +73,9 @@ namespace lu::utils
         }
 
         static std::time_t getDateTime(const std::string& dateTimeStr, const std::string& format="%Y%m%d%H%M%S");
-        static std::string getDateTimeStr(std::time_t time, const std::string& fromat="%Y%m%d%H%M%S");
+
+        //TODO Change to C++23 or use chron 
+        //static std::string getDateTimeStr(std::time_t time, const std::string& fromat="%Y%m%d%H%M%S");
 
         static  void DieWithUserMessage(const char *msg, const char *detail);
         static void DieWithSystemMessage(const char *msg);

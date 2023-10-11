@@ -75,7 +75,7 @@ namespace
             }
             else if (strMessage->getString() == "GetName")
             {
-                lu::platform::socket::data_handler::StringV::Message reply(gtlThreadName);
+                lu::platform::socket::data_handler::StringV::Message reply(LuThread::getCurrentThreadName());
                 dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::StringV::Message));
                 delete strMessage;
             }

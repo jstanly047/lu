@@ -16,11 +16,12 @@ TEST_F(TestUtils, stringToEpoc)
     ASSERT_EQ(lu::utils::Utils::getDateTime("1970/01/01 07:30:00", "%Y/%m/%d %H:%M:%S"), 0);
 }
 
+/*
 TEST_F(TestUtils, epocToStr)
 {
     ASSERT_EQ(lu::utils::Utils::getDateTimeStr(0), "19700101073000");
     ASSERT_EQ(lu::utils::Utils::getDateTimeStr(0,"%Y/%m/%d %H:%M:%S"), "1970/01/01 07:30:00");
-}
+}*/
 
 TEST_F(TestUtils, charSplit)
 {

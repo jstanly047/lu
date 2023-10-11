@@ -6,6 +6,6 @@ DBWriter::DBWriter(soci::session& session, unsigned int bulkWriteThreshold) :
     m_sociSession(session),
     m_sociTransaction(m_sociSession),
     m_bulkWriteThreshold(bulkWriteThreshold),
-    m_writeCount(0u)
+    m_writeCount(0U)
 {
 }

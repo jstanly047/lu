@@ -17,48 +17,40 @@ namespace
     
     bool setFDFlags(FileDescriptorAndFlags fileDescriptorAndFlags)
     {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-        int fdFlags = ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_GETFL, 0);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+        int fdFlags = ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_GETFL);
 
         if (fdFlags == FLAG_SET_OR_GET_FAILED) 
         {
             return false;
         }
 
+        // NOLINTNEXTLINE(hicpp-signed-bitwise)
         fdFlags |= fileDescriptorAndFlags.flags;
 
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-        if (::fcntl(fileDescriptorAndFlags.fileDescriptor, F_SETFL, fdFlags) == FLAG_SET_OR_GET_FAILED) 
-        {
-            return false;
-        }
-
-        return true;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+        return ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_SETFL, fdFlags) != FLAG_SET_OR_GET_FAILED;
     }
 
     bool removeFDFlags(FileDescriptorAndFlags fileDescriptorAndFlags)
     {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-        int fdFlags = ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_GETFL, 0);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+        int fdFlags = ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_GETFL);
 
         if (fdFlags == FLAG_SET_OR_GET_FAILED) 
         {
             return false;
         }
 
+        // NOLINTNEXTLINE(hicpp-signed-bitwise)
         fdFlags &= ~fileDescriptorAndFlags.flags;
 
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-        if (::fcntl(fileDescriptorAndFlags.fileDescriptor, F_SETFL, fdFlags) == FLAG_SET_OR_GET_FAILED) 
-        {
-            return false;
-        }
-
-        return true;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+        return ::fcntl(fileDescriptorAndFlags.fileDescriptor, F_SETFL, fdFlags) != FLAG_SET_OR_GET_FAILED;
     }
 }
 
-FileDescriptor::FileDescriptor(int fd) : m_fd(fd) {}
+FileDescriptor::FileDescriptor(int fileDescriptor) : m_fd(fileDescriptor) {}
 
 FileDescriptor::FileDescriptor(std::nullptr_t) : m_fd(NULL_FD) {}
 

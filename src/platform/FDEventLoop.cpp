@@ -3,19 +3,18 @@
 #include <platform/defs.h>
 #include <glog/logging.h>
 
+#include <cassert>
 #include <sys/epoll.h>
-#include <assert.h>
 #include <vector>
 
 using namespace lu::platform;
 
-FDEventLoop::FDEventLoop(FDEventLoop&& other)
-{
+FDEventLoop::FDEventLoop(FDEventLoop&& other) noexcept {
     std::swap(m_epollFD, other.m_epollFD);
     std::swap(m_stop, other.m_stop);
 }
 
-FDEventLoop& FDEventLoop::operator=(FDEventLoop&& other)
+FDEventLoop& FDEventLoop::operator=(FDEventLoop&& other)noexcept 
 {
     std::swap(m_epollFD, other.m_epollFD);
     std::swap(m_stop, other.m_stop);
@@ -52,7 +51,7 @@ bool FDEventLoop::init()
     return true;
 }
 
-bool FDEventLoop::add(IFDEventHandler &event)
+bool FDEventLoop::add(IFDEventHandler &event) const
 {
     assert(event.getFD() != nullptr);
     struct epoll_event epollEvent{};
@@ -61,7 +60,7 @@ bool FDEventLoop::add(IFDEventHandler &event)
     return ::epoll_ctl(m_epollFD, EPOLL_CTL_ADD, event.getFD(), &epollEvent) == 0;
 }
 
-bool FDEventLoop::remove(IFDEventHandler &event)
+bool FDEventLoop::remove(IFDEventHandler &event) const
 {
     assert(event.getFD() != nullptr);
     return ::epoll_ctl(m_epollFD, EPOLL_CTL_DEL, event.getFD(), nullptr) == 0;
@@ -74,14 +73,14 @@ void FDEventLoop::start(int maxEvents)
 
     for(;;) 
     {
-        int n = ::epoll_wait(m_epollFD, events.data(), maxEvents, -1);
+        int numberEvents = ::epoll_wait(m_epollFD, events.data(), maxEvents, -1);
 
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < numberEvents; ++i) 
         {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             (reinterpret_cast<IFDEventHandler*>(events[i].data.ptr))->onEvent(events[i]);
 
-            if ((events[i].events & EPOLLHUP || events[i].events & EPOLLERR))
+            if ((((events[i].events & EPOLLHUP) != 0U) || ((events[i].events & EPOLLERR) != 0U)))
             {
                 ::epoll_ctl(m_epollFD, EPOLL_CTL_DEL, events[i].data.fd, nullptr);
             }

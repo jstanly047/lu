@@ -128,4 +128,4 @@ class snapafwRecipe(ConanFile):
         srcFiles=self.source_folder + "/src"
         include=self.source_folder + "/include"
         print(self.source_folder)
-        self.run("run-clang-tidy -p " + self.build_folder + " -checks=bugprone*,cppcoreguidelines* " + srcFiles + " " + include + " -fix > " + unitTestResultPath )
+        self.run("run-clang-tidy -p " + self.build_folder + " -checks=bugprone*,cppcoreguidelines*,concurrency*,hicpp*,performance*,readability* " + srcFiles + " " + include + " -fix > " + unitTestResultPath )

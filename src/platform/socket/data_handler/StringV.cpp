@@ -25,27 +25,28 @@ ssize_t StringV::readHeader(ssize_t offset)
         std::memcpy(reinterpret_cast<uint8_t*>(&header) + bytesInFirstBuffer, m_buffer2.get(), (ssize_t) sizeof(Header) - bytesInFirstBuffer);
         return header.getSize();
     }
-    else if (offset < BUFFER_SIZE)
+    if (offset < BUFFER_SIZE)
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        Header* header = reinterpret_cast<Header*>(m_buffer1.get() + offset);
+        auto* header = reinterpret_cast<Header*>(m_buffer1.get() + offset);
         return header->getSize();
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    Header* header = reinterpret_cast<Header*>(m_buffer2.get() + offset - BUFFER_SIZE);
+    auto* header = reinterpret_cast<Header*>(m_buffer2.get() + offset - BUFFER_SIZE);
     return header->getSize();
 }
 
 void* StringV::readMessage(ssize_t offset, ssize_t size)
 {
-    auto newMessage = new Message();
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+    auto *newMessage = new Message();
 
     if ((offset < BUFFER_SIZE) && (offset + size >= BUFFER_SIZE))
     {        
         auto bytesInFirstBuffer = BUFFER_SIZE - offset;
         std::memcpy(newMessage, m_buffer1.get() + offset, bytesInFirstBuffer);
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic)
         std::memcpy(reinterpret_cast<uint8_t*>(newMessage) + bytesInFirstBuffer, m_buffer2.get(), size - bytesInFirstBuffer);
     }
     else if (offset < BUFFER_SIZE)

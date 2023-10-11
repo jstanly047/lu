@@ -11,14 +11,14 @@ namespace lu::platform
         FDEventLoop(const FDEventLoop&) = delete;
         FDEventLoop& operator=(const FDEventLoop&) = delete;
 
-        FDEventLoop(FDEventLoop&& other);
-        FDEventLoop& operator=(FDEventLoop&& other);
+        FDEventLoop(FDEventLoop&& other) noexcept;
+        FDEventLoop& operator=(FDEventLoop&& other) noexcept;
         FDEventLoop() : m_epollFD(NULL_FD), m_stop(false) {}
         ~FDEventLoop();
 
         bool init();
-        bool add(IFDEventHandler &event);
-        bool remove(IFDEventHandler &event);
+        bool add(IFDEventHandler &event) const;
+        bool remove(IFDEventHandler &event) const;
         void start(int maxEvents);
         void stop();
 

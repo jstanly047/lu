@@ -4,14 +4,14 @@
 
 #include <array>
 
-#include <unistd.h>
-#include <sys/epoll.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <assert.h>
+#include <cassert>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include <glog/logging.h>
 
@@ -22,15 +22,11 @@ namespace
     const lu::platform::FileDescriptor nullFileDescriptor(nullptr);
 }
 
-BaseSocket::BaseSocket(int fd) : m_fd(new FileDescriptor(fd))
+BaseSocket::BaseSocket(int fileDescriptor) : m_fd(new FileDescriptor(fileDescriptor))
 { 
 }
 
-BaseSocket::~BaseSocket()
-{
-}
-
-BaseSocket::BaseSocket(int fd, const sockaddr& address) : BaseSocket(fd)
+BaseSocket::BaseSocket(int fileDescriptor, const sockaddr& address) : BaseSocket(fileDescriptor)
 {
     getIPAndPort(address);
 }
@@ -38,9 +34,9 @@ BaseSocket::BaseSocket(int fd, const sockaddr& address) : BaseSocket(fd)
 BaseSocket::BaseSocket(BaseSocket&& other) noexcept:
     m_fd(std::move(other.m_fd)),
     m_ip(std::move(other.m_ip)),
-    m_port(std::move(other.m_port)),
-    m_socketFlags(std::move(other.m_socketFlags)),
-    m_reuseAddAndPort(std::move(other.m_reuseAddAndPort))
+    m_port(other.m_port),
+    m_socketFlags(other.m_socketFlags),
+    m_reuseAddAndPort(other.m_reuseAddAndPort)
     
 {
 }
@@ -72,7 +68,7 @@ void BaseSocket::setAddress(const sockaddr& address)
 
 void BaseSocket::setNonBlocking()
 {
-    if (m_fd->setToNonBlocking() == false)
+    if (!m_fd->setToNonBlocking())
     {
         LOG(ERROR) << "Can not set non blocking for socket " << (int) *m_fd << "!";
     }
@@ -205,20 +201,20 @@ void BaseSocket::getIPAndPort(const struct sockaddr &address)
     
     if (address.sa_family == AF_INET) 
     {
-        std::array<char, INET_ADDRSTRLEN> ip{};
+        std::array<char, INET_ADDRSTRLEN> ipAddress{};
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,)
-        const struct sockaddr_in& ipv4 = reinterpret_cast<const struct sockaddr_in &>(address);
-        ::inet_ntop(AF_INET, &(ipv4.sin_addr), ip.data(), INET_ADDRSTRLEN );
-        m_ip = std::string(ip.data());
+        const auto& ipv4 = reinterpret_cast<const struct sockaddr_in &>(address);
+        ::inet_ntop(AF_INET, &(ipv4.sin_addr), ipAddress.data(), INET_ADDRSTRLEN );
+        m_ip = std::string(ipAddress.data());
         m_port = ::ntohs(ipv4.sin_port);
     } 
     else if (address.sa_family == AF_INET6) 
     {
-        std::array<char, INET6_ADDRSTRLEN> ip{};
+        std::array<char, INET6_ADDRSTRLEN> ipAddress{};
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        const struct sockaddr_in6 &ipv6 = reinterpret_cast<const struct sockaddr_in6 &>(address);
-        ::inet_ntop(AF_INET6, &(ipv6.sin6_addr), ip.data(), INET6_ADDRSTRLEN);
-        m_ip = std::string(ip.data());
+        const auto &ipv6 = reinterpret_cast<const struct sockaddr_in6 &>(address);
+        ::inet_ntop(AF_INET6, &(ipv6.sin6_addr), ipAddress.data(), INET6_ADDRSTRLEN);
+        m_ip = std::string(ipAddress.data());
         m_port = ::ntohs(ipv6.sin6_port);
     } 
     else 
@@ -235,12 +231,7 @@ template<typename T>
 bool BaseSocket::setSocketOption(int level, int option, const T& value)
 {
     assert(*m_fd != nullptr);
-    if (::setsockopt(*m_fd, level, option, &value, sizeof(value)) == -1) 
-    {
-        return false;
-    }
-
-    return true;
+    return static_cast<bool>(::setsockopt(*m_fd, level, option, &value, sizeof(value)) != -1);
 }
 
 template<typename T>

@@ -54,7 +54,7 @@ protected:
         EXPECT_CALL(mockServerThreadCallback,  onInit()).WillOnce(::testing::Return(true));
         EXPECT_CALL(mockServerThreadCallback,  onStart()).WillOnce(::testing::Invoke([&]()
             { 
-                EXPECT_EQ(gtlThreadName,"TestServer");
+                EXPECT_EQ(LuThread::getCurrentThreadName() ,"TestServer");
                 std::lock_guard<std::mutex> lock(startMutex);
                 serverStarted = true;
                 startCondition.notify_one();
@@ -105,7 +105,7 @@ protected:
                     }
                     else if (strMessage->getString() == "GetName")
                     {
-                        lu::platform::socket::data_handler::String::Message reply(gtlThreadName);
+                        lu::platform::socket::data_handler::String::Message reply(LuThread::getCurrentThreadName());
                         dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
                     }
 

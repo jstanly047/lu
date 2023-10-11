@@ -15,7 +15,7 @@ namespace lu::platform::thread::channel
         void transferMsg(const std::string& threadName, void* msg);
         void add(const std::string& threadName, TransferQueue& transferQueue);
         unsigned int getThreadIndx(const std::string& threadName) const;
-        ChannelID getChannelID() const;
+        ChannelID getChannelID();
 
     private:
         std::vector<TransferQueue*> m_transferQueues;

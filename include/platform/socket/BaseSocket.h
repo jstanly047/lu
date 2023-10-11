@@ -15,9 +15,9 @@ namespace lu::platform::socket
         BaseSocket(const BaseSocket&)               = delete;
         BaseSocket& operator=(const BaseSocket&)    = delete;
 
-        BaseSocket(int socketId = lu::platform::NULL_FD);
-        BaseSocket(int socketId, const sockaddr& address);
-        ~BaseSocket();
+        BaseSocket(int fileDescriptor = lu::platform::NULL_FD);
+        BaseSocket(int fileDescriptor, const sockaddr& address);
+        ~BaseSocket() = default;
 
         BaseSocket(BaseSocket&& other) noexcept;
         BaseSocket& operator=(BaseSocket&& other) noexcept;

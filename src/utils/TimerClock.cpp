@@ -1,5 +1,5 @@
+#include <cassert>
 #include <utils/TimerClock.h>
-#include <assert.h>
 
 using namespace lu::utils;
 

@@ -6,8 +6,6 @@
 
 namespace  lu::platform::thread
 {
-    extern thread_local std::string gtlThreadName;
-
     class LuThread
     {
     public:
@@ -17,6 +15,8 @@ namespace  lu::platform::thread
         LuThread(LuThread&& other) = delete;
         LuThread& operator=(LuThread&& other) = delete;
         virtual ~LuThread() {}
+
+        static const std::string& getCurrentThreadName() { return m_sThreadLocalName; }
 
         void init();
         void run();
@@ -34,10 +34,11 @@ namespace  lu::platform::thread
         std::string m_name;
         std::thread m_thread;
         channel::InputChannel m_inputChannel;
-
+       
 
     private:
         channel::OutputChannel m_outputChannel;
         channel::ChannelID m_channelID{};
+        static thread_local std::string m_sThreadLocalName;
     };
 } 

@@ -14,7 +14,7 @@ namespace lu::platform
         FileDescriptor(FileDescriptor&& other) = delete;;
         FileDescriptor& operator=(FileDescriptor&& other) = delete;
 
-        FileDescriptor(int fd);
+        FileDescriptor(int fileDescriptor);
         FileDescriptor(std::nullptr_t);
         ~FileDescriptor();
 
