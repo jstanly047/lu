@@ -5,6 +5,7 @@ using namespace  lu::platform::thread;
 
 namespace
 {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     thread_local std::string m_sThreadLocalName="None";
 }
 
