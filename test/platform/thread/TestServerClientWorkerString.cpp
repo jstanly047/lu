@@ -18,8 +18,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <iostream>
-
 using namespace lu::platform::thread;
 
 namespace
@@ -55,6 +53,7 @@ namespace
 
         void onNewConnection(StringDataSocket *dataSocket)
         {
+            m_clients.emplace_back(dataSocket);
         }
 
         void onTimer(const lu::platform::FDTimer<TestClientTheadCallback> &)
@@ -63,7 +62,6 @@ namespace
 
         void onClientClose(StringDataSocket &dataSocket)
         {
-            delete &dataSocket;
         }
 
         void onData(StringDataSocket &dataSocket, void *message)
@@ -96,6 +94,7 @@ namespace
     private:
         LuThread *m_thread;
         WorkerThread<MockWorkerThread> *m_workerThread;
+        std::vector<std::unique_ptr<StringDataSocket>> m_clients;
         unsigned int m_expectedMsg{};
     };
 

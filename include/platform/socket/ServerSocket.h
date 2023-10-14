@@ -106,6 +106,7 @@ namespace lu::platform::socket
                         if (::getsockname(fd, (struct sockaddr *) &localAddr, &addrSize) < 0)
                         {
                             LOG(ERROR) << "getsockname failed!!";
+                            ::freeaddrinfo(servAddr);
                             return false;
                         }
 
@@ -128,6 +129,7 @@ namespace lu::platform::socket
 
             m_baseSocket.setAddress((struct sockaddr&) localAddr);
             LOG(INFO) << "Service started " << m_baseSocket.getIP() << ":" << m_baseSocket.getPort();
+            ::freeaddrinfo(servAddr);
             return true;
         }         
 

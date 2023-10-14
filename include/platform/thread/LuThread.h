@@ -16,7 +16,7 @@ namespace  lu::platform::thread
         LuThread& operator=(LuThread&& other) = delete;
         virtual ~LuThread() {}
 
-        static const std::string& getCurrentThreadName() { return m_sThreadLocalName; }
+        static const std::string& getCurrentThreadName(); 
 
         void init();
         void run();
@@ -39,6 +39,6 @@ namespace  lu::platform::thread
     private:
         channel::OutputChannel m_outputChannel;
         channel::ChannelID m_channelID{};
-        static thread_local std::string m_sThreadLocalName;
+        //static thread_local std::string m_sThreadLocalName;
     };
 } 

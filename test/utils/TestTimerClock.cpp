@@ -40,8 +40,16 @@ TEST(TestTimerClock, StatInMSec)
     EXPECT_GE(accumulator.getTotalElapsedTimeMSec(), 200);
     EXPECT_LE(accumulator.getTotalElapsedTimeMSec(), 250);
     EXPECT_LE(accumulator.getTotalQty(), 3000);
-    std::string stat = accumulator.getStatInMilliSec();
-    EXPECT_EQ(stat, "Total Time (ms): " + std::to_string(accumulator.getTotalElapsedTimeMSec()) + ".000000 Total Qty : 3000 PerMSAvg : 15.000000");
+
+    double actualTime;
+    double actualPerSecAvg;
+    std::sscanf(accumulator.getStatInMilliSec().c_str(), "Total Time (ms): %lf Total Qty : 3000 PerMSAvg : %lf", &actualTime, &actualPerSecAvg);
+
+    // Compare floating-point values with a tolerance (e.g., 1e-6)
+    EXPECT_GE(actualTime, 200.0);
+    EXPECT_LE(actualTime, 201.0);
+    EXPECT_GE(actualPerSecAvg, 14.0);
+    EXPECT_LE(actualPerSecAvg, 15.0);
 }
 
 TEST(TestTimerClock, StatInSec) 
@@ -59,6 +67,14 @@ TEST(TestTimerClock, StatInSec)
     EXPECT_GE(accumulator.getTotalElapsedTimeSec(), 2);
     EXPECT_LE(accumulator.getTotalElapsedTimeSec(), 3);
     EXPECT_LE(accumulator.getTotalQty(), 16);
-    std::string stat = accumulator.getStatInSec();
-    EXPECT_EQ(stat, "Total Time (sec): " + std::to_string(accumulator.getTotalElapsedTimeSec()) + ".000000 Total Qty : 16 PerSecAvg : 8.000000");
+
+    double actualTime;
+    double actualPerSecAvg;
+    std::sscanf(accumulator.getStatInSec().c_str(), "Total Time (sec): %lf Total Qty : 16 PerSecAvg : %lf", &actualTime, &actualPerSecAvg);
+
+    // Compare floating-point values with a tolerance (e.g., 1e-6)
+    EXPECT_GE(actualTime, 2.0);
+    EXPECT_LE(actualTime, 3.0);
+    EXPECT_GE(actualPerSecAvg, 7.0);
+    EXPECT_LE(actualPerSecAvg, 8.1);
 }

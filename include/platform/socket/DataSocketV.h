@@ -32,7 +32,6 @@ namespace lu::platform::socket
                                                                                       m_dataSocketCallback(dataSocketCallback),
                                                                                       m_dataHandler(),
                                                                                       m_headerSize(m_dataHandler.getHeaderSize()),
-                                                                                      m_receiveBufferShiftSize(m_dataHandler.getReceiveBufferSize() / 4),
                                                                                       m_numberOfBytesLeftToRecv(m_dataHandler.getReceiveBufferSize())
 
         {
@@ -187,7 +186,7 @@ namespace lu::platform::socket
                     return;
                 }
 
-                if (m_numberOfBytesLeftToRead + m_headerSize >= expectedMsgSize)
+                if (m_numberOfBytesLeftToRead >= expectedMsgSize)
                 {
                     m_dataSocketCallback.onData(*this, m_dataHandler.readMessage(m_readOffset, expectedMsgSize));
                     updateForDataRead(expectedMsgSize);
@@ -230,7 +229,6 @@ namespace lu::platform::socket
         DataSocketVCallback &m_dataSocketCallback;
         DataHandler m_dataHandler;
         ssize_t m_headerSize{};
-        ssize_t m_receiveBufferShiftSize{};
         ssize_t m_numberOfBytesInBuffer{};
         ssize_t m_readOffset{};
         ssize_t m_numberOfBytesLeftToRead{};

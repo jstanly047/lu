@@ -54,8 +54,6 @@ protected:
 
     void TearDown() override 
     {
-        delete dataSocket;
-        dataSocket = nullptr;
         serverThead.join();
     }
 
@@ -67,7 +65,8 @@ protected:
             startCondition.notify_one();
         }
        
-        dataSocket = serverSocket.acceptDataSocket();
+        auto  dataSocket = serverSocket.acceptDataSocket();
+        m_clientSockets.emplace_back(dataSocket);
         EXPECT_NE((int) dataSocket->getFD(), lu::platform::NULL_FD);
     }
 
@@ -76,7 +75,7 @@ protected:
     ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>> connectSocket;
     ServerSocket<IServerSocketCallback> serverSocket;
     std::thread serverThead;
-    BaseSocket* dataSocket = nullptr;
+    std::vector<std::unique_ptr<BaseSocket>> m_clientSockets;
     std::mutex startMutex;
     std::condition_variable startCondition;
     bool threadStarted = false;

@@ -53,6 +53,7 @@ public:
 
     void onNewConnection(StringDataSocket *dataSocket)
     {
+        m_clients.emplace_back(dataSocket);
     }
 
     void onTimer(const lu::platform::FDTimer<TestClientTheadCallback> &)
@@ -89,6 +90,7 @@ public:
 private:
     LuThread *m_thread;
     WorkerThread<MockWorkerThread>* m_workerThread;
+    std::vector<std::unique_ptr<StringDataSocket>> m_clients;
 };
 
 class TestServerClientWorker : public ::testing::Test

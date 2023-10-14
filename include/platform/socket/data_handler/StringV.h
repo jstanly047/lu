@@ -11,6 +11,7 @@ namespace lu::platform::socket::data_handler
     {
     public:
         static constexpr ssize_t BUFFER_SIZE=1000;
+        #pragma pack(push, 1) 
         class Header
         {
         public:
@@ -34,8 +35,9 @@ namespace lu::platform::socket::data_handler
             std::string getString() const { return std::string(m_data); }
 
         private:
-            char m_data[64];
+            char m_data[64]{};
         };
+        #pragma pack(pop)
 
         StringV(const StringV&)               = delete;
         StringV& operator=(const StringV&)    = delete;
@@ -58,8 +60,8 @@ namespace lu::platform::socket::data_handler
         
 
     private:
-        std::unique_ptr<uint8_t> m_buffer1;
-        std::unique_ptr<uint8_t> m_buffer2;
+        std::unique_ptr<uint8_t[]> m_buffer1;
+        std::unique_ptr<uint8_t[]> m_buffer2;
         struct iovec m_readIOVec[2]{};
     };
 }

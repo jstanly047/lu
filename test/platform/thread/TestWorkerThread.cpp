@@ -55,15 +55,16 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadName)
 
             static unsigned stopCount = 1;
             EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
 
             if (stopCount == 6u)
             {
                 m_workerProducer.stop();
+                delete data;
                 return;
             }
 
             stopCount++;
-            auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(producerExpectedValue, *data);
             m_workerProducer.transferMsg(m_workerConsumer.getName(), new int(++count));
             producerExpectedValue += 2;
@@ -134,15 +135,16 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
 
             static unsigned stopCount = 1;
             EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
+            auto data = reinterpret_cast<unsigned int*>(channelData.data);
 
             if (stopCount == 6u)
             {
                 m_workerProducer.stop();
+                delete data;
                 return;
             }
 
             stopCount++;
-            auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(producerExpectedValue, *data);
             m_workerProducer.transferMsg(consumerIndx, new int(++count));
             producerExpectedValue += 2;

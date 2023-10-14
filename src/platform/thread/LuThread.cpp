@@ -1,10 +1,12 @@
 #include <platform/thread/LuThread.h>
 #include <glog/logging.h>
-#include <iostream>
 
 using namespace  lu::platform::thread;
 
-thread_local std::string LuThread::m_sThreadLocalName="None";
+namespace
+{
+    thread_local std::string m_sThreadLocalName="None";
+}
 
 
 LuThread::LuThread(const std::string &name) : m_name(name)
@@ -18,8 +20,13 @@ void LuThread::init()
 void LuThread::run()
 {
     m_sThreadLocalName = m_name;
-    m_channelID = m_outputChannel.getChannelID();
+    m_channelID = channel::OutputChannel::getChannelID();
     LOG(INFO) << "[" << m_name << "] Started channelID:" << m_channelID;
+}
+
+const std::string &LuThread::getCurrentThreadName()
+{
+    return m_sThreadLocalName;
 }
 
 void LuThread::stop()

@@ -14,6 +14,7 @@
 
 namespace lu::platform
 {
+    #pragma pack(push, 1) 
     struct EventData
     {
         enum EventType
@@ -27,6 +28,7 @@ namespace lu::platform
 
         EventData(EventType type = EventType::None, void *ptr = nullptr) : eventType(type), data(ptr) {}
     };
+    #pragma pack(pop)
 
     constexpr std::size_t BUFFER_SIZE = sizeof(EventData) * 200;
     constexpr std::size_t READ_BUFFER_SHIFT_SIZE = sizeof(EventData) * 10;
@@ -66,7 +68,7 @@ namespace lu::platform
 
         bool notify(const EventData &eventData) const
         {
-            return ::write(*m_out, &eventData, sizeof(eventData));
+            return ::write(*m_out, &eventData, sizeof(EventData));
         }
 
         const FileDescriptor &getInFD() const

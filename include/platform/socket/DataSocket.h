@@ -182,7 +182,7 @@ namespace lu::platform::socket
                     return;
                 }
 
-                if (m_numberOfBytesLeftToRead + m_headerSize >= expectedMsgSize)
+                if (m_numberOfBytesLeftToRead >= expectedMsgSize)
                 {
                     m_dataSocketCallback.onData(*this, m_dataHandler.readMessage(m_readOffset, expectedMsgSize));
                     updateForDataRead(expectedMsgSize);

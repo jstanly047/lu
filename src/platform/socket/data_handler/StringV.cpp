@@ -69,11 +69,13 @@ int StringV::getNumberOfBuffers(ssize_t writeableOffset)
         m_readIOVec[0].iov_len = BUFFER_SIZE - writeableOffset;
         m_readIOVec[1].iov_base = m_buffer2.get();
         m_readIOVec[1].iov_len = BUFFER_SIZE;
-         return 2;
+                return 2;
     }
-    
+
+    m_readIOVec[0].iov_base = m_buffer1.get();
+    m_readIOVec[0].iov_len = 0;
     auto offsetForSecondBuffer =  writeableOffset - BUFFER_SIZE;
-    m_readIOVec[0].iov_base = m_buffer2.get() + offsetForSecondBuffer;
-    m_readIOVec[0].iov_len = BUFFER_SIZE - offsetForSecondBuffer;
-    return 1;
+    m_readIOVec[1].iov_base = m_buffer2.get() + offsetForSecondBuffer;
+    m_readIOVec[1].iov_len = BUFFER_SIZE - offsetForSecondBuffer;
+    return 2;
 }
