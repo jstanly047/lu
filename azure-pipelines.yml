@@ -17,11 +17,11 @@ steps:
     targetType: 'inline'
     script: |
       # Write your commands here
-      ./dist/bin/LuTest --gtest_output="xml:/dist/report/LuTest.xml"
+      ./build.sh -t Debug -u
 - task: PublishTestResults@2
   inputs:
     testResultsFormat: 'JUnit'
     testResultsFiles: '*.xml'
-    searchFolder: '$(System.DefaultWorkingDirectory)/dist/report'
+    searchFolder: '$(System.DefaultWorkingDirectory)/build/Debug/unitTestResult'
     failTaskOnFailedTests: true
     testRunTitle: 'Lu Unit Tests'
