@@ -79,12 +79,12 @@ bool FileDescriptor::operator !=(std::nullptr_t) const
     return m_fd != NULL_FD;
 }
 
-bool FileDescriptor::setToNonBlocking()
+bool FileDescriptor::setToNonBlocking() const
 {
     return setFDFlags({m_fd, O_NONBLOCK});
 }
 
-bool FileDescriptor::setBlocking()
+bool FileDescriptor::setBlocking() const
 {
     return removeFDFlags({m_fd, O_NONBLOCK});
 }

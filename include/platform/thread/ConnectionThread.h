@@ -59,10 +59,16 @@ namespace lu::platform::thread
                 return;
             }
 
-            this->m_thread = std::thread(&ConnectionThread::run, this);
+            lu::platform::thread::LuThread::start();
         }
 
-        void run()
+        void connectTo(const std::string& host, const std::string& service)
+        {
+            m_services.emplace_back(Service{host, service});
+        }
+
+    private:
+        void run() override final
         {
             for (Service& service : m_services)
             {
@@ -77,19 +83,13 @@ namespace lu::platform::thread
                 }
 
                 m_connectionThreadCallback.onConnection(*(service.connection->getDataSocket()));
-                service.connection->getDataSocket()->getBaseSocket().setNonBlocking();
+                //service.connection->getDataSocket()->getBaseSocket().setNonBlocking();
                 this->m_eventLoop.add(*(service.connection->getDataSocket()));
             }
 
             EventThread<ConnectionThreadCallback>::run();
         }
 
-        void connectTo(const std::string& host, const std::string& service)
-        {
-            m_services.emplace_back(Service{host, service});
-        }
-
-    private:
         ConnectionThreadCallback& m_connectionThreadCallback;
         std::list<Service> m_services;
     };

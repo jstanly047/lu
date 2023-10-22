@@ -60,7 +60,7 @@ namespace
         {
         }
 
-        void onClientClose(StringDataSocket &dataSocket)
+        void onClientClose([[maybe_unused]]StringDataSocket &dataSocket)
         {
         }
 

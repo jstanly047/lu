@@ -21,28 +21,6 @@ namespace  lu::platform::thread
             return m_luThreadCallback.onInit();
         }
 
-        void start()
-        {
-            this->m_thread = std::thread(&WorkerThread::run, this);
-        }
-
-        void run()
-        {
-            LuThread::run();
-            m_luThreadCallback.onStart();
-
-            for(;;) 
-            {
-                channel::ChannelData channelData = m_inputChannel.getTransferQueue().pop();
-                m_luThreadCallback.onMsg(channelData);
-
-                if (UNLIKELY(channelData.data == nullptr))
-                {
-                    break;
-                }
-            }
-        }
-
         void stop()
         {
             LuThread::stop();
@@ -60,6 +38,21 @@ namespace  lu::platform::thread
         virtual ~WorkerThread(){}
 
     private:
+        void run() override final
+        {
+            m_luThreadCallback.onStart();
+
+            for(;;) 
+            {
+                channel::ChannelData channelData = m_inputChannel.getTransferQueue().pop();
+                m_luThreadCallback.onMsg(channelData);
+
+                if (UNLIKELY(channelData.data == nullptr))
+                {
+                    break;
+                }
+            }
+        }
 
         LuThreadCallback& m_luThreadCallback;
     };

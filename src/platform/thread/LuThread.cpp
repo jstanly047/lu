@@ -18,11 +18,17 @@ void LuThread::init()
 {
 }
 
-void LuThread::run()
+void LuThread::start()
+{
+    this->m_thread = std::thread(&LuThread::threadRun, this);
+}
+
+void LuThread::threadRun()
 {
     m_sThreadLocalName = m_name;
     m_channelID = channel::OutputChannel::getChannelID();
     LOG(INFO) << "[" << m_name << "] Started channelID:" << m_channelID;
+    run();
 }
 
 const std::string &LuThread::getCurrentThreadName()

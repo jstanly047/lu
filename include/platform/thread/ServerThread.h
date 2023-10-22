@@ -84,35 +84,13 @@ namespace lu::platform::thread
 
             if (m_serverConfig.CREATE_NEW_THREAD)
             {
-                this->m_thread = std::thread(&ServerThread::run, this);
+                LuThread::start();
                 m_syncStart.wait();
             }
             else
             {
                 run();
             }
-        }
-
-        void run()
-        {
-            if (m_serverSocket.setUpTCP(m_serverConfig.NUMBER_OF_CONNECTION_IN_WAITING_QUEUE) == false)
-            {
-                return;
-            }
-
-            this->m_serverSocket.getBaseSocket().setNonBlocking();
-            this->m_eventLoop.add(m_serverSocket);
-
-            if (m_serverConfig.CREATE_NEW_THREAD)
-            {
-                m_syncStart.increment();
-            }
-            else
-            {
-                m_syncStart.wait();
-            }
-
-            EventThread<ServerThreadCallback>::run();
         }
 
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
@@ -145,6 +123,28 @@ namespace lu::platform::thread
         std::vector<BaseClientThreadCallback*>& getClientThreadCallbacks() { return m_serverClientThreadsCallbacksPtr; }
 
     private:
+        void run() override final
+        {
+            if (m_serverSocket.setUpTCP(m_serverConfig.NUMBER_OF_CONNECTION_IN_WAITING_QUEUE) == false)
+            {
+                return;
+            }
+
+            //this->m_serverSocket.getBaseSocket().setNonBlocking();
+            this->m_eventLoop.add(m_serverSocket);
+
+            if (m_serverConfig.CREATE_NEW_THREAD)
+            {
+                m_syncStart.increment();
+            }
+            else
+            {
+                m_syncStart.wait();
+            }
+
+            EventThread<ServerThreadCallback>::run();
+        }
+
         ServerThreadCallback& m_serverThreadCallback;
         lu::platform::socket::ServerSocket<ServerThread> m_serverSocket;
         unsigned int m_currentClientHandler{};

@@ -118,7 +118,7 @@ class snapafwRecipe(ConanFile):
             print(coverageReportPath)
             self.run("lcov -c -d " + self.build_folder + " -b . -o " + coverageOutFile)
             self.run("lcov -a " + coverageBaseLineFile + " -a " + coverageOutFile + "  -o  " + coverageCombinedFile)
-            self.run("lcov -r " + coverageCombinedFile + " '/usr/include/*' '*usr/lib/*' '*test*' -o " + coverageCombinedFile)
+            self.run("lcov -r " + coverageCombinedFile + " '/usr/include/*' '*usr/lib/*' '*test*'  '*.conan2*' -o " + coverageCombinedFile)
             self.run("genhtml -o " + coverageReportPath + coverageCombinedFile)
 
     

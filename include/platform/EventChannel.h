@@ -48,7 +48,7 @@ namespace lu::platform
         {
         }
 
-        ~EventChannel() {}
+        virtual ~EventChannel() {}
 
         bool init()
         {
@@ -61,7 +61,7 @@ namespace lu::platform
             m_in.reset(new FileDescriptor(pipeFDs[0]));
             m_out.reset(new FileDescriptor(pipeFDs[1]));
             m_in->setToNonBlocking();
-            m_out->setToNonBlocking();
+            //m_out->setToNonBlocking();
             LOG(INFO) << "[" << m_name << "] File created channel out[" << (int)*m_in << "], out[" << (int)*m_out << "]";
             return true;
         }
@@ -81,53 +81,59 @@ namespace lu::platform
         {
             for (;;)
             {
-                if (m_numberOfBytesLeftToRead >=  sizeof(EventData))
+                if (m_numberOfBytesLeftToRead <  sizeof(EventData))
                 {
-                    // TODO make it non blocking
-                    EventData eventData;
-                    std::memcpy(&eventData, (void*) (m_buffer + m_readOffset), sizeof(EventData));
-                    m_readOffset += sizeof(EventData);
-                    m_numberOfBytesLeftToRead -= sizeof(EventData);
-
-                    switch (eventData.eventType)
-                    {
-                    case EventData::NewConnection:
-                        m_eventChannelHandler.onNewConnection(reinterpret_cast<lu::platform::socket::BaseSocket *>(eventData.data));
-                        break;
-                    default:
-                        break;
-                    }
-
-                    continue;
+                    return;
                 }
 
-                return;
+                // TODO make it non blocking
+                EventData eventData;
+                std::memcpy(&eventData, (void*) (m_buffer + m_readOffset), sizeof(EventData));
+                m_readOffset += sizeof(EventData);
+                m_numberOfBytesLeftToRead -= sizeof(EventData);
+
+                switch (eventData.eventType)
+                {
+                case EventData::NewConnection:
+                    m_eventChannelHandler.onNewConnection(reinterpret_cast<lu::platform::socket::BaseSocket *>(eventData.data));
+                    break;
+                default:
+                    break;
+                }
             }
         }
 
         bool Receive()
         {
-            ssize_t numberOfBytesRead = 0;
-
-            if (lu::utils::Utils::readDataFile(*m_in, m_buffer + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+            for (;;)
             {
-                return false;
-            }
+                ssize_t numberOfBytesRead = 0;
 
-            m_numberOfBytesLeftToRead += numberOfBytesRead;
-            readMessages();
+                if (lu::utils::Utils::readDataFile(*m_in, m_buffer + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+                {
+                    return false;
+                }
 
-            if (m_numberOfBytesLeftToRead == 0)
-            {
-                m_readOffset = 0;
-                m_numberOfBytesLeftToRecv = BUFFER_SIZE;
-            }
-            else if (m_numberOfBytesLeftToRead <= READ_BUFFER_SHIFT_SIZE)
-            {
-                std::memcpy(m_buffer, m_buffer + m_readOffset, m_numberOfBytesLeftToRead);
-                m_readOffset = 0;
-                m_numberOfBytesLeftToRecv = BUFFER_SIZE - m_numberOfBytesLeftToRead;
-                assert(m_numberOfBytesLeftToRecv > 0u);
+                if (numberOfBytesRead == 0)
+                {
+                    break;
+                }
+
+                m_numberOfBytesLeftToRead += numberOfBytesRead;
+                readMessages();
+
+                if (m_numberOfBytesLeftToRead == 0)
+                {
+                    m_readOffset = 0;
+                    m_numberOfBytesLeftToRecv = BUFFER_SIZE;
+                }
+                else if (m_numberOfBytesLeftToRead <= READ_BUFFER_SHIFT_SIZE)
+                {
+                    std::memcpy(m_buffer, m_buffer + m_readOffset, m_numberOfBytesLeftToRead);
+                    m_readOffset = 0;
+                    m_numberOfBytesLeftToRecv = BUFFER_SIZE - m_numberOfBytesLeftToRead;
+                    assert(m_numberOfBytesLeftToRecv > 0u);
+                }
             }
 
             return true;
@@ -145,7 +151,10 @@ namespace lu::platform
                 return;
             }
 
-            Receive();
+            if (Receive() == false)
+            {
+                return;
+            }
         }
 
         const FileDescriptor &getFD() const override final

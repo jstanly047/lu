@@ -19,7 +19,7 @@ namespace  lu::platform::thread
         static const std::string& getCurrentThreadName(); 
 
         void init();
-        void run();
+        void start();
         void join();
         void stop();
         void connect(LuThread& readerThread);
@@ -28,6 +28,7 @@ namespace  lu::platform::thread
         void transferMsg(const std::string& threadName, void * msg);
         void transferMsg(unsigned int threadIndex, void * msg);
         unsigned int getThreadIndex(const std::string& threadName) const;
+        virtual void run() = 0;
 
 
     protected:
@@ -37,6 +38,8 @@ namespace  lu::platform::thread
        
 
     private:
+        void threadRun();
+
         channel::OutputChannel m_outputChannel;
         channel::ChannelID m_channelID{};
         //static thread_local std::string m_sThreadLocalName;

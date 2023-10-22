@@ -17,7 +17,7 @@ namespace lu::platform
         ~FDEventLoop();
 
         bool init();
-        bool add(IFDEventHandler &event) const;
+        bool add(IFDEventHandler &event);
         bool remove(IFDEventHandler &event) const;
         void start(int maxEvents);
         void stop();

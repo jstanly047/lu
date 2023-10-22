@@ -51,9 +51,15 @@ bool FDEventLoop::init()
     return true;
 }
 
-bool FDEventLoop::add(IFDEventHandler &event) const
+bool FDEventLoop::add(IFDEventHandler &event)
 {
     assert(event.getFD() != nullptr);
+    if (event.getFD().setToNonBlocking() == false)
+    {
+        LOG(ERROR) << "FD[" << event.getFD() << "] fail to set non blocking!!";
+        return false;
+    }
+
     struct epoll_event epollEvent{};
     epollEvent.events = EPOLLIN | EPOLLET;
     epollEvent.data.ptr = &event;

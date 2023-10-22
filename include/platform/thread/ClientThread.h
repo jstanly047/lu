@@ -36,24 +36,12 @@ namespace lu::platform::thread
             return EventThread<ClientThreadCallback>::init();
         }
 
-        void start()
-        {
-            this->m_thread = std::thread(&ClientThread::run, this);
-        }
-
-        void run()
-        {
-            this->m_eventLoop.add(m_eventChannel);
-            m_syncStart.increment();
-            EventThread<ClientThreadCallback>::run();
-        }
-
         void onNewConnection(lu::platform::socket::BaseSocket *baseSocket)
         {
             auto dataSocket = new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket));
             // TODO check onNewCOnnection used should be able to send an data
             this->m_clientThreadCallback.onNewConnection(dataSocket);
-            dataSocket->getBaseSocket().setNonBlocking();
+            //dataSocket->getBaseSocket().setNonBlocking();
             this->m_eventLoop.add(*dataSocket);
             delete baseSocket;
             LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket << "]";
@@ -63,6 +51,13 @@ namespace lu::platform::thread
         ClientThreadCallback& getCallback() { return m_clientThreadCallback; }
 
     private:
+        void run() override final
+        {
+            this->m_eventLoop.add(m_eventChannel);
+            m_syncStart.increment();
+            EventThread<ClientThreadCallback>::run();
+        }
+
         ClientThreadCallback& m_clientThreadCallback;
         lu::platform::EventChannel<ClientThread> m_eventChannel;
         lu::utils::WaitForCount& m_syncStart;

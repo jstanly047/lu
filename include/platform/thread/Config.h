@@ -28,6 +28,8 @@ namespace lu::platform::thread
 
         }
 
+        EventThreadConfig(){}
+
         int NUMBER_OF_EVENTS_PER_HANDLE = 10;
         unsigned int TIMER_IN_MSEC = 1000u;
         std::string TIMER_NAME = "SCH";
