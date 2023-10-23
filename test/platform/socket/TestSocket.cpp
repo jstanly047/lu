@@ -1,9 +1,6 @@
 #include <platform/socket/ServerSocket.h>
 #include <platform/socket/ConnectSocket.h>
 #include <platform/socket/DataSocket.h>
-#include <platform/socket/IDataHandler.h>
-#include <platform/socket/IServerSocketCallback.h>
-#include <platform/socket/IDataSocketCallback.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <netinet/in.h>
@@ -13,10 +10,34 @@
 #include <thread>
 #include <condition_variable>
 
-#include <platform/socket/MockSeverSocketCallback.h>
-
 using namespace lu::platform::socket;
 
+class MockSeverSocketCallback 
+{
+public:
+    MOCK_METHOD(void, onNewConnection, (lu::platform::socket::BaseSocket *));
+};
+
+class DataHandler
+{
+public:
+    DataHandler() {}
+
+    virtual uint8_t *getReceiveBufferToFill() { return nullptr; }
+    virtual std::size_t getReceiveBufferSize() { return 0; }
+    virtual std::size_t getHeaderSize() { return 0; }
+    virtual std::size_t readHeader(std::size_t offset) { return offset; }
+    virtual void *readMessage([[maybe_unused]] std::size_t offset, [[maybe_unused]] std::size_t size) { return nullptr; }
+
+private:
+};
+
+class DataSocketCallback
+{
+public:
+    virtual void onClientClose([[maybe_unused]] DataSocket<DataSocketCallback, DataHandler> &dataSocket) {}
+    virtual void onData([[maybe_unused]] DataSocket<DataSocketCallback, DataHandler> &dataSocket, [[maybe_unused]] void *data) {}
+};
 
 class TestSocket : public ::testing::Test
 {
@@ -71,9 +92,9 @@ protected:
     }
 
     MockSeverSocketCallback m_mockServerSocketCallback;
-    IDataSocketCallback<IDataHandler> m_clientDataSocketCallback;
-    ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>> connectSocket;
-    ServerSocket<IServerSocketCallback> serverSocket;
+    DataSocketCallback m_clientDataSocketCallback;
+    ConnectSocket<DataSocketCallback, DataSocket<DataSocketCallback, DataHandler>> connectSocket;
+    ServerSocket<MockSeverSocketCallback> serverSocket;
     std::thread serverThead;
     std::vector<std::unique_ptr<BaseSocket>> m_clientSockets;
     std::mutex startMutex;
@@ -146,7 +167,7 @@ TEST_F(TestSocket, DISABLED_setMaxSendDataWaitThreshold)
 
 TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 {
-    auto connectSocketTemp = new ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>>("localhost", "10000");
+    auto connectSocketTemp = new ConnectSocket<DataSocketCallback, DataSocket<DataSocketCallback, DataHandler>>("localhost", "10000");
     connectSocketTemp->connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp->getBaseSocket(), nullptr);
     int fd = connectSocketTemp->getBaseSocket()->getFD();
@@ -157,7 +178,7 @@ TEST_F(TestSocket, checkDestructionOfConnectionDataSocket)
 
 TEST_F(TestSocket, checkOnReconnectCloseAlreadyOpenedDataSocket)
 {
-    ConnectSocket<IDataSocketCallback<IDataHandler>, DataSocket<IDataSocketCallback<IDataHandler>, IDataHandler>> connectSocketTemp("localhost", "10000");
+    ConnectSocket<DataSocketCallback, DataSocket<DataSocketCallback, DataHandler>> connectSocketTemp("localhost", "10000");
     connectSocketTemp.connectToTCP(m_clientDataSocketCallback);
     ASSERT_NE(connectSocketTemp.getBaseSocket(), nullptr);
     int fd = connectSocketTemp.getBaseSocket()->getFD();

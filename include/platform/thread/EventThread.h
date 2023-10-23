@@ -103,6 +103,7 @@ namespace lu::platform::thread
             m_eventLoop.start(m_clientThreadConfig.NUMBER_OF_EVENTS_PER_HANDLE);
         }
 
+    private:
         EventThreadCallback& m_eventThreadCallback;
         EventThreadConfig m_clientThreadConfig;
         lu::platform::FDEventLoop m_eventLoop;

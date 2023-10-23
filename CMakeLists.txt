@@ -94,11 +94,6 @@ if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
     find_package(GTest REQUIRED)
 
-    file(GLOB LU_MOCK_SOCKET_SRC  ./test/mock/platform/socket/*.h)
-    add_library(luMockSocket STATIC ${LU_MOCK_SOCKET_SRC})
-    target_link_libraries(luMockSocket luSocket)
-    target_include_directories(luMockSocket PUBLIC ${PROJ_TEST_INC_DIR})
-
     file(GLOB LU_MOCK_THREAD_SRC  ./test/mock/platform/thread/*.h)
     add_library(luMockThread STATIC ${LU_MOCK_THREAD_SRC})
     target_link_libraries(luMockThread luThread)
@@ -129,7 +124,6 @@ if (UNIT_TEST)
                             #thread
                             luSocketDataHandler
                             luSocket
-                            luMockSocket
                             luThread
                             luStorageDB
                             luMockThread

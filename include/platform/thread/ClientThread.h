@@ -42,7 +42,7 @@ namespace lu::platform::thread
             // TODO check onNewCOnnection used should be able to send an data
             this->m_clientThreadCallback.onNewConnection(dataSocket);
             //dataSocket->getBaseSocket().setNonBlocking();
-            this->m_eventLoop.add(*dataSocket);
+            this->addToEventLoop(*dataSocket);
             delete baseSocket;
             LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket << "]";
         }
@@ -53,7 +53,7 @@ namespace lu::platform::thread
     private:
         void run() override final
         {
-            this->m_eventLoop.add(m_eventChannel);
+            this->addToEventLoop(m_eventChannel);
             m_syncStart.increment();
             EventThread<ClientThreadCallback>::run();
         }

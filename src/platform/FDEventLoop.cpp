@@ -9,32 +9,10 @@
 
 using namespace lu::platform;
 
-FDEventLoop::FDEventLoop(FDEventLoop&& other) noexcept {
-    std::swap(m_epollFD, other.m_epollFD);
-    std::swap(m_stop, other.m_stop);
-}
-
-FDEventLoop& FDEventLoop::operator=(FDEventLoop&& other)noexcept 
-{
-    std::swap(m_epollFD, other.m_epollFD);
-    std::swap(m_stop, other.m_stop);
-    return *this;
-}
-
 FDEventLoop::~FDEventLoop()
 {
-    if (m_epollFD == lu::platform::NULL_FD)
-    {
-        return;
-    }
-    
-    if (::close(m_epollFD) == -1)
-    {
-        LOG(ERROR) << "Cannot close FD[" << m_epollFD << "] event pool!";
-        return;
-    }
-
     LOG(INFO) << "Destroy FD[" << m_epollFD << "] event pool!";
+    close();
 }
 
 bool FDEventLoop::init()
@@ -94,14 +72,8 @@ void FDEventLoop::start(int maxEvents)
 
         if (UNLIKELY(m_stop))
         {
-            if (::close(m_epollFD) == -1)
-            {
-                LOG(ERROR) << "Try stop event FD[" << m_epollFD << "] failed!";
-                return;
-            }
-
+            close();
             LOG(INFO) << "Stoped FD[" << m_epollFD << "] event pool!";
-            m_epollFD = lu::platform::NULL_FD;
             break;
         }
     }
@@ -111,4 +83,20 @@ void FDEventLoop::stop()
 {
     /*If a file descriptor being monitored by select() is closed in another thread, the result is unspecified.*/
     m_stop = true;
+}
+
+void FDEventLoop::close()
+{
+    if (m_epollFD == -1)
+    {
+        return;
+    }
+    
+    if (::close(m_epollFD) == -1)
+    {
+        LOG(ERROR) << "Try stop event FD[" << m_epollFD << "] failed!";
+        return;
+    }
+
+    m_epollFD = lu::platform::NULL_FD;
 }

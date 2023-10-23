@@ -79,7 +79,7 @@ TEST(TestEventChannel, checkCallback)
         {
             thread.addToEventLoop(eventChannel);
             waitFor.increment();
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));    
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));  
         }
     ));
 
@@ -103,7 +103,7 @@ TEST(TestEventChannel, checkCallback)
 
     waitFor.wait();
 
-    for (unsigned int i = 1U; i <= 2000U; i++)
+    for (unsigned int i = 1U; i <= 196; i++)
     {
         if (i % 2 == 0)
         {
@@ -114,6 +114,21 @@ TEST(TestEventChannel, checkCallback)
             eventChannel.notify(EventData());
         }
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    for (unsigned int i = 1U; i <= 1804; i++)
+    {
+        if (i % 2 == 0)
+        {
+            eventChannel.notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
+        }
+        else
+        {
+            eventChannel.notify(EventData());
+        }
+    }
+
 
     thread.join();
 }

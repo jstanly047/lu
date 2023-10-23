@@ -84,7 +84,7 @@ namespace lu::platform::thread
 
                 m_connectionThreadCallback.onConnection(*(service.connection->getDataSocket()));
                 //service.connection->getDataSocket()->getBaseSocket().setNonBlocking();
-                this->m_eventLoop.add(*(service.connection->getDataSocket()));
+                this->addToEventLoop(*(service.connection->getDataSocket()));
             }
 
             EventThread<ConnectionThreadCallback>::run();

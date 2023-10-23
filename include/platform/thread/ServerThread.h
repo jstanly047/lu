@@ -131,7 +131,7 @@ namespace lu::platform::thread
             }
 
             //this->m_serverSocket.getBaseSocket().setNonBlocking();
-            this->m_eventLoop.add(m_serverSocket);
+            this->addToEventLoop(m_serverSocket);
 
             if (m_serverConfig.CREATE_NEW_THREAD)
             {
