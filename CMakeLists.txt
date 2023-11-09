@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.2)
-project(joutillib)
+project(LuPlatformLib)
 option(UNIT_TEST "Build for unit testing" OFF)
 option(COV_BUILD "Flag to enable unit test build" OFF)
 
@@ -97,7 +97,7 @@ if (UNIT_TEST)
     file(GLOB LU_MOCK_THREAD_SRC  ./test/mock/platform/thread/*.h)
     add_library(luMockThread STATIC ${LU_MOCK_THREAD_SRC})
     target_link_libraries(luMockThread luThread)
-    target_include_directories(luMockThread PUBLIC ${PROJ_TEST_INC_DIR})
+    target_include_directories(luMockThread PUBLIC ${PROJ_TEST_INC_DIR} ${LU_PLATFORM_HEADRES})
 
     file(GLOB TEST_UTILS_SRC ./test/utils/*.cpp)
     file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
@@ -116,7 +116,7 @@ if (UNIT_TEST)
                             ${TEST_REFLECTION_SRC}
                             ${TEST_STORAGE_SRC})
 
-    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS})
+    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS} ${LU_PLATFORM_HEADRES})
 
     target_link_libraries(LuTests
                             luPlatform

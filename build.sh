@@ -73,3 +73,6 @@ printf  "\n${PURPLE}=====================> Start Building Engines & SO...${NC}\n
 printf "$BUILD_CMD"
 $BUILD_CMD
 printf  "\n${PURPLE}======================> Done Building Engines & SO...${NC}\n"
+
+#conan export-pkg . --user snapdev_core --channel stable
+#conan upload   lu_platform/1.0@snapdev_core/stable  -r snap_innovations

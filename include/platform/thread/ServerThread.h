@@ -33,9 +33,9 @@ namespace lu::platform::thread
                     m_serverConfig(serverConfig),
                     m_syncStart(m_serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS)
         {
-            if (m_serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS >= std::thread::hardware_concurrency() - 1u)
+            if (m_serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS >= std::thread::hardware_concurrency())
             {
-                m_serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS = std::thread::hardware_concurrency() - 1u;
+                m_serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS = std::thread::hardware_concurrency();
                 m_syncStart.update(m_serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS);
             }
 

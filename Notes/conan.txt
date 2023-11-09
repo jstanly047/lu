@@ -119,3 +119,19 @@ CMakeToolchain
 
 Resolve Version Conflicts
 https://docs.conan.io/2/tutorial/versioning/conflicts.html
+
+
+Instal Conan Server 
+================================================
+wget -qO - https://releases.jfrog.io/artifactory/api/gpg/key/public | sudo gpg --dearmor -o /usr/share/keyrings/jfrog-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/jfrog-archive-keyring.gpg] https://releases.jfrog.io/artifactory/artifactory-debs focal main" | sudo tee -a /etc/apt/sources.list
+
+sudo apt update
+sudo apt install jfrog-artifactory-cpp-ce
+sudo service artifactory start
+
+http://<IP_ADDRESS>:8081/artifactory/
+
+For client side
+================================================
+conan remote add <alias_name_of_artifactory> http://<IP_ADDRESS>:8081/artifactory/api/conan/<name_of_artifactory>
