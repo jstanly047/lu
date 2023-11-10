@@ -10,11 +10,14 @@ namespace lu::platform::thread::channel
     class InputChannel
     {
     public:
-        InputChannel(){}
-        TransferQueue& getTransferQueue() { return m_transferQueue; }
+        InputChannel();
+        TransferQueue& getTransferQueue() { return *m_transferQueue; }
         void sendStop();
+        ~InputChannel();
+        void push(ChannelData);
+        ChannelData pop();
 
     private:
-        TransferQueue m_transferQueue;
+        TransferQueue* m_transferQueue;
     };
 }

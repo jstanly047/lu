@@ -1,4 +1,5 @@
 #include <platform/thread/channel/OutputChannel.h>
+#include <queue/Queue.h>
 
 namespace
 {

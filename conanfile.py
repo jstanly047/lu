@@ -87,12 +87,18 @@ class snapafwRecipe(ConanFile):
         copy(self, "*.h", os.path.join(self.source_folder, "include/storage"), os.path.join(self.package_folder, "include/storage"), keep_path=True)
         copy(self, "*.h", os.path.join(self.source_folder, "include/utils"), os.path.join(self.package_folder, "include/utils"), keep_path=True)
         #copy(self, "*.h", os.path.join(self.source_folder, "include/thread"), os.path.join(self.package_folder, "include/thread"), keep_path=True)
+        #copy(self, "*.h", os.path.join(self.source_folder, "include/queue"), os.path.join(self.package_folder, "include/queue"), keep_path=True)
         copy(self, "*.a", self.build_folder, os.path.join(self.package_folder, "lib"), keep_path=True)
 
     def package_info(self):
-        self.cpp_info.libs = ["lu_platform"]
+        self.cpp_info.set_property("cmake_find_mode", "both")
+        self.cpp_info.set_property("cmake_file_name", "lu_platform")
+        self.cpp_info.set_property("cmake_file", "lu_platform-config.cmake")
+        self.cpp_info.libs = ['liblucommon.a', 'libutils.a', 'libluSocket.a', 'libluPlatform.a', 'libluSocketDataHandler.a', 'libluThread.a', 'libluThreadChannel.a', 'libluStorageDB.a']
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.includedirs = ["include"]
+        self.cpp_info.names["cmake_find_package"] = "lu_platform"
+        self.cpp_info.names["cmake_find_package_multi"] = "lu_platform"
 
         '''
         if self.options.shared:

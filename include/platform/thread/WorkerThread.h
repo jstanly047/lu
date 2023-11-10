@@ -3,6 +3,7 @@
 #include <common/TemplateConstraints.h>
 #include <platform/thread/LuThread.h>
 #include <platform/thread/channel/TransferQueue.h>
+#include <common/defs.h>
 
 namespace  lu::platform::thread
 {
@@ -24,7 +25,7 @@ namespace  lu::platform::thread
         void stop()
         {
             LuThread::stop();
-            m_inputChannel.getTransferQueue().push({getChannelID(), nullptr});
+            m_inputChannel.push({getChannelID(), nullptr});
         }
 
         void join()
@@ -44,7 +45,7 @@ namespace  lu::platform::thread
 
             for(;;) 
             {
-                channel::ChannelData channelData = m_inputChannel.getTransferQueue().pop();
+                channel::ChannelData channelData = m_inputChannel.pop();
                 m_luThreadCallback.onMsg(channelData);
 
                 if (UNLIKELY(channelData.data == nullptr))

@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <cassert>
+#include <cstring>
 
 #include <glog/logging.h>
 
