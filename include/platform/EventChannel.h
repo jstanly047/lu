@@ -21,7 +21,8 @@ namespace lu::platform
         enum EventType
         {
             None,
-            NewConnection
+            NewConnection,
+            AppMessage
         };
 
         EventType eventType;
@@ -30,6 +31,25 @@ namespace lu::platform
         EventData(EventType type = EventType::None, void *ptr = nullptr) : eventType(type), data(ptr) {}
     };
     #pragma pack(pop)
+
+    template <lu::common::NonPtrClassOrStruct EventChannelHandler>
+    class EventChannel;
+
+    class EventNotifier
+    {
+        template<lu::common::NonPtrClassOrStruct EventChannelHandler>
+        friend class EventChannel;
+
+    public:
+        bool notify(const EventData &eventData) const
+        {
+            return ::write(m_out, &eventData, sizeof(EventData));
+        }
+
+    private:
+        EventNotifier(FileDescriptor& out) : m_out(out){}
+        FileDescriptor& m_out;        
+    };
 
     constexpr std::size_t BUFFER_SIZE = sizeof(EventData) * 200;
     constexpr std::size_t READ_BUFFER_SHIFT_SIZE = sizeof(EventData) * 10;
@@ -67,15 +87,16 @@ namespace lu::platform
             return true;
         }
 
-        bool notify(const EventData &eventData) const
-        {
-            return ::write(*m_out, &eventData, sizeof(EventData));
-        }
-
         const FileDescriptor &getInFD() const
         {
             return getFD();
         }
+
+        EventNotifier* getEventNotifier() const
+        {
+            return new EventNotifier(*m_out);
+        }
+
 
     private:
         inline void readMessages()
@@ -97,6 +118,9 @@ namespace lu::platform
                 {
                 case EventData::NewConnection:
                     m_eventChannelHandler.onNewConnection(reinterpret_cast<lu::platform::socket::BaseSocket *>(eventData.data));
+                    break;
+                case EventData::AppMessage:
+                    m_eventChannelHandler.onAppMsg(eventData.data);
                     break;
                 default:
                     break;

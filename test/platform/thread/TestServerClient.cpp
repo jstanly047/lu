@@ -80,6 +80,9 @@ protected:
                     serverClientDataSockets.insert(std::unique_ptr<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>>(dataSocket));
                 }));
 
+
+            EXPECT_CALL(*mockServerClientCallback,  onAppMsg(::testing::_)).Times(0);
+
             EXPECT_CALL(*mockServerClientCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
                 [&]( lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket, void* message)
                 { 

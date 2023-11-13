@@ -39,13 +39,7 @@ class TestClientTheadCallback
 {
 public:
     using StringDataSocket=lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String>;
-    TestClientTheadCallback() : m_thread(nullptr), m_workerThread(nullptr) {}
-    
-    void connectWorkerThread(WorkerThread<MockWorkerThread>& workerThread)
-    {
-        m_workerThread = &workerThread;
-        m_thread->connect(workerThread);
-    }
+    TestClientTheadCallback() : m_workerThread(nullptr) {}
 
     bool onInit() { return true; }
     void onStart(){}
@@ -54,6 +48,10 @@ public:
     void onNewConnection(StringDataSocket *dataSocket)
     {
         m_clients.emplace_back(dataSocket);
+    }
+
+    void onAppMsg([[maybe_unused]]void *msg)
+    {
     }
 
     void onTimer(const lu::platform::FDTimer<TestClientTheadCallback> &)
@@ -74,7 +72,7 @@ public:
         {
             lu::platform::socket::data_handler::String::Message reply("Pong");
             dataSocket.sendMsg(&reply, sizeof(lu::platform::socket::data_handler::String::Message));
-            getThread().transferMsg(m_workerThread->getName(), strMessage);
+            LuThread::transferMsg(m_workerThread->getName(), strMessage);
         }
         else if (strMessage->getString() == "GetName")
         {
@@ -84,11 +82,13 @@ public:
         }
     }
 
-    void setThread(LuThread &thread) { m_thread = &thread; }
-    LuThread &getThread() { return *m_thread; }
+    
+    void setWorkertThread(WorkerThread<MockWorkerThread>& workerThread)
+    {
+        m_workerThread = &workerThread;
+    }
 
 private:
-    LuThread *m_thread;
     WorkerThread<MockWorkerThread>* m_workerThread;
     std::vector<std::unique_ptr<StringDataSocket>> m_clients;
 };
@@ -115,9 +115,11 @@ protected:
         EXPECT_CALL(mockServerThreadCallback,  onExit()).Times(1);
         EXPECT_CALL(mockServerThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
 
+        serverThread.connectTo(workerConsumer);
+        
         for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {
-            callbacks->connectWorkerThread(workerConsumer);
+            callbacks->setWorkertThread(workerConsumer);
         }
 
         serverThread.init();

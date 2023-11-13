@@ -57,7 +57,7 @@ namespace lu::platform::thread
                 m_serverClientThreads.emplace_back(std::make_unique<ClientThread<BaseClientThreadCallback, DataSocketType>>(static_cast<BaseClientThreadCallback&>(m_serverClientThreadsCallbacks.back()), 
                                                 clientThreadName, eventThreadConfig, m_syncStart));
                 m_serverClientThreadsCallbacksPtr.push_back(&m_serverClientThreadsCallbacks.back());
-                m_serverClientThreadsCallbacks.back().setThread(*m_serverClientThreads.back());
+                //m_serverClientThreadsCallbacks.back().setThread(*m_serverClientThreads.back());
             }
         }
 
@@ -96,7 +96,7 @@ namespace lu::platform::thread
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
         {
             m_currentClientHandler = m_currentClientHandler % m_serverClientThreads.size();
-            m_serverClientThreads[m_currentClientHandler]->getEventChannel().notify(lu::platform::EventData(lu::platform::EventData::NewConnection, baseSocket));
+            m_serverClientThreads[m_currentClientHandler]->getEventNotifier().notify(lu::platform::EventData(lu::platform::EventData::NewConnection, baseSocket));
             m_currentClientHandler++;
         }
 
@@ -118,6 +118,22 @@ namespace lu::platform::thread
             }
 
             EventThread<ServerThreadCallback>::stop();
+        }
+
+        void connectTo(LuThread& luThread)
+        {
+            for (auto& serverClientThread : m_serverClientThreads)
+            {
+                serverClientThread->connect(luThread);
+            }
+        }
+
+        void connectFrom(LuThread& thread)
+        {
+            for (auto& clientThread : m_serverClientThreads)
+            {
+                clientThread->addConnectingThread(thread);
+            }
         }
 
         std::vector<BaseClientThreadCallback*>& getClientThreadCallbacks() { return m_serverClientThreadsCallbacksPtr; }

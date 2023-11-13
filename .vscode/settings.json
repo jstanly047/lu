@@ -73,6 +73,7 @@
         "netfwd": "cpp",
         "future": "cpp",
         "coroutine": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "cassert": "cpp"
     }
 }

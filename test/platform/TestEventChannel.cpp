@@ -14,6 +14,7 @@ class MockEventHandler
 {
 public:
     MOCK_METHOD(void, onNewConnection, (socket::BaseSocket *));
+    MOCK_METHOD(void, onAppMsg, (void *));
 };
 
 class MockThreadEventHandler
@@ -103,15 +104,17 @@ TEST(TestEventChannel, checkCallback)
 
     waitFor.wait();
 
+    std::unique_ptr<EventNotifier> eventNotifier(eventChannel.getEventNotifier());
+
     for (unsigned int i = 1U; i <= 196; i++)
     {
         if (i % 2 == 0)
         {
-            eventChannel.notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
+            eventNotifier->notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
         }
         else
         {
-            eventChannel.notify(EventData());
+            eventNotifier->notify(EventData());
         }
     }
 
@@ -121,11 +124,11 @@ TEST(TestEventChannel, checkCallback)
     {
         if (i % 2 == 0)
         {
-            eventChannel.notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
+            eventNotifier->notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
         }
         else
         {
-            eventChannel.notify(EventData());
+            eventNotifier->notify(EventData());
         }
     }
 

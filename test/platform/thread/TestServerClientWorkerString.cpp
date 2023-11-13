@@ -33,19 +33,19 @@ namespace
         return serverConfig;
     }
 
+    struct ReplyMsg
+    {
+        channel::ChannelID channelID;
+        unsigned int intValue;
+    };
+
     lu::utils::WaitForCount waitForCount(1u);
 
     class TestClientTheadCallback
     {
     public:
         using StringDataSocket=lu::platform::socket::DataSocket<TestClientTheadCallback, lu::platform::socket::data_handler::String>;
-        TestClientTheadCallback() : m_thread(nullptr), m_workerThread(nullptr) {}
-
-        void connectWorkerThread(WorkerThread<MockWorkerThread> &workerThread)
-        {
-            m_workerThread = &workerThread;
-            m_thread->connect(workerThread);
-        }
+        TestClientTheadCallback() : m_workerThread(nullptr) {}
 
         bool onInit() { return true; }
         void onStart() {}
@@ -54,6 +54,14 @@ namespace
         void onNewConnection(StringDataSocket *dataSocket)
         {
             m_clients.emplace_back(dataSocket);
+        }
+
+        void onAppMsg(void *msg)
+        {
+            auto replyMsg = reinterpret_cast<ReplyMsg*>(msg);
+            m_expectedValues[replyMsg->channelID]++;
+            EXPECT_EQ(replyMsg->intValue, m_expectedValues[replyMsg->channelID]);
+            delete replyMsg;
         }
 
         void onTimer(const lu::platform::FDTimer<TestClientTheadCallback> &)
@@ -84,16 +92,18 @@ namespace
             {
                 m_expectedMsg++;
                 ASSERT_EQ(m_expectedMsg, std::stoul(strMessage->getString()));
-                getThread().transferMsg(m_workerThread->getName(), strMessage);
+                LuThread::transferMsg(m_workerThread->getName(), strMessage);
             }
         }
 
-        void setThread(LuThread &thread) { m_thread = &thread; }
-        LuThread &getThread() { return *m_thread; }
+        void setWorkertThread(WorkerThread<MockWorkerThread>& workerThread)
+        {
+            m_workerThread = &workerThread;
+        }
 
     private:
-        LuThread *m_thread;
         WorkerThread<MockWorkerThread> *m_workerThread;
+        std::map<channel::ChannelID, unsigned int> m_expectedValues;
         std::vector<std::unique_ptr<StringDataSocket>> m_clients;
         unsigned int m_expectedMsg{};
     };
@@ -202,12 +212,14 @@ protected:
     void SetUp() override 
     {
         EXPECT_EQ(serverThread.getName(),"TestServer");
+        serverThread.connectTo(workerConsumer);
+        serverThread.connectFrom(workerConsumer);
         
         for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {
-            callbacks->connectWorkerThread(workerConsumer);
+            callbacks->setWorkertThread(workerConsumer);
         }
-
+        
         serverThread.init();
         serverThread.start();
 
@@ -253,10 +265,15 @@ TEST_F(TestServerClientWorkerString, TestPingPong)
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(channelData.data);
 
             static unsigned int stopCount = 0;
-            if (std::stoul(strMessage->getString()) == NUM_MSG_SEND)
+            auto replyMsg = new ReplyMsg();
+            replyMsg->intValue = std::stoul(strMessage->getString());
+            replyMsg->channelID = LuThread::getCurrentThreadChannelID();
+            if (replyMsg->intValue == NUM_MSG_SEND)
             {
                 stopCount++;
             }
+
+            LuThread::transferMsgToServerThread(channelData.channelID, replyMsg);
             
             delete strMessage;
 

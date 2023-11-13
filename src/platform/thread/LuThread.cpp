@@ -7,6 +7,8 @@ namespace
 {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     thread_local std::string m_sThreadLocalName="None";
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+    thread_local LuThread* m_sCurrentLuThread = nullptr;
 }
 
 
@@ -26,6 +28,7 @@ void LuThread::start()
 void LuThread::threadRun()
 {
     m_sThreadLocalName = m_name;
+    m_sCurrentLuThread = this;
     m_channelID = channel::OutputChannel::getChannelID();
     LOG(INFO) << "[" << m_name << "] Started channelID:" << m_channelID;
     run();
@@ -52,15 +55,30 @@ void LuThread::connect(LuThread &readerThread)
     m_outputChannel.add(readerThread.getName(), readerThread.m_inputChannel.getTransferQueue());
 }
 
+void LuThread::connectTo(channel::ChannelID channelID, lu::platform::EventNotifier* eventNotifier)
+{
+    m_eventNotifiers.insert({channelID, std::unique_ptr<lu::platform::EventNotifier>(eventNotifier)});
+}
+
 void LuThread::transferMsg(const std::string &threadName, void *msg)
 {
-    m_outputChannel.transferMsg(threadName, msg);
+    m_sCurrentLuThread->m_outputChannel.transferMsg(threadName, msg);
 }
 
 void LuThread::transferMsg(unsigned int threadIndex, void *msg)
 {
-    m_outputChannel.transferMsg(threadIndex, msg);
+    m_sCurrentLuThread->m_outputChannel.transferMsg(threadIndex, msg);
 }
+
+void LuThread::transferMsgToServerThread(channel::ChannelID channelID, void *msg)
+{
+    m_sCurrentLuThread->m_eventNotifiers[channelID]->notify(lu::platform::EventData(lu::platform::EventData::AppMessage, msg));
+}
+
+ channel::ChannelID LuThread::getCurrentThreadChannelID()
+ {
+    return m_sCurrentLuThread->m_channelID;
+ }
 
 unsigned int LuThread::getThreadIndex(const std::string& threadName) const
 {
