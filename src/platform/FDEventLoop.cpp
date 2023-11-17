@@ -29,10 +29,10 @@ bool FDEventLoop::init()
     return true;
 }
 
-bool FDEventLoop::add(IFDEventHandler &event)
+bool FDEventLoop::add(IFDEventHandler &event) const
 {
     assert(event.getFD() != nullptr);
-    if (event.getFD().setToNonBlocking() == false)
+    if (!event.getFD().setToNonBlocking())
     {
         LOG(ERROR) << "FD[" << event.getFD() << "] fail to set non blocking!!";
         return false;

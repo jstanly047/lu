@@ -112,6 +112,8 @@ class snapafwRecipe(ConanFile):
         unitTestResultPath=os.path.join(self.build_folder, "unitTestResult")
         os.environ['GTEST_OUTPUT'] = "xml:" + unitTestResultPath + "/Result.xml"
         coverageBaseLineFile=self.build_folder + "/coverage.baseline "
+        copy(self, "*", os.path.join(self.source_folder, "test/resource"), os.path.join(self.build_folder, "resource"), keep_path=True)
+
 
         if self.options.COV_BUILD:
             self.run("lcov -c -i -b . -d " + self.build_folder + " -o " + coverageBaseLineFile)

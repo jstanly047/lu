@@ -43,6 +43,7 @@ find_package(glog REQUIRED)
 find_package(gflags REQUIRED)
 find_package(libmysqlclient REQUIRED)
 find_package(SOCI REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 ############################################################################
 #Build Libraries
@@ -84,6 +85,12 @@ target_include_directories(luStorageDB PUBLIC ${PROJ_INC_DIR}
                                               ${glog_INCLUDE_DIRS} 
                                               ${gflags_INCLUDE_DIRS})
 
+
+file(GLOB LU_CRYPTO_SRC  ./src/crypto/*.cpp)
+add_library(luCrypto STATIC ${LU_CRYPTO_SRC})
+target_include_directories(luCrypto PUBLIC ${PROJ_INC_DIR} ${OpenSSL_INCLUDE_DIRS})
+target_link_libraries(luCrypto OpenSSL::Crypto OpenSSL::SSL)
+
 #file(GLOB THREAD_SRC  ./src/thread/*.cpp)
 #add_library(thread STATIC ${THREAD_SRC})
 #target_include_directories(thread PUBLIC ${PROJ_INC_DIR})
@@ -107,6 +114,7 @@ if (UNIT_TEST)
     file(GLOB TEST_PlATFORM_SRC ./test/platform/*.cpp)
     file(GLOB TEST_REFLECTION_SRC ./test/reflection/*.cpp)
     file(GLOB TEST_STORAGE_SRC ./test/storage/*.cpp)
+    file(GLOB TEST_CRYPTO_SRC ./test/crypto/*.cpp)
 
     add_executable(LuTests ./test/TestMain.cpp 
                             ${TEST_UTILS_SRC}
@@ -115,7 +123,8 @@ if (UNIT_TEST)
                             ${TEST_THREAD_SRC}
                             ${TEST_PlATFORM_SRC}
                             ${TEST_REFLECTION_SRC}
-                            ${TEST_STORAGE_SRC})
+                            ${TEST_STORAGE_SRC}
+                            ${TEST_CRYPTO_SRC})
 
     target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS} ${LU_PLATFORM_HEADRES})
 
@@ -127,6 +136,7 @@ if (UNIT_TEST)
                             luSocket
                             luThread
                             luStorageDB
+                            luCrypto
                             luMockThread
                             glog::glog
                             GTest::gtest

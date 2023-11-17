@@ -3,9 +3,9 @@
 
 using namespace lu::platform::thread::channel;
 
-InputChannel::InputChannel()
+InputChannel::InputChannel() : m_transferQueue(new TransferQueue())
 {
-    m_transferQueue = new TransferQueue();
+    
 }
 
 InputChannel::~InputChannel()
