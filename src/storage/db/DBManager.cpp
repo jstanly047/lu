@@ -1,10 +1,9 @@
 #include <storage/db/DBManager.h>
-#include <soci/mysql/soci-mysql.h>
 
 using namespace lu::storage::db;
 
-DBManager::DBManager(const std::string& connectionStr, unsigned int bulkWriteThreshold):
-    m_sociSession(soci::mysql, connectionStr),
+DBManager::DBManager(const soci::backend_factory& factory, const std::string& connectionStr, unsigned int bulkWriteThreshold):
+    m_sociSession(factory, connectionStr),
     m_dbReader(m_sociSession),
     m_dbWriter(m_sociSession, bulkWriteThreshold)
 {
@@ -24,5 +23,10 @@ DBWriter& DBManager::getDBWriter()
 void DBManager::commit()
 {
     m_sociSession.commit();
+}
+
+void DBManager::execute(const std::string& sql)
+{
+    m_sociSession << sql;
 }
         

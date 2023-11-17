@@ -87,6 +87,7 @@ namespace lu::storage::db                                                       
             session.prepare << CONCAT_REC("SELECT * FROM ",CONV_TO_STRING(TABLE_NAME)); \
             return retVal;                                                              \
         }                                                                               \
+                                                                                        \
         void truncate(soci::session& session)                                           \
         {                                                                               \
             session << CONCAT_REC("TRUNCATE TABLE ",CONV_TO_STRING(TABLE_NAME));        \

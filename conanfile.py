@@ -52,6 +52,7 @@ class snapafwRecipe(ConanFile):
         self.requires("glog/0.6.0")
         self.requires("soci/4.0.3")
         self.requires("libmysqlclient/8.1.0")
+        self.requires("sqlite3/3.43.0")
         # there is version conflict for this library so it override the requirement#
         self.requires("zlib/1.2.13", override=True)
         

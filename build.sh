@@ -63,7 +63,7 @@ else
     BUILD_CMD="$BUILD_CMD -s build_type=Release"
 fi
 
-BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True  --build=missing"
+BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True --build=missing"
 
 RED='\033[0;31m'
 PURPLE='\033[0;35m'

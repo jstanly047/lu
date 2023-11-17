@@ -7,7 +7,7 @@ namespace lu::storage::db
     class DBManager
     {
     public:
-        DBManager(const std::string& connectionStr, unsigned int bulkWriteThreshold);
+        DBManager(const soci::backend_factory& factory, const std::string& connectionStr, unsigned int bulkWriteThreshold);
         DBReader& getDBReader();
         DBWriter& getDBWriter();
 
@@ -32,6 +32,8 @@ namespace lu::storage::db
         }
 
         void commit();
+
+        void execute(const std::string& sql);
 
     private:
         soci::session m_sociSession;

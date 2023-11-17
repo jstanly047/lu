@@ -101,6 +101,7 @@ target_link_libraries(luCrypto OpenSSL::Crypto OpenSSL::SSL)
 if (UNIT_TEST)
     add_definitions(-DUNIT_TEST_MODE)
     find_package(GTest REQUIRED)
+    find_package(SQLite3 REQUIRED)
 
     file(GLOB LU_MOCK_THREAD_SRC  ./test/mock/platform/thread/*.h)
     add_library(luMockThread STATIC ${LU_MOCK_THREAD_SRC})
@@ -126,7 +127,7 @@ if (UNIT_TEST)
                             ${TEST_STORAGE_SRC}
                             ${TEST_CRYPTO_SRC})
 
-    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS} ${LU_PLATFORM_HEADRES})
+    target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS} ${LU_PLATFORM_HEADRES} ${SQLite3_INCLUDE_DIRS})
 
     target_link_libraries(LuTests
                             luPlatform
@@ -141,6 +142,7 @@ if (UNIT_TEST)
                             glog::glog
                             GTest::gtest
                             GTest::gmock
+                            SOCI::soci_sqlite3_static
                             )
 
 endif(UNIT_TEST)
