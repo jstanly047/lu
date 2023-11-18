@@ -10,7 +10,7 @@ using namespace lu::storage::db;
 
 namespace
 {
-     constexpr char* create_GTestClass = R"( 
+     const std::string create_GTestClass = R"( 
         CREATE TABLE gtest_class  (
             name TEXT,
             age INTEGER,
@@ -18,7 +18,7 @@ namespace
         )
     )";
 
-    constexpr char* create_MyClass = R"(
+    const std::string create_MyClass = R"(
         CREATE TABLE MyClass  (
             name TEXT,
             age INTEGER
@@ -36,13 +36,11 @@ public:
 protected:
     void SetUp() override 
     {
-        //m_dbManger.truncate<GTestClass>();
-        //m_dbManger.truncate<MyClass>();
-        m_dbManger.commit();
     }
 
     void TearDown() override 
     {
+        m_dbManger.commit();
     }
 
     DBManager m_dbManger;
@@ -55,6 +53,7 @@ TEST_F(TestMetaData, checkReflectionAliasDB)
     m_dbManger.store(obj);
     auto rows = m_dbManger.load<GTestClass>();
     ASSERT_EQ(rows.begin()->name, obj.name);
+    //m_dbManger.truncate<GTestClass>();
 }
 
 TEST_F(TestMetaData, checkReflectionDB)
@@ -64,4 +63,5 @@ TEST_F(TestMetaData, checkReflectionDB)
     m_dbManger.store(obj);
     auto rows = m_dbManger.load<MyClass>();
     ASSERT_EQ(rows.begin()->name, obj.name);
+    //m_dbManger.truncate<MyClass>();
 }

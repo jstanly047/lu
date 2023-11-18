@@ -15,7 +15,7 @@
 using namespace lu::crypto;
 
 template<std::size_t HashSize>
-std::string RSAPrivateKey::singData(const std::string &data, const std::string& salt)
+std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std::string& salt)
 {  
     assert(m_privateKey != nullptr);
     const std::string dataWithSalt = salt + data;
@@ -37,10 +37,9 @@ std::string RSAPrivateKey::singData(const std::string &data, const std::string& 
     }
 
     size_t encMessageLength;
+    DataWrap dataWrap(HashSize);
 
-    auto *EncMsg = (unsigned char*) ::malloc(HashSize);
-
-    if (::EVP_DigestSignFinal(rsaSignCtx, EncMsg, &encMessageLength) <= 0) 
+    if (::EVP_DigestSignFinal(rsaSignCtx, dataWrap.getData(), &encMessageLength) <= 0) 
     {
         //LOG(ERROR) << "Signing failed in EVP_DigestSignFinal!";
         ::EVP_MD_CTX_destroy(rsaSignCtx);
@@ -49,8 +48,7 @@ std::string RSAPrivateKey::singData(const std::string &data, const std::string& 
 
     ::EVP_MD_CTX_destroy(rsaSignCtx);
     Base64EncodeDecode encodeDecode;
-    auto retVal = encodeDecode.encode(EncMsg, encMessageLength);
-    ::free(EncMsg);
+    auto retVal = encodeDecode.encode(dataWrap);
     return retVal;
 }
 
@@ -89,6 +87,6 @@ RSAPrivateKey::~RSAPrivateKey()
 }
 
 
-template std::string RSAPrivateKey::singData<256>(const std::string &data, const std::string& salt);
-template std::string RSAPrivateKey::singData<384>(const std::string &data, const std::string& salt);
-template std::string RSAPrivateKey::singData<512>(const std::string &data, const std::string& salte);
+template std::string RSAPrivateKey::getBase64Signature<256>(const std::string &data, const std::string& salt);
+template std::string RSAPrivateKey::getBase64Signature<384>(const std::string &data, const std::string& salt);
+template std::string RSAPrivateKey::getBase64Signature<512>(const std::string &data, const std::string& salte);

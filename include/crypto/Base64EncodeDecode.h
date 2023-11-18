@@ -1,4 +1,5 @@
 #pragma once
+#include <crypto/DataWrap.h>
 #include <string>
 
 namespace lu::crypto
@@ -6,7 +7,7 @@ namespace lu::crypto
     class Base64EncodeDecode
     {
     public:
-        std::string encode(unsigned char *msg, size_t len) const;
-        std::pair<unsigned char*, size_t> decode(const std::string& data, size_t len) const;
+        std::string encode(DataWrap& data) const;
+        DataWrap decode(const std::string& data, int len) const;
     };
 }

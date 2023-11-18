@@ -15,7 +15,7 @@
 using namespace lu::crypto;
 
 template<std::size_t HashSize>
-bool RSAPublicKey::verify(const std::string& data, const std::string &signature, const std::string& salt) const
+bool RSAPublicKey::verifyBase64Signature(const std::string& data, const std::string &signature, const std::string& salt) const
 {
     assert(m_publicKey != nullptr);
     Base64EncodeDecode encodeDecode;
@@ -39,9 +39,8 @@ bool RSAPublicKey::verify(const std::string& data, const std::string &signature,
         return false;
     }
 
-    int AuthStatus = ::EVP_DigestVerifyFinal(rsaVerifyCtx, decodedSignature.first, decodedSignature.second);
+    int AuthStatus = ::EVP_DigestVerifyFinal(rsaVerifyCtx, decodedSignature.getData(), decodedSignature.getLength());
     ::EVP_MD_CTX_destroy(rsaVerifyCtx);
-    ::free(decodedSignature.first);
     return AuthStatus == 1;
 }
 
@@ -77,6 +76,6 @@ RSAPublicKey::~RSAPublicKey()
     ::EVP_PKEY_free(m_publicKey);
 }
 
-template bool RSAPublicKey::verify<256>(const std::string& data, const std::string &signature, const std::string& salt) const;
-template bool RSAPublicKey::verify<384>(const std::string& data, const std::string &signature, const std::string& salt) const;
-template bool RSAPublicKey::verify<512>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<256>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<384>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<512>(const std::string& data, const std::string &signature, const std::string& salt) const;

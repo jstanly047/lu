@@ -12,7 +12,7 @@ namespace lu::crypto
     {
     public:
         template<std::size_t HashSize=256>
-        std::string singData(const std::string &data, const std::string& salt="");
+        std::string getBase64Signature(const std::string &data, const std::string& salt="");
         bool load(const std::string& filePath);
         ~RSAPrivateKey();
 

@@ -72,6 +72,7 @@ namespace lu::utils
             return retVal;
         }
 
+        static std::time_t getUTCDateTime(const std::string& dateTimeStr, const std::string& format="%Y%m%d%H%M%S");
         static std::time_t getDateTime(const std::string& dateTimeStr, const std::string& format="%Y%m%d%H%M%S");
 
         //TODO Change to C++23 or use chron 

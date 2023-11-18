@@ -10,10 +10,16 @@ class TestUtils : public ::testing::Test
 };
 
 
-TEST_F(TestUtils, stringToEpoc)
+TEST_F(TestUtils, stringToEpocUTC)
 {
-    ASSERT_EQ(lu::utils::Utils::getDateTime("19700101000000"), 0);
-    ASSERT_EQ(lu::utils::Utils::getDateTime("1970/01/01 07:30:00", "%Y/%m/%d %H:%M:%S"), 0);
+    ASSERT_EQ(lu::utils::Utils::getUTCDateTime("19700101000000"), 0);
+    ASSERT_EQ(lu::utils::Utils::getDateTime("1970/01/01 00:00:00", "%Y/%m/%d %H:%M:%S"), 0);
+}
+
+TEST_F(TestUtils, stringToEpocLocal)
+{
+    ASSERT_EQ(lu::utils::Utils::getDateTime("19700101019800"), 0);
+    ASSERT_EQ(lu::utils::Utils::getDateTime("1970/01/01 05:30:00", "%Y/%m/%d %H:%M:%S"), 0);
 }
 
 /*

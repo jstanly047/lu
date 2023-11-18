@@ -14,11 +14,25 @@
 using namespace lu::utils;
 //constexpr size_t MAX_TIME_STRING_SIZE = 64;
 
+std::time_t Utils::getUTCDateTime(const std::string &dateTimeStr, const std::string& format)
+{
+    std::tm time{};
+    memset(&time, 0, sizeof(time));
+    char* retVal = ::strptime(dateTimeStr.c_str(), format.c_str(), &time);
+
+    if (retVal == nullptr)
+    {
+        return -1;
+    }
+
+    return ::timegm(&time);
+}
+
 std::time_t Utils::getDateTime(const std::string &dateTimeStr, const std::string& format)
 {
     std::tm time{};
     memset(&time, 0, sizeof(time));
-    char* retVal = strptime(dateTimeStr.c_str(), format.c_str(), &time);
+    char* retVal = ::strptime(dateTimeStr.c_str(), format.c_str(), &time);
 
     if (retVal == nullptr)
     {

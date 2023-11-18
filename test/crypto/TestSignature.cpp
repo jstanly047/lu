@@ -31,11 +31,11 @@ TEST(TestSignature, signWithoutSalt)
     RSAPublicKey rsaPublicKey;
     ASSERT_EQ(rsaPublicKey.load("resource/publick_key.pem"), true);
     std::string data = "User:Stanly, Calims:10001";
-    auto token = rsaPrivateKey.singData(data);
-    ASSERT_EQ(rsaPublicKey.verify(data, token), true);
+    auto token = rsaPrivateKey.getBase64Signature(data);
+    ASSERT_EQ(rsaPublicKey.verifyBase64Signature(data, token), true);
 
     std::string wrongClaim = "User:Stanly, Calims:11001";
-    ASSERT_EQ(rsaPublicKey.verify(wrongClaim, token), false);
+    ASSERT_EQ(rsaPublicKey.verifyBase64Signature(wrongClaim, token), false);
 }
 
 
@@ -46,7 +46,7 @@ TEST(TestSignature, singWithSalt)
     RSAPublicKey rsaPublicKey;
     ASSERT_EQ(rsaPublicKey.load("resource/publick_key.pem"), true);
     std::string data = "User:Stanly, Calims:10001";
-    auto token = rsaPrivateKey.singData(data, "stanly");
-    ASSERT_EQ(rsaPublicKey.verify(data, token, "stanly"), true);
-    ASSERT_EQ(rsaPublicKey.verify(data, token, "stanly1"), false);
+    auto token = rsaPrivateKey.getBase64Signature(data, "stanly");
+    ASSERT_EQ(rsaPublicKey.verifyBase64Signature(data, token, "stanly"), true);
+    ASSERT_EQ(rsaPublicKey.verifyBase64Signature(data, token, "stanly1"), false);
 }

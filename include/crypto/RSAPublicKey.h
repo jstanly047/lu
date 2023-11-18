@@ -9,7 +9,7 @@ namespace lu::crypto
     {
     public:
         template<std::size_t HashSize=256>
-        bool verify(const std::string& data, const std::string &signature, const std::string& salt="") const;
+        bool verifyBase64Signature(const std::string& data, const std::string &signature, const std::string& salt="") const;
         bool load(const std::string& filePath);
         ~RSAPublicKey();
 

@@ -9,8 +9,6 @@ namespace lu::crypto
     template <std::size_t HashSize>
     struct RSAKeyTraits;
 
-    
-
     using HashFunctionPtr = const EVP_MD* (*)();
 
     template <>
