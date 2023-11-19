@@ -19,7 +19,6 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
 {  
     assert(m_privateKey != nullptr);
     const std::string dataWithSalt = salt + data;
-
     ::EVP_MD_CTX* rsaSignCtx = ::EVP_MD_CTX_create();
 
     if (::EVP_DigestSignInit(rsaSignCtx, NULL, RSAKeyTraits<HashSize>::HASH_FUNCTION()(), NULL, m_privateKey)<=0) 
@@ -36,7 +35,7 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
         return std::string();
     }
 
-    size_t encMessageLength;
+    std::size_t encMessageLength = HashSize;
     DataWrap dataWrap(HashSize);
 
     if (::EVP_DigestSignFinal(rsaSignCtx, dataWrap.getData(), &encMessageLength) <= 0) 
@@ -47,33 +46,23 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
     }
 
     ::EVP_MD_CTX_destroy(rsaSignCtx);
-    Base64EncodeDecode encodeDecode;
-    auto retVal = encodeDecode.encode(dataWrap);
-    return retVal;
+    return Base64EncodeDecode::encode(dataWrap);
 }
 
 bool RSAPrivateKey::load(const std::string& filePath)
 {
     ::BIO *keyFile = ::BIO_new_file(filePath.c_str(), "r");
 
-    if (keyFile == NULL) 
+    if (keyFile == nullptr) 
     {
         //LOG(ERROR) << "Can not open RSA Private key file " << filePath.c_str();
         return false;
     }
 
-    m_privateKey = ::PEM_read_bio_PrivateKey(keyFile, NULL, NULL, NULL);
+    m_privateKey = ::PEM_read_bio_PrivateKey(keyFile, nullptr, nullptr, nullptr);
     ::BIO_free(keyFile);
     
-    if (m_privateKey == NULL)
-    {
-        //LOG(ERROR) << "Can not read RSA Private key " << filePath.c_str();
-        return false;
-    }
-
-    
-    //LOG(INFO) << "Loaded private key " << filePath;
-    return true;
+    return m_privateKey != nullptr;
 }
 
 RSAPrivateKey::~RSAPrivateKey()

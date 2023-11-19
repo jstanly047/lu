@@ -18,11 +18,8 @@ template<std::size_t HashSize>
 bool RSAPublicKey::verifyBase64Signature(const std::string& data, const std::string &signature, const std::string& salt) const
 {
     assert(m_publicKey != nullptr);
-    Base64EncodeDecode encodeDecode;
-
-    auto decodedSignature = encodeDecode.decode(signature, HashSize);
+    auto decodedSignature = Base64EncodeDecode::decode(signature, HashSize);
     const std::string dataWithSalt = salt + data;
-
     ::EVP_MD_CTX* rsaVerifyCtx = ::EVP_MD_CTX_create();
 
     if (::EVP_DigestVerifyInit(rsaVerifyCtx, NULL, RSAKeyTraits<HashSize>::HASH_FUNCTION()(), NULL, m_publicKey) <= 0) 
@@ -56,14 +53,7 @@ bool RSAPublicKey::load(const std::string& filePath)
     m_publicKey = ::PEM_read_bio_PUBKEY(keyFile, nullptr, nullptr, nullptr);
     ::BIO_free(keyFile);
 
-    if (!m_publicKey)
-    {
-        //LOG(ERROR) << "Can not read RSA Public key " << filePath;
-        return false;
-    }
-
-    //LOG(INFO) << "Loaded Public key " << filePath;
-    return true;
+    return  m_publicKey != nullptr;
 }
 
 RSAPublicKey::~RSAPublicKey()

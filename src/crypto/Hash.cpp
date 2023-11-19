@@ -22,9 +22,9 @@ std::string Hash<Algo>::getBase64Hash(const std::string &data)
     DataWrap dataWrap(HashTraits<Algo>::HASH_SIZE);
     ::EVP_DigestInit_ex(m_mdctx, m_md, NULL);
     ::EVP_DigestUpdate(m_mdctx, data.data(), data.length());
-    unsigned int md_len;
+    unsigned int md_len = 0;
     ::EVP_DigestFinal_ex(m_mdctx, dataWrap.getData(), &md_len);
-    return base64EncodeDecode.encode(dataWrap);
+    return Base64EncodeDecode::encode(dataWrap);
 }
 
 template <HashAlgo Algo>
@@ -38,10 +38,10 @@ Hash<Algo>::~Hash()
     ::EVP_MD_CTX_free(m_mdctx);
 }
 
-template class Hash<HashAlgo::SHA>;
-template class Hash<HashAlgo::SHA224>;
-template class Hash<HashAlgo::SHA256>;
-template class Hash<HashAlgo::SHA384>;
-template class Hash<HashAlgo::SHA512>;
-//template class Hash<HashAlgo::MD4>;
-template class Hash<HashAlgo::MD5>;
+template class lu::crypto::Hash<HashAlgo::SHA>;
+template class lu::crypto::Hash<HashAlgo::SHA224>;
+template class lu::crypto::Hash<HashAlgo::SHA256>;
+template class lu::crypto::Hash<HashAlgo::SHA384>;
+template class lu::crypto::Hash<HashAlgo::SHA512>;
+//template class lu::crypto::Hash<HashAlgo::MD4>;
+template class lu::crypto::Hash<HashAlgo::MD5>;

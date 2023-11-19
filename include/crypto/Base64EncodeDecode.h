@@ -7,7 +7,7 @@ namespace lu::crypto
     class Base64EncodeDecode
     {
     public:
-        std::string encode(DataWrap& data) const;
-        DataWrap decode(const std::string& data, int len) const;
+        static std::string encode(DataWrap& data) ;
+        static DataWrap decode(const std::string& b64message, int len) ;
     };
 }
