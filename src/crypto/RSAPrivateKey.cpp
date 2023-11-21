@@ -76,6 +76,6 @@ RSAPrivateKey::~RSAPrivateKey()
 }
 
 
-template std::string RSAPrivateKey::getBase64Signature<256>(const std::string &data, const std::string& salt);
-template std::string RSAPrivateKey::getBase64Signature<384>(const std::string &data, const std::string& salt);
-template std::string RSAPrivateKey::getBase64Signature<512>(const std::string &data, const std::string& salte);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<256>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<384>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<512>(const std::string &data, const std::string& salte);

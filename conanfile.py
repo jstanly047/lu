@@ -52,7 +52,7 @@ class snapafwRecipe(ConanFile):
         self.requires("glog/0.6.0")
         self.requires("soci/4.0.3")
         self.requires("libmysqlclient/8.1.0")
-        self.requires("sqlite3/3.43.0")
+        self.requires("sqlite3/3.44.0")
         # there is version conflict for this library so it override the requirement#
         self.requires("zlib/1.2.13", override=True)
         
@@ -84,18 +84,19 @@ class snapafwRecipe(ConanFile):
     def package(self):
         copy(self, "*.h", os.path.join(self.source_folder, "include/common"), os.path.join(self.package_folder, "include/common"), keep_path=True)
         copy(self, "*.h", os.path.join(self.source_folder, "include/platform"), os.path.join(self.package_folder, "include/platform"), keep_path=True)
-        #copy(self, "*.h", os.path.join(self.source_folder, "include/reflection"), os.path.join(self.package_folder, "include/reflection"), keep_path=True)
+        copy(self, "*.h", os.path.join(self.source_folder, "include/reflection"), os.path.join(self.package_folder, "include/reflection"), keep_path=True)
         copy(self, "*.h", os.path.join(self.source_folder, "include/storage"), os.path.join(self.package_folder, "include/storage"), keep_path=True)
         copy(self, "*.h", os.path.join(self.source_folder, "include/utils"), os.path.join(self.package_folder, "include/utils"), keep_path=True)
         #copy(self, "*.h", os.path.join(self.source_folder, "include/thread"), os.path.join(self.package_folder, "include/thread"), keep_path=True)
         #copy(self, "*.h", os.path.join(self.source_folder, "include/queue"), os.path.join(self.package_folder, "include/queue"), keep_path=True)
+        copy(self, "*.h", os.path.join(self.source_folder, "include/crypto"), os.path.join(self.package_folder, "include/crypto"), keep_path=True)
         copy(self, "*.a", self.build_folder, os.path.join(self.package_folder, "lib"), keep_path=True)
 
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "both")
         self.cpp_info.set_property("cmake_file_name", "lu_platform")
         self.cpp_info.set_property("cmake_file", "lu_platform-config.cmake")
-        self.cpp_info.libs = ['liblucommon.a', 'libutils.a', 'libluSocket.a', 'libluPlatform.a', 'libluSocketDataHandler.a', 'libluThread.a', 'libluThreadChannel.a', 'libluStorageDB.a']
+        self.cpp_info.libs = ['liblucommon.a', 'libutils.a', 'libluSocket.a', 'libluPlatform.a', 'libluSocketDataHandler.a', 'libluThread.a', 'libluThreadChannel.a', 'libluStorageDB.a', 'libluCrypto.a']
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "lu_platform"
