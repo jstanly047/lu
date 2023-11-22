@@ -34,8 +34,6 @@ class snapafwRecipe(ConanFile):
         if self.options.COV_BUILD:
             self.options.UNIT_TEST = True
             self.settings.build_type = "Debug"
-        elif self.settings.build_type == "Debug":
-            self.options.UNIT_TEST = True
 
     def configure(self):
         pass
