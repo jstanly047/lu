@@ -30,11 +30,6 @@ class snapafwRecipe(ConanFile):
     "CLANG_CHECK":False
     }
 
-    def config_options(self):
-        if self.options.COV_BUILD:
-            self.options.UNIT_TEST = True
-            self.settings.build_type = "Debug"
-
     def configure(self):
         pass
 
@@ -50,7 +45,7 @@ class snapafwRecipe(ConanFile):
         self.requires("glog/0.6.0")
         self.requires("soci/4.0.3")
         self.requires("libmysqlclient/8.1.0")
-        self.requires("sqlite3/3.44.0")
+        self.requires("sqlite3/3.44.2")
         # there is version conflict for this library so it override the requirement#
         self.requires("zlib/1.2.13", override=True)
         

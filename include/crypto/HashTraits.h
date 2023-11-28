@@ -4,6 +4,9 @@
 #include <openssl/sha.h>
 #include <openssl/md4.h>
 #include <openssl/md5.h>
+#include <openssl/evp.h>
+#include <openssl/types.h>
+
 
 
 namespace lu::crypto
@@ -19,6 +22,8 @@ namespace lu::crypto
         MD5
     };
 
+    using HashFunctionPtr = const EVP_MD* (*)();
+
     template <HashAlgo Algo>
     struct HashTraits;
 
@@ -27,6 +32,11 @@ namespace lu::crypto
     {
         static constexpr const char* ALGO_NAME = "SHA1";
         static constexpr int HASH_SIZE = SHA_DIGEST_LENGTH;
+
+        static HashFunctionPtr HASH_FUNCTION()
+        {
+            return EVP_sha1;
+        }
     };
 
     template <>
@@ -34,6 +44,11 @@ namespace lu::crypto
     {
         static constexpr const char* ALGO_NAME = "SHA224";
         static constexpr int HASH_SIZE = SHA224_DIGEST_LENGTH;
+
+        static HashFunctionPtr HASH_FUNCTION()
+        {
+            return EVP_sha256;
+        }
     };
 
     template <>
@@ -41,6 +56,11 @@ namespace lu::crypto
     {
         static constexpr const char* ALGO_NAME = "SHA256";
         static constexpr int HASH_SIZE = SHA256_DIGEST_LENGTH;
+
+        static HashFunctionPtr HASH_FUNCTION()
+        {
+            return EVP_sha256;
+        }
     };
 
     template <>
@@ -48,6 +68,11 @@ namespace lu::crypto
     {
         static constexpr const char* ALGO_NAME = "SHA384";
         static constexpr int HASH_SIZE = SHA384_DIGEST_LENGTH;
+
+        static HashFunctionPtr HASH_FUNCTION()
+        {
+            return EVP_sha384;
+        }
     };
 
     template <>
@@ -55,6 +80,11 @@ namespace lu::crypto
     {
         static constexpr const char* ALGO_NAME = "SHA512";
         static constexpr int HASH_SIZE = SHA512_DIGEST_LENGTH;
+
+        static HashFunctionPtr HASH_FUNCTION()
+        {
+            return EVP_sha512;
+        }
     };
 
     /*template <>
@@ -69,5 +99,10 @@ namespace lu::crypto
     {
         static constexpr const char* ALGO_NAME = "MD5";
         static constexpr int HASH_SIZE = MD5_DIGEST_LENGTH;
+
+        static HashFunctionPtr HASH_FUNCTION()
+        {
+            return EVP_md5;
+        }
     };
 }

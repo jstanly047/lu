@@ -1,6 +1,5 @@
 #include <crypto/RSAPrivateKey.h>
 #include <crypto/Base64EncodeDecode.h>
-#include <crypto/RSAKeyTraits.h>
 
 #include <openssl/aes.h>
 #include <openssl/evp.h>
@@ -14,14 +13,14 @@
 
 using namespace lu::crypto;
 
-template<std::size_t HashSize>
+template<HashAlgo Algo>
 std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std::string& salt)
 {  
     assert(m_privateKey != nullptr);
     const std::string dataWithSalt = salt + data;
     ::EVP_MD_CTX* rsaSignCtx = ::EVP_MD_CTX_create();
 
-    if (::EVP_DigestSignInit(rsaSignCtx, NULL, RSAKeyTraits<HashSize>::HASH_FUNCTION()(), NULL, m_privateKey)<=0) 
+    if (::EVP_DigestSignInit(rsaSignCtx, NULL, HashTraits<Algo>::HASH_FUNCTION()(), NULL, m_privateKey)<=0) 
     {
         //LOG(ERROR) << "Signing failed in EVP_DigestSignInit!";
         ::EVP_MD_CTX_destroy(rsaSignCtx);
@@ -35,8 +34,16 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
         return std::string();
     }
 
-    std::size_t encMessageLength = HashSize;
-    DataWrap dataWrap(HashSize);
+    std::size_t encMessageLength = 0;
+
+    if (::EVP_DigestSignFinal(rsaSignCtx, nullptr, &encMessageLength) <= 0) 
+    {
+        //LOG(ERROR) << "Signing failed in EVP_DigestSignFinal!";
+        ::EVP_MD_CTX_destroy(rsaSignCtx);
+        return std::string();
+    }
+
+    DataWrap dataWrap(encMessageLength);
 
     if (::EVP_DigestSignFinal(rsaSignCtx, dataWrap.getData(), &encMessageLength) <= 0) 
     {
@@ -75,7 +82,9 @@ RSAPrivateKey::~RSAPrivateKey()
     ::EVP_PKEY_free(m_privateKey);
 }
 
-
-template std::string lu::crypto::RSAPrivateKey::getBase64Signature<256>(const std::string &data, const std::string& salt);
-template std::string lu::crypto::RSAPrivateKey::getBase64Signature<384>(const std::string &data, const std::string& salt);
-template std::string lu::crypto::RSAPrivateKey::getBase64Signature<512>(const std::string &data, const std::string& salte);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<HashAlgo::MD5>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<HashAlgo::SHA>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<HashAlgo::SHA224>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<HashAlgo::SHA256>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<HashAlgo::SHA384>(const std::string &data, const std::string& salt);
+template std::string lu::crypto::RSAPrivateKey::getBase64Signature<HashAlgo::SHA512>(const std::string &data, const std::string& salt);

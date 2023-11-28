@@ -1,6 +1,5 @@
 #include <crypto/RSAPublicKey.h>
 #include <crypto/Base64EncodeDecode.h>
-#include <crypto/RSAKeyTraits.h>
 
 #include <cassert>
 
@@ -14,24 +13,24 @@
 
 using namespace lu::crypto;
 
-template<std::size_t HashSize>
+template<HashAlgo Algo>
 bool RSAPublicKey::verifyBase64Signature(const std::string& data, const std::string &signature, const std::string& salt) const
 {
     assert(m_publicKey != nullptr);
-    auto decodedSignature = Base64EncodeDecode::decode(signature, HashSize);
+    auto decodedSignature = Base64EncodeDecode::decode(signature);
     const std::string dataWithSalt = salt + data;
     ::EVP_MD_CTX* rsaVerifyCtx = ::EVP_MD_CTX_create();
 
-    if (::EVP_DigestVerifyInit(rsaVerifyCtx, NULL, RSAKeyTraits<HashSize>::HASH_FUNCTION()(), NULL, m_publicKey) <= 0) 
+    if (::EVP_DigestVerifyInit(rsaVerifyCtx, NULL, HashTraits<Algo>::HASH_FUNCTION()(), NULL, m_publicKey) <= 0) 
     {
-        //LOG(ERROR) << "Singature verificatio faild at EVP_DigestVerifyInit [" << signature << "]";
+        //LOG(ERROR) << "Signature verification failed at EVP_DigestVerifyInit [" << signature << "]";
         ::EVP_MD_CTX_destroy(rsaVerifyCtx);
         return false;
     }
 
     if (::EVP_DigestVerifyUpdate(rsaVerifyCtx, dataWithSalt.data(), dataWithSalt.length()) <= 0) 
     {
-        //LOG(ERROR) << "Singature verificatio faild at EVP_DigestVerifyUpdate [" << signature << "]";
+        //LOG(ERROR) << "Signature verification failed at EVP_DigestVerifyUpdate [" << signature << "]";
         ::EVP_MD_CTX_destroy(rsaVerifyCtx);
         return false;
     }
@@ -66,6 +65,9 @@ RSAPublicKey::~RSAPublicKey()
     ::EVP_PKEY_free(m_publicKey);
 }
 
-template bool RSAPublicKey::verifyBase64Signature<256>(const std::string& data, const std::string &signature, const std::string& salt) const;
-template bool RSAPublicKey::verifyBase64Signature<384>(const std::string& data, const std::string &signature, const std::string& salt) const;
-template bool RSAPublicKey::verifyBase64Signature<512>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<HashAlgo::MD5>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<HashAlgo::SHA>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<HashAlgo::SHA224>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<HashAlgo::SHA256>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<HashAlgo::SHA384>(const std::string& data, const std::string &signature, const std::string& salt) const;
+template bool RSAPublicKey::verifyBase64Signature<HashAlgo::SHA512>(const std::string& data, const std::string &signature, const std::string& salt) const;

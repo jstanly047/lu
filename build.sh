@@ -49,7 +49,7 @@ done
 
 BUILD_CMD="conan build . "
 
-if [ $buildunittest = true ]; then
+if [ $buildunittest = true ] || [ "$buildType" = "Coverage" ]; then
     BUILD_CMD="$BUILD_CMD -o UNIT_TEST=True"
 fi
 

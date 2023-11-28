@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
-
-#include <openssl/types.h>
-
+#include <crypto/HashTraits.h>
 
 namespace lu::crypto
 {
@@ -11,7 +9,7 @@ namespace lu::crypto
     class RSAPrivateKey
     {
     public:
-        template<std::size_t HashSize=256>
+        template<HashAlgo Algo=HashAlgo::SHA256>
         std::string getBase64Signature(const std::string &data, const std::string& salt="");
         bool load(const std::string& filePath);
         ~RSAPrivateKey();

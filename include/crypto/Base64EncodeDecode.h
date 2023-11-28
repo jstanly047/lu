@@ -8,6 +8,6 @@ namespace lu::crypto
     {
     public:
         static std::string encode(DataWrap& data) ;
-        static DataWrap decode(const std::string& b64message, int len) ;
+        static DataWrap decode(const std::string& b64message) ;
     };
 }
