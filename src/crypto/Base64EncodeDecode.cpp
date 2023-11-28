@@ -7,7 +7,8 @@ namespace
 {
     std::size_t calcDecodeLength(const std::string& b64message)
     {
-        std::size_t len = b64message.size(), padding = 0;
+        std::size_t len = b64message.size();
+        std::size_t padding = 0;
 
         if (b64message[len - 1] == '=' && b64message[len - 2] == '=')
         {
@@ -30,7 +31,7 @@ std::string Base64EncodeDecode::encode(DataWrap& data)
     auto *bio = ::BIO_new(BIO_s_mem());
     bio = ::BIO_push(b64, bio);
 
-    ::BIO_write(bio, data.getData(), data.getLength());
+    ::BIO_write(bio, data.getData(), static_cast<int>(data.getLength()));
     BIO_flush(bio);
     BIO_get_mem_ptr(bio, &bptr);
     std::string result(bptr->data, bptr->length);
@@ -48,7 +49,7 @@ DataWrap Base64EncodeDecode::decode(const std::string& b64message)
     // BIO_set_flags is needed to make sure the BIO_f_base64 BIO doesn't add newlines
     BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
-    BIO_read(bio, dataWrap.getData(), b64message.length() + 1);
+    BIO_read(bio, dataWrap.getData(),static_cast<int>(b64message.length() + 1));
     BIO_free_all(bio);
     return dataWrap;
 }

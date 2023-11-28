@@ -3,7 +3,7 @@
 
 using namespace lu::crypto;
 
-DataWrap::DataWrap(int length) : m_data(new unsigned char[length]),
+DataWrap::DataWrap(std::size_t length) : m_data(new unsigned char[length]),
                                  m_length(length)
 {
     std::memset(m_data.get(), 0, m_length);
