@@ -164,22 +164,25 @@ namespace lu::platform
             return true;
         }
 
-        void onEvent(struct ::epoll_event &event) override final
+        bool onEvent(struct ::epoll_event &event) override final
         {
             if ((event.events & EPOLLERR))
             {
                 m_in.reset(nullptr);
-                return;
+                return true;
             }
             else if (!(event.events & EPOLLIN))
             {
-                return;
+                return true;
             }
 
             if (Receive() == false)
             {
-                return;
+                LOG(ERROR) << "Read failed for Event Channel FD[" << (int)*m_in << "]!";
+                return false;
             }
+
+            return true;
         }
 
         const FileDescriptor &getFD() const override final

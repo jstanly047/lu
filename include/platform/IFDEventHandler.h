@@ -18,11 +18,11 @@ namespace lu::platform
         IFDEventHandler(IFDEventHandler&& other) = delete;
         IFDEventHandler& operator=(IFDEventHandler&& other) = delete;
 
-        virtual void onEvent(struct ::epoll_event& event) = 0;
+        virtual bool onEvent(struct ::epoll_event& event) = 0;
         virtual const FileDescriptor& getFD() const = 0;
-    
+        virtual ~IFDEventHandler() {}
+
     protected:
         IFDEventHandler() {}
-        ~IFDEventHandler() {}
     };
 }

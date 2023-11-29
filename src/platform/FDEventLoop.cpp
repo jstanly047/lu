@@ -62,11 +62,12 @@ void FDEventLoop::start(int maxEvents)
         for (int i = 0; i < numberEvents; ++i) 
         {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            (reinterpret_cast<IFDEventHandler*>(events[i].data.ptr))->onEvent(events[i]);
+            auto iFDEventHandler = (reinterpret_cast<IFDEventHandler*>(events[i].data.ptr));
 
-            if ((((events[i].events & EPOLLHUP) != 0U) || ((events[i].events & EPOLLERR) != 0U)))
+            if (iFDEventHandler->onEvent(events[i]) == false)
             {
                 ::epoll_ctl(m_epollFD, EPOLL_CTL_DEL, events[i].data.fd, nullptr);
+                delete iFDEventHandler;
             }
         }
 

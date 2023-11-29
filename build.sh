@@ -76,3 +76,6 @@ printf  "\n${PURPLE}======================> Done Building Engines & SO...${NC}\n
 
 #conan export-pkg . --user snapdev_core --channel stable
 #conan upload   lu_platform/1.0@snapdev_core/stable  -r snap_innovations
+
+ #conan export-pkg . --user snapdev_core --channel stable  -s build_type=Debug -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True
+ #conan export-pkg . --user snapdev_core --channel stable  -s build_type=Release -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True

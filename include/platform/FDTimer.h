@@ -124,26 +124,28 @@ namespace lu::platform
         virtual ~FDTimer() {}
 
     private:
-        void onEvent(struct ::epoll_event &event) override final
+        bool onEvent(struct ::epoll_event &event) override final
         {
             // TODO what are the other event can happens EPOLLHUP dont part of timer fd
             if ((event.events & EPOLLERR))
             {
                 m_fd.reset(nullptr);
-                return;
+                return true;
             }
             else if (!(event.events & EPOLLIN))
             {
-                return;
+                return true;
             }
 
             int64_t res;
             if (::read(*m_fd, &res, sizeof(res)) == -1)
             {
                 LOG(ERROR) << "Read failed for timer FD[" << (int)*m_fd << "]!";
-                return;
+                return true;
             }
+
             m_timerCallback.onTimer(*this);
+            return true;
         }
 
         std::unique_ptr<FileDescriptor> m_fd;

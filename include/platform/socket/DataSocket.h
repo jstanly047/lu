@@ -16,6 +16,8 @@
 #include <cstring>
 #include <string>
 
+#include <glog/logging.h>
+
 namespace lu::platform::socket
 {
     template <lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
@@ -199,23 +201,27 @@ namespace lu::platform::socket
             m_numberOfBytesLeftToRead -= size;
         }
 
-        void onEvent(struct ::epoll_event &event) override final
+        bool onEvent(struct ::epoll_event &event) override final
         {
             if ((event.events & EPOLLHUP || event.events & EPOLLERR))
             {
                 m_dataSocketCallback.onClientClose(*this);
-                return;
+                return false;
             }
             else if (!(event.events & EPOLLIN))
             {
-                return;
+                return true;
             }
 
             if (Receive() == false)
             {
                 // TODO : May be different callback since this some IO read error
+                LOG(ERROR) << "Read failed for data socket FD[" << (int) m_baseSocket.getFD() << "]!";
                 m_dataSocketCallback.onClientClose(*this);
+                return false;
             }
+
+            return true;
         }
 
         const lu::platform::FileDescriptor &getFD() const override final { return m_baseSocket.getFD(); }

@@ -59,9 +59,8 @@ public:
 
     }
 
-    void onClientClose(StringDataSocket & dataSocket)
+    void onClientClose([[maybe_unused]]StringDataSocket & dataSocket)
     {
-        delete &dataSocket;
     }
 
     void onData(StringDataSocket &dataSocket, void * message)

@@ -57,9 +57,8 @@ namespace
         {
         }
 
-        void onClientClose(StringDataSocket &dataSocket)
+        void onClientClose([[maybe_unused]]StringDataSocket &dataSocket)
         {
-            delete &dataSocket;
         }
 
         void onData(StringDataSocket &dataSocket, void *message)
@@ -86,7 +85,7 @@ namespace
             }
         }
 
-        void setWorkertThread(WorkerThread<MockWorkerThread>& workerThread)
+        void setWorkerThread(WorkerThread<MockWorkerThread>& workerThread)
         {
             m_workerThread = &workerThread;
         }
@@ -152,9 +151,8 @@ namespace
             }
         }
 
-        void onClientClose(StringDataSocket &dataSocket)
+        void onClientClose([[maybe_unused]]StringDataSocket &dataSocket)
         {
-            delete &dataSocket;
         }
 
         void onExit() 
@@ -204,7 +202,7 @@ protected:
         
         for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {
-            callbacks->setWorkertThread(workerConsumer);
+            callbacks->setWorkerThread(workerConsumer);
         }
 
         serverThread.init();

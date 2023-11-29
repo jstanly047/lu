@@ -177,16 +177,15 @@ namespace lu::platform::socket
         }
                     
     private:
-        void onEvent(struct ::epoll_event& event) override final
+        bool onEvent(struct ::epoll_event& event) override final
         {
             if ((event.events & EPOLLHUP || event.events & EPOLLERR))
             {
                 m_baseSocket = BaseSocket();
-                return;
             }
             else if (!(event.events & EPOLLIN))
             {
-                return;
+                return true;
             }
             
             for (;;)
@@ -200,6 +199,8 @@ namespace lu::platform::socket
                 
                 m_serverSocketCallback.onNewConnection(dataSocket);
             }
+
+            return true;
         }
 
         BaseSocket m_baseSocket;
