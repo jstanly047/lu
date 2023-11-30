@@ -2,6 +2,8 @@
 
 #include <platform/IFDEventHandler.h>
 #include <platform/defs.h>
+#include <common/PointerComparator.h>
+#include <set>
 
 namespace lu::platform
 {
@@ -19,6 +21,7 @@ namespace lu::platform
         bool init();
         bool add(IFDEventHandler &event) const;
         bool remove(IFDEventHandler &event) const;
+        bool add(std::unique_ptr<IFDEventHandler>&& event);
         void start(int maxEvents);
         void stop();
 
@@ -27,5 +30,6 @@ namespace lu::platform
         void close();
         int m_epollFD = NULL_FD;
         bool m_stop{};
+        std::set<std::unique_ptr<IFDEventHandler>, lu::common::PointerComparator<IFDEventHandler>> m_IFDEventHandlers{};
     };
 }

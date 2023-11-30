@@ -44,9 +44,8 @@ namespace
         void onStart() {}
         void onExit() { ASSERT_EQ(m_expectedMsg, NUM_MSG_SEND);}
 
-        void onNewConnection(StringDataSocket *dataSocket)
+        void onNewConnection([[maybe_unused]]StringDataSocket &dataSocket)
         {
-            m_clients.emplace_back(dataSocket);
         }
 
         void onAppMsg([[maybe_unused]] void *msg)
@@ -92,7 +91,6 @@ namespace
 
     private:
         WorkerThread<MockWorkerThread> *m_workerThread;
-         std::vector<std::unique_ptr<StringDataSocket>> m_clients;
         unsigned int m_expectedMsg{};
     };
 

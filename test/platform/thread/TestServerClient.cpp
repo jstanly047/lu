@@ -74,10 +74,9 @@ protected:
             EXPECT_CALL(*mockServerClientCallback,  onStart());
             //EXPECT_CALL(*mockServerClientCallback,  onStartComplete());
             EXPECT_CALL(*mockServerClientCallback,  onNewConnection(::testing::_)).WillRepeatedly(::testing::Invoke(
-                [&](lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>* dataSocket)
+                [&]([[maybe_unused]]lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket)
                 {
                     
-                    serverClientDataSockets.insert(std::unique_ptr<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>>(dataSocket));
                 }));
 
 
@@ -138,8 +137,6 @@ protected:
     MockServerThreadCallback mockServerThreadCallback;
     ServerThread<IServerThreadCallback, lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>, MockServerClientThreadCallback, IClientThreadCallback> serverThread;
     std::vector<IClientThreadCallback*> serverClientThreadsCallbacks;
-
-    std::set<std::unique_ptr<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>>> serverClientDataSockets;
 
     MockConnectionThreadCallback mockConnectionThreadCallback;
     ConnectionThread<IConnectionThreadCallback, lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>> connectionThread;

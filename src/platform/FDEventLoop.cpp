@@ -44,6 +44,16 @@ bool FDEventLoop::add(IFDEventHandler &event) const
     return ::epoll_ctl(m_epollFD, EPOLL_CTL_ADD, event.getFD(), &epollEvent) == 0;
 }
 
+bool FDEventLoop::add(std::unique_ptr<IFDEventHandler>&& event) 
+{
+    if (add(*event.get()) == false)
+    {
+        return false;
+    }
+
+    return m_IFDEventHandlers.insert(std::move(event)).second;
+}
+
 bool FDEventLoop::remove(IFDEventHandler &event) const
 {
     assert(event.getFD() != nullptr);
@@ -67,7 +77,13 @@ void FDEventLoop::start(int maxEvents)
             if (iFDEventHandler->onEvent(events[i]) == false)
             {
                 ::epoll_ctl(m_epollFD, EPOLL_CTL_DEL, events[i].data.fd, nullptr);
-                delete iFDEventHandler;
+
+                if (iFDEventHandler->getType() == IFDEventHandler::DataSocket)
+                {
+                    auto itr= m_IFDEventHandlers.find(iFDEventHandler);
+                    m_IFDEventHandlers.erase(itr);
+                    continue;
+                }
             }
         }
 

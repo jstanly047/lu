@@ -30,7 +30,8 @@ namespace lu::platform::socket
         DataSocketV(DataSocketV &&other) = delete;
         DataSocketV &operator=(DataSocketV &&other) = delete;
 
-        DataSocketV(DataSocketVCallback &dataSocketCallback, BaseSocket &&baseSocket) : m_baseSocket(std::move(baseSocket)),
+        DataSocketV(DataSocketVCallback &dataSocketCallback, BaseSocket &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
+                                                                                      m_baseSocket(std::move(baseSocket)),
                                                                                       m_dataSocketCallback(dataSocketCallback),
                                                                                       m_dataHandler(),
                                                                                       m_headerSize(m_dataHandler.getHeaderSize()),

@@ -20,7 +20,7 @@ namespace lu::platform::thread
         MOCK_METHOD(void, onStart, (), (override));
         //MOCK_METHOD(void, onStartComplete, ());
         MOCK_METHOD(void, onExit, (), (override));
-        MOCK_METHOD(void, onNewConnection, (lu::platform::socket::BaseSocket* baseSocket), (override));
+        MOCK_METHOD(void, onNewConnection, (lu::platform::socket::BaseSocket& baseSocket), (override));
         MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<IServerThreadCallback>&), (override));
     };
 }

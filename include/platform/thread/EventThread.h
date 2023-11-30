@@ -5,6 +5,7 @@
 #include <platform/FDEventLoop.h>
 #include <platform/EventChannel.h>
 #include <platform/FDTimer.h>
+#include <memory>
 
 #include <glog/logging.h>
 
@@ -80,6 +81,11 @@ namespace lu::platform::thread
         bool addToEventLoop(lu::platform::IFDEventHandler& ifdEventHandler)
         {
             return m_eventLoop.add(ifdEventHandler);
+        }
+
+        bool addToEventLoop(std::unique_ptr<lu::platform::IFDEventHandler>&& ifdEventHandler)
+        {
+            return m_eventLoop.add(std::move(ifdEventHandler));
         }
 
         const std::string& getName() const { return m_name; }

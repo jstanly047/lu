@@ -24,7 +24,9 @@ namespace lu::platform
         FDTimer(const FDTimer &) = delete;
         FDTimer &operator=(const FDTimer &) = delete;
 
-        FDTimer(FDTimer &&other) noexcept: m_fd(std::move(other.m_fd)),
+        FDTimer(FDTimer &&other) noexcept: 
+                IFDEventHandler(std::move(other)),
+                m_fd(std::move(other.m_fd)),
                 m_interval(std::move(other.m_interval)),
                 m_timerCallback(other.m_timerCallback),
                 m_name(std::move(other.m_name)),
@@ -34,6 +36,7 @@ namespace lu::platform
 
         FDTimer &operator=(FDTimer &&other) noexcept
         {
+            IFDEventHandler::operator=(std::move(other));
             m_fd = std::move(other.m_fd);
             m_interval = other.m_interval;
             m_timerCallback = other.m_timerCallback;
@@ -42,7 +45,8 @@ namespace lu::platform
             return *this;
         }
 
-        FDTimer(TimerCallback &timerCallback, const std::string &name) : m_fd(),
+        FDTimer(TimerCallback &timerCallback, const std::string &name) : IFDEventHandler(IFDEventHandler::Timer),
+                                                                         m_fd(),
                                                                          m_interval(),
                                                                          m_timerCallback(timerCallback),
                                                                          m_name(name),

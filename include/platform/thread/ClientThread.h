@@ -51,13 +51,13 @@ namespace lu::platform::thread
 
         void onNewConnection(lu::platform::socket::BaseSocket *baseSocket)
         {
-            auto dataSocket = new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket));
+            std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket)));
+            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) baseSocket->getFD() << "]";
             // TODO check onNewCOnnection used should be able to send an data
-            this->m_clientThreadCallback.onNewConnection(dataSocket);
+            this->m_clientThreadCallback.onNewConnection(*dataSocket.get());
             //dataSocket->getBaseSocket().setNonBlocking();
-            this->addToEventLoop(*dataSocket);
+            this->addToEventLoop(std::move(dataSocket));
             delete baseSocket;
-            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket << "]";
         }
 
         void onAppMsg(void* msg)

@@ -12,7 +12,7 @@ namespace lu::platform::thread
         virtual void onStart() = 0;
         //virtual void onStartComplete() = 0;
         virtual void onExit() = 0;
-        virtual void onNewConnection(lu::platform::socket::BaseSocket* baseSocket) = 0;
+        virtual void onNewConnection(lu::platform::socket::BaseSocket& baseSocket) = 0;
         virtual void onTimer(const lu::platform::FDTimer<IServerThreadCallback>&) = 0;
     };
 }

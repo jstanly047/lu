@@ -26,6 +26,7 @@ namespace lu::platform::socket
 
         ServerSocket(const std::string& service, ServerSocketCallback &connectionHandler, bool reuseAddAndPort = true)
             :
+            IFDEventHandler(IFDEventHandler::ServerSocket),
             m_baseSocket(), 
             m_serverSocketCallback(connectionHandler),
             m_service(service),
@@ -36,6 +37,7 @@ namespace lu::platform::socket
 
         ServerSocket(ServerSocket&& other) noexcept
             :
+            IFDEventHandler(std::move(other)),
             m_baseSocket(std::move(other.m_baseSocket)),
             m_serverSocketCallback(other.m_serverSocketCallback),
             m_service(std::move(other.m_service)),
@@ -46,6 +48,7 @@ namespace lu::platform::socket
 
         ServerSocket& operator=(ServerSocket&& other) noexcept
         {
+            IFDEventHandler::operator=(std::move(other));
             m_baseSocket = std::move(other.m_baseSocket);
             //m_serverSocketCallback = other.m_serverSocketCallback;
             m_service = std::move(other.m_service);

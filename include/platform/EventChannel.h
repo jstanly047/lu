@@ -64,8 +64,10 @@ namespace lu::platform
         EventChannel(EventChannel &&other) = delete;
         EventChannel &operator=(EventChannel &&other) = delete;
 
-        EventChannel(EventChannelHandler &eventChannelHandler, const std::string &name) : m_eventChannelHandler(eventChannelHandler),
-                                                                                          m_name(name)
+        EventChannel(EventChannelHandler &eventChannelHandler, const std::string &name) : 
+            IFDEventHandler(IFDEventHandler::Pipe),
+            m_eventChannelHandler(eventChannelHandler),
+            m_name(name)
         {
         }
 

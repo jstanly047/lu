@@ -45,9 +45,8 @@ public:
     void onStart(){}
     void onExit() {}
 
-    void onNewConnection(StringDataSocket *dataSocket)
+    void onNewConnection([[maybe_unused]]StringDataSocket &dataSocket)
     {
-        m_clients.emplace_back(dataSocket);
     }
 
     void onAppMsg([[maybe_unused]]void *msg)
@@ -89,7 +88,6 @@ public:
 
 private:
     WorkerThread<MockWorkerThread>* m_workerThread;
-    std::vector<std::unique_ptr<StringDataSocket>> m_clients;
 };
 
 class TestServerClientWorker : public ::testing::Test
