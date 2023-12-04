@@ -80,7 +80,7 @@ void LuThread::transferMsgToServerThread(channel::ChannelID channelID, void *msg
     return m_sCurrentLuThread->m_channelID;
  }
 
-unsigned int LuThread::getThreadIndex(const std::string& threadName) const
+unsigned int LuThread::getThreadIndex(const std::string& threadName) 
 {
-    return m_outputChannel.getThreadIndx(threadName);
+    return m_sCurrentLuThread->m_outputChannel.getThreadIndx(threadName);
 }

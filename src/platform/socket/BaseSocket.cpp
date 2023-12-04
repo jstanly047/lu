@@ -10,7 +10,6 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/epoll.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 #include <glog/logging.h>
@@ -248,11 +247,18 @@ T BaseSocket::getSocketOption(int level, int option) const
     return value;
 }
 
-void BaseSocket::stop() 
+int BaseSocket::stop(ShutSide site) 
 {
     assert(*m_fd != nullptr);
-    shutdown(*m_fd,SHUT_RDWR);
+    return ::shutdown(*m_fd, site);
 }
+
+int BaseSocket::close() 
+{
+    assert(*m_fd != nullptr);
+    return m_fd->close();
+}
+
 
 
 template bool lu::platform::socket::BaseSocket::setSocketOption<int>(int level, int option, const int& value);

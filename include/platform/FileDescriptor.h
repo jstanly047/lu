@@ -26,6 +26,7 @@ namespace lu::platform
 
         bool setToNonBlocking() const;
         bool setBlocking() const;
+        int close();
 
     private:
         int m_fd;

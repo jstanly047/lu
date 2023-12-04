@@ -115,13 +115,15 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
     m_workerProducer.connect(m_workerConsumer);
     m_workerConsumer.connect(m_workerProducer);
 
-    auto consumerIndx =  m_workerProducer.getThreadIndex(m_workerConsumer.getName());
-    auto producerIndx =  m_workerConsumer.getThreadIndex(m_workerProducer.getName());
+    unsigned int consumerIndx = std::numeric_limits<unsigned int>::max();;
+     
+    unsigned int producerIndx = std::numeric_limits<unsigned int>::max();;
 
     EXPECT_CALL(m_mockProducerCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(m_mockProducerCallback,  onStart()).WillOnce(::testing::Invoke(
         [&]()
         {
+            consumerIndx = LuThread::getThreadIndex(m_workerConsumer.getName());
             m_workerProducer.transferMsg(consumerIndx, new int(++count));
         }));
     EXPECT_CALL(m_mockProducerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
@@ -153,7 +155,12 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
     EXPECT_CALL(m_mockProducerCallback,  onExit()).Times(1);
     
     EXPECT_CALL(m_mockConsumerCallback,  onInit()).WillOnce(::testing::Return(true));
-    EXPECT_CALL(m_mockConsumerCallback,  onStart());
+    EXPECT_CALL(m_mockConsumerCallback,  onStart()).WillOnce(::testing::Invoke(
+        [&]()
+        {
+            producerIndx = m_workerConsumer.getThreadIndex(m_workerProducer.getName());
+        }));
+
     EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
@@ -199,10 +206,10 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
     m_workerConsumer.connect(m_workerProducer);
     m_workerConsumerSecond.connect(m_workerProducer);
 
-    auto consumerIndx =  m_workerProducer.getThreadIndex(m_workerConsumer.getName());
-    auto producerIndx =  m_workerConsumer.getThreadIndex(m_workerProducer.getName());
-    auto consumerSecondIndx =  m_workerProducer.getThreadIndex(m_workerConsumerSecond.getName());
-    auto producerSecondIndx =  m_workerConsumerSecond.getThreadIndex(m_workerProducer.getName());
+    auto consumerIndx = std::numeric_limits<unsigned int>::max();
+    auto producerIndx = std::numeric_limits<unsigned int>::max();
+    auto consumerSecondIndx = std::numeric_limits<unsigned int>::max();  
+    auto producerSecondIndx = std::numeric_limits<unsigned int>::max();
 
     EXPECT_CALL(m_mockProducerCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(m_mockProducerCallback,  onStart()).WillOnce(::testing::Invoke(
@@ -212,10 +219,12 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
             {
                 if (count%2 == 0)
                 {
+                    consumerSecondIndx = m_workerProducer.getThreadIndex(m_workerConsumerSecond.getName());
                     m_workerProducer.transferMsg(consumerSecondIndx, new int(count));
                 }
                 else
                 {
+                    consumerIndx = m_workerProducer.getThreadIndex(m_workerConsumer.getName());
                     m_workerProducer.transferMsg(consumerIndx, new int(count));
                 }
             }
@@ -256,7 +265,11 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
     EXPECT_CALL(m_mockProducerCallback,  onExit()).Times(1);
     
     EXPECT_CALL(m_mockConsumerCallback,  onInit()).WillOnce(::testing::Return(true));
-    EXPECT_CALL(m_mockConsumerCallback,  onStart());
+    EXPECT_CALL(m_mockConsumerCallback,  onStart()).WillOnce(::testing::Invoke(
+        [&]()
+        {
+            producerIndx = m_workerConsumer.getThreadIndex(m_workerProducer.getName());
+        }));
     EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
@@ -281,7 +294,12 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
     EXPECT_CALL(m_mockConsumerCallback,  onExit()).Times(1);
 
     EXPECT_CALL(m_mockConsumerCallbackSecond,  onInit()).WillOnce(::testing::Return(true));
-    EXPECT_CALL(m_mockConsumerCallbackSecond,  onStart());
+    EXPECT_CALL(m_mockConsumerCallbackSecond,  onStart()).WillOnce(::testing::Invoke(
+        [&]()
+        {
+            producerSecondIndx = m_workerConsumerSecond.getThreadIndex(m_workerProducer.getName());
+        }));
+
     EXPECT_CALL(m_mockConsumerCallbackSecond,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {

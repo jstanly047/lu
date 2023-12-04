@@ -52,7 +52,8 @@ namespace lu::platform::thread
         void onNewConnection(lu::platform::socket::BaseSocket *baseSocket)
         {
             std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket)));
-            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) baseSocket->getFD() << "]";
+            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) baseSocket->getFD() << "] "
+                        << " IP[" << baseSocket->getIP() << ":" << baseSocket->getPort()  << "]";
             // TODO check onNewCOnnection used should be able to send an data
             this->m_clientThreadCallback.onNewConnection(*dataSocket.get());
             //dataSocket->getBaseSocket().setNonBlocking();

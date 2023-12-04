@@ -23,7 +23,7 @@ namespace lu::platform
 
         IFDEventHandler(const IFDEventHandler&)               = delete;
         IFDEventHandler& operator=(const IFDEventHandler&)    = delete;
-        IFDEventHandler(IFDEventHandler&& other) = default;
+        IFDEventHandler(IFDEventHandler&& other)            = default;
         IFDEventHandler& operator=(IFDEventHandler&& other) = default;
 
         virtual bool onEvent(struct ::epoll_event& event) = 0;

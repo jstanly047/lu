@@ -89,6 +89,23 @@ bool FileDescriptor::setBlocking() const
     return removeFDFlags({m_fd, O_NONBLOCK});
 }
 
+int FileDescriptor::close()
+{
+    if (m_fd == NULL_FD)
+    {
+        return 0;
+    }
+
+    int retVal = ::close(m_fd);
+    
+    if (retVal == 0)
+    {
+        m_fd = NULL_FD;
+    }
+
+    return retVal;
+}
+
 FileDescriptor::~FileDescriptor()
 {
     if (m_fd == NULL_FD)

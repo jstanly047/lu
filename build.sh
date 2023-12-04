@@ -3,6 +3,7 @@
 buildType="Debug"
 cleanBuild=""
 buildunittest=false
+exportPackage=false
 
 function display_usage() {
     echo "Usage: $0 [-t <Debug/Release/Coverage/ClangTidy>] [-c] [-u]"
@@ -10,9 +11,10 @@ function display_usage() {
     echo "  -t <type> : Specify the build type (Debug/Release/Coverage). Default is Debug."
     echo "  -c        : Clean the build before starting the build process."
     echo "  -u        : Enable Unit Tests (only applicable for Debug/Release builds)."
+    echo "  -e        : Export the build to local conan package"
 }
 
-while getopts ":t:cu" opt; do
+while getopts ":t:cue" opt; do
     case $opt in
         t)
             case "$OPTARG" in
@@ -32,6 +34,9 @@ while getopts ":t:cu" opt; do
         u)
             buildunittest=true
             ;;
+        e)
+            exportPackage=true
+            ;;
         \?)
             echo "Invalid option: -$OPTARG"
             display_usage
@@ -45,9 +50,8 @@ while getopts ":t:cu" opt; do
     esac
 done
 
-
-
 BUILD_CMD="conan build . "
+EXPORT_CMD="conan export-pkg . --user snapdev_core --channel stable"
 
 if [ $buildunittest = true ] || [ "$buildType" = "Coverage" ]; then
     BUILD_CMD="$BUILD_CMD -o UNIT_TEST=True"
@@ -55,14 +59,17 @@ fi
 
 if [ "$buildType" = "Debug" ]; then
     BUILD_CMD="$BUILD_CMD -s build_type=Debug"
+    EXPORT_CMD="$EXPORT_CMD -s build_type=Debug"
 elif [ "$buildType" = "Coverage" ]; then
     BUILD_CMD="$BUILD_CMD -o COV_BUILD=True -s build_type=Debug"
 elif [ "$buildType" = "ClangTidy" ]; then
     BUILD_CMD="$BUILD_CMD -o CLANG_CHECK=True -s build_type=Release"
 else
     BUILD_CMD="$BUILD_CMD -s build_type=Release"
+    EXPORT_CMD="$EXPORT_CMD -s build_type=Release"
 fi
 
+EXPORT_CMD="$EXPORT_CMD  -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True"
 BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True --build=missing"
 
 RED='\033[0;31m'
@@ -77,5 +84,13 @@ printf  "\n${PURPLE}======================> Done Building Engines & SO...${NC}\n
 #conan export-pkg . --user snapdev_core --channel stable
 #conan upload   lu_platform/1.0@snapdev_core/stable  -r snap_innovations
 
- #conan export-pkg . --user snapdev_core --channel stable  -s build_type=Debug -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True
- #conan export-pkg . --user snapdev_core --channel stable  -s build_type=Release -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True
+#conan export-pkg . --user snapdev_core --channel stable  -s build_type=Debug -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True
+#conan export-pkg . --user snapdev_core --channel stable  -s build_type=Release -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True
+
+
+if [ $exportPackage = true ]; then
+    printf  "\n${BOLD_BLUE}=====================> Exporting to local conan...${NC}\n"
+    printf "$EXPORT_CMD"
+    $EXPORT_CMD
+    printf  "\n${BOLD_BLUE}=====================> Done exporting to local conan...${NC}\n"
+fi

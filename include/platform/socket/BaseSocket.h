@@ -4,11 +4,20 @@
 #include<string>
 #include<memory>
 
+#include <sys/socket.h>
+
 struct timeval;
 struct sockaddr;
 
 namespace lu::platform::socket
 {
+    enum ShutSide
+    {
+        ShutdownRead = SHUT_RD,
+        ShutdownWrite = SHUT_WR,
+        ShutdownReadWrite = SHUT_RDWR
+    };
+
     class BaseSocket
     {
     public:
@@ -51,10 +60,8 @@ namespace lu::platform::socket
         
         template<typename T>
         bool setSocketOption(int level, int option, const T& value);
-        void stop();
-
-        
-        //TODO close function for DataSocket to close the baseSocket
+        int stop(ShutSide);
+        int close();
 
     protected:
         

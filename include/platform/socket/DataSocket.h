@@ -167,6 +167,18 @@ namespace lu::platform::socket
         const std::string &getIP() const { return m_baseSocket.getIP(); }
         int getPort() const { return m_baseSocket.getPort(); }
 
+        int close()
+        {
+            int retVal = m_baseSocket.close();
+
+            if (retVal = 0)
+            {
+                delete this;
+            }
+
+            return retVal;
+        }
+
     private:
         inline void readMessages()
         {
