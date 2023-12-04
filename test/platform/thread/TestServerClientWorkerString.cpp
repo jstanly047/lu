@@ -251,14 +251,6 @@ TEST_F(TestServerClientWorkerString, TestPingPong)
     EXPECT_CALL(mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, workerConsumer.getChannelID());
-                waitForCount.increment();
-                return;
-            }
-
-            
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(channelData.data);
 
             static unsigned int stopCount = 0;
@@ -277,6 +269,7 @@ TEST_F(TestServerClientWorkerString, TestPingPong)
             if (stopCount == 1u)
             {
                 workerConsumer.stop();
+                waitForCount.increment();
             }
         }));
 

@@ -46,12 +46,13 @@ namespace  lu::platform::thread
             for(;;) 
             {
                 channel::ChannelData channelData = m_inputChannel.pop();
-                m_luThreadCallback.onMsg(channelData);
-
+                
                 if (UNLIKELY(channelData.data == nullptr))
                 {
                     break;
                 }
+
+                m_luThreadCallback.onMsg(channelData);
             }
         }
 

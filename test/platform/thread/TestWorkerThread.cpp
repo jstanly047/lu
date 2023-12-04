@@ -47,12 +47,6 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadName)
     EXPECT_CALL(m_mockProducerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
-                return;
-            }
-
             static unsigned stopCount = 1;
             EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
@@ -77,12 +71,6 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadName)
     EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
-                return;
-            }
-
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerExpectedValue, *data);
@@ -129,12 +117,6 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
     EXPECT_CALL(m_mockProducerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
-                return;
-            }
-
             static unsigned stopCount = 1;
             EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
@@ -164,12 +146,6 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
     EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
-                return;
-            }
-
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerExpectedValue, *data);
@@ -236,13 +212,6 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
         {
             static unsigned int countMsg = 0;
             static std::set<unsigned int> dataCache;
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
-                EXPECT_THAT(dataCache, ::testing::ElementsAre(2u, 4u, 6u, 8u, 10u, 12u));
-                return;
-            }
-
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             dataCache.insert(*data);
 
@@ -259,6 +228,7 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
             countMsg++;
             if (countMsg == 6u)
             {
+                EXPECT_THAT(dataCache, ::testing::ElementsAre(2u, 4u, 6u, 8u, 10u, 12u));
                 m_workerProducer.stop();
             }
         }));
@@ -273,12 +243,6 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
     EXPECT_CALL(m_mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerConsumer.getChannelID());
-                return;
-            }
-
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerExpectedValue, *data);
@@ -303,12 +267,6 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
     EXPECT_CALL(m_mockConsumerCallbackSecond,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, m_workerConsumerSecond.getChannelID());
-                return;
-            }
-
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerSecondExpectedValue, *data);

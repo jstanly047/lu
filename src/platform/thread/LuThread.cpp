@@ -29,6 +29,9 @@ void LuThread::threadRun()
 {
     m_sThreadLocalName = m_name;
     m_sCurrentLuThread = this;
+    #ifdef __linux__
+        ::pthread_setname_np(::pthread_self(), m_name.c_str());
+    #endif
     m_channelID = channel::OutputChannel::getChannelID();
     LOG(INFO) << "[" << m_name << "] Started channelID:" << m_channelID;
     run();

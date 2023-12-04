@@ -151,7 +151,6 @@ protected:
 
 TEST_F(TestServerClientWorker, TestPingPong)
 {
-    waitForCount.update(2u);
     EXPECT_CALL(mockConnectionThreadCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockConnectionThreadCallback,  onStart());
     std::vector<std::pair<StringDataSocket*, int>> clientSideDataSocket;
@@ -206,13 +205,6 @@ TEST_F(TestServerClientWorker, TestPingPong)
     EXPECT_CALL(mockConsumerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
         {
-            if (channelData.data == nullptr)
-            {
-                EXPECT_EQ(channelData.channelID, workerConsumer.getChannelID());
-                waitForCount.increment();
-                return;
-            }
-
             static unsigned stopCount = 0;
             stopCount++;
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(channelData.data);
