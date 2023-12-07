@@ -171,6 +171,8 @@ namespace lu::platform::socket
         const std::string &getIP() const { return m_baseSocket.getIP(); }
         int getPort() const { return m_baseSocket.getPort(); }
 
+        int stop(ShutSide shutSide) { return m_baseSocket.stop(shutSide); }
+
     private:
         inline void readMessages()
         {

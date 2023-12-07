@@ -81,6 +81,11 @@ namespace
                 m_expectedMsg++;
                 ASSERT_EQ(m_expectedMsg, std::stoul(strMessage->getString()));
                 LuThread::transferMsg(m_workerThread->getName(), strMessage);
+
+                if (m_expectedMsg == NUM_MSG_SEND)
+                {
+                    dataSocket.stop(lu::platform::socket::ShutdownWrite);
+                }
             }
         }
 
@@ -101,6 +106,7 @@ namespace
          using StringDataSocket=lu::platform::socket::DataSocketV<ConnectionThreadCallback, lu::platform::socket::data_handler::StringV>;
         bool onInit() { return true; }
         void onStart() {}
+        void onAppMsg([[maybe_unused]]void*) {}
 
         // EXPECT_CALL(connectionThreadCallback,  onStartComplete());
         void onConnection(StringDataSocket &dataSocket)

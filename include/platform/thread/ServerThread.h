@@ -141,7 +141,7 @@ namespace lu::platform::thread
     private:
         void run() override final
         {
-            if (m_serverSocket.setUpTCP(m_serverConfig.NUMBER_OF_CONNECTION_IN_WAITING_QUEUE) == false)
+            if (m_serverSocket.setUpTCP(m_serverConfig.NUMBER_OF_CONNECTION_IN_WAITING_QUEUE, m_serverConfig.IPV6) == false)
             {
                 return;
             }

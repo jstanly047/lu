@@ -15,6 +15,7 @@ namespace lu::platform::thread
         unsigned int TIMER_IN_MSEC = 1000u;
         std::string TIMER_NAME = "SER";
         bool REPEAT_TIMER = true;
+        bool IPV6 = false;
     };
 
     struct EventThreadConfig

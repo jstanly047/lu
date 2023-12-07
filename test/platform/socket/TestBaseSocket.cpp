@@ -154,4 +154,16 @@ TEST_F(TestBaseSocket, checkMove)
     ASSERT_EQ(flags, lu::platform::NULL_FD);
 }
 
+TEST_F(TestBaseSocket, checkClose)
+{
+    lu::platform::socket::BaseSocket temSocketObj(m_socket);
+    ASSERT_NE(temSocketObj.getFD(), nullptr);
+    int flags = ::fcntl(m_socket, F_GETFL);
+    ASSERT_NE(flags, lu::platform::NULL_FD);
+    temSocketObj.close();
+    flags = ::fcntl(m_socket, F_GETFL);
+    ASSERT_EQ(flags, lu::platform::NULL_FD);
+    ASSERT_EQ(temSocketObj.getFD(), nullptr);
+}
+
 

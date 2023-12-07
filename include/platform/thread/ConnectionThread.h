@@ -67,9 +67,37 @@ namespace lu::platform::thread
             m_services.emplace_back(Service{host, service});
         }
 
+        void connectFrom(LuThread& thread)
+        {
+            m_threadsConnecting.push_back(&thread);
+        }
+
+        void onNewConnection([[maybe_unused]]lu::platform::socket::BaseSocket *baseSocket)
+        {
+        }
+
+        void onAppMsg(void* msg)
+        {
+            this->m_connectionThreadCallback.onAppMsg(msg);
+        }
+
     private:
         void run() override final
         {
+            for (auto thread : m_threadsConnecting)
+            {
+                this->m_eventChannelForConnectingThreads.emplace_back(*this, this->getName());
+                if (m_eventChannelForConnectingThreads.back().init() == false)
+                {
+                    LOG(ERROR) << "Failed to init event channel!";
+                    std::abort();
+                }
+
+                thread->connectTo(this->getChannelID(), m_eventChannelForConnectingThreads.back().getEventNotifier());
+                LOG(INFO) << "Connect thread " << thread->getName() << " to server thread " << this->getName(); 
+                this->addToEventLoop(m_eventChannelForConnectingThreads.back());
+            }
+            
             for (Service& service : m_services)
             {
                 service.connection->connectToTCP(m_connectionThreadCallback);
@@ -92,6 +120,9 @@ namespace lu::platform::thread
 
         ConnectionThreadCallback& m_connectionThreadCallback;
         std::list<Service> m_services;
+        std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
+        std::list<lu::platform::EventChannel<ConnectionThread>> m_eventChannelForConnectingThreads;
+        std::vector<LuThread*> m_threadsConnecting;
     };
 }
 

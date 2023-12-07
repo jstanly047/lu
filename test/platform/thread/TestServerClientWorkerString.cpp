@@ -1,12 +1,10 @@
 #include <platform/thread/ClientThread.h>
 #include <platform/thread/ConnectionThread.h>
-#include <platform/thread/MockServerThreadCallback.h>
 #include <platform/thread/MockWorkerThread.h>
 #include <platform/thread/ServerThread.h>
 #include <platform/thread/WorkerThread.h>
 #include <platform/socket/DataSocket.h>
 #include <platform/socket/data_handler/String.h>
-
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -95,7 +93,7 @@ namespace
             }
         }
 
-        void setWorkertThread(WorkerThread<MockWorkerThread>& workerThread)
+        void setWorkerThread(WorkerThread<MockWorkerThread>& workerThread)
         {
             m_workerThread = &workerThread;
         }
@@ -113,6 +111,7 @@ namespace
         using StringDataSocket=lu::platform::socket::DataSocket<ConnectionThreadCallback, lu::platform::socket::data_handler::String>;
         bool onInit() { return true; }
         void onStart() {}
+        void onAppMsg([[maybe_unused]]void*) {}
 
         // EXPECT_CALL(connectionThreadCallback,  onStartComplete());
         void onConnection(StringDataSocket &dataSocket)
@@ -214,7 +213,7 @@ protected:
         
         for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {
-            callbacks->setWorkertThread(workerConsumer);
+            callbacks->setWorkerThread(workerConsumer);
         }
         
         serverThread.init();

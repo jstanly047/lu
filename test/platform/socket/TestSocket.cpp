@@ -50,7 +50,7 @@ public:
 protected:
     void SetUp() override 
     {
-        auto result = serverSocket.setUpTCP(4);
+        auto result = serverSocket.setUpTCP(4, false);
         EXPECT_TRUE(result);
         ASSERT_EQ(serverSocket.getBaseSocket().getIP(), "0.0.0.0");
         ASSERT_EQ(serverSocket.getBaseSocket().getPort(), 10000);

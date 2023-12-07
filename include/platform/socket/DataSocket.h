@@ -179,6 +179,8 @@ namespace lu::platform::socket
             return retVal;
         }
 
+        int stop(ShutSide shutSide) { return m_baseSocket.stop(shutSide); }
+
     private:
         inline void readMessages()
         {

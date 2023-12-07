@@ -58,11 +58,11 @@ namespace lu::platform::socket
 
         virtual ~ServerSocket() {}
 
-        bool setUpTCP(int numberOfConnectionInWaitQueue)
+        bool setUpTCP(int numberOfConnectionInWaitQueue, bool ipv6)
         {
             struct addrinfo addrCriteria;
             ::memset(&addrCriteria, 0, sizeof(addrCriteria));
-            addrCriteria.ai_family = AF_UNSPEC;
+            addrCriteria.ai_family = ipv6 ? AF_INET6 : AF_INET;
             addrCriteria.ai_flags = AI_PASSIVE;
             addrCriteria.ai_socktype = SOCK_STREAM;
             addrCriteria.ai_protocol = IPPROTO_TCP;

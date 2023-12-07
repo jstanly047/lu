@@ -26,6 +26,7 @@ namespace
         SeverConfig serverConfig{};
         serverConfig.TIMER_IN_MSEC = 100u;
         serverConfig.CREATE_NEW_THREAD = true;
+        serverConfig.IPV6 = true;
         return serverConfig;
     }
 }
@@ -33,16 +34,16 @@ namespace
 template class ServerThread<IServerThreadCallback, lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>, MockServerClientThreadCallback, IClientThreadCallback> ;
 template class ConnectionThread<IConnectionThreadCallback, lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>>;
 
-class TestServerClient : public ::testing::Test
+class TestServerClient_IP6 : public ::testing::Test
 {
 public:
-    TestServerClient() :
+    TestServerClient_IP6() :
                     serverThread("TestServer", mockServerThreadCallback, "10000", getServerConfig()),
                     connectionThread("Client",mockConnectionThreadCallback, EventThreadConfig(getServerConfig()))
     {
-        connectionThread.connectTo("localhost", "10000");
-        connectionThread.connectTo("localhost", "10000");
-        connectionThread.connectTo("localhost", "10000");
+        connectionThread.connectTo("::1", "10000");
+        connectionThread.connectTo("::1", "10000");
+        connectionThread.connectTo("::1", "10000");
     }
 protected:
     void SetUp() override 
@@ -149,7 +150,7 @@ protected:
     std::array<std::atomic<int>, 3> countReceivedPing = {0, 0, 0}; 
 };
 
-TEST_F(TestServerClient, TestPingPong)
+TEST_F(TestServerClient_IP6, TestPingPong)
 {
     EXPECT_CALL(mockConnectionThreadCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockConnectionThreadCallback,  onStart());

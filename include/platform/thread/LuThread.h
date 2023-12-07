@@ -14,10 +14,16 @@ namespace  lu::platform::thread
     template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
     class ClientThread;
 
+    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ConnectionThread;
+
     class LuThread
     {
         template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
         friend class ClientThread;
+
+        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ConnectionThread;
 
     public:
         LuThread(const std::string& name);

@@ -18,8 +18,8 @@ DataWrap &DataWrap::operator=(DataWrap &&other) noexcept
 {
     if (this != &other)
     {
-        m_data = std::move(other.m_data);
-        m_length = other.m_length;
+        m_data.swap(other.m_data);
+        std::swap(m_length, other.m_length);
     }
 
     return *this;
