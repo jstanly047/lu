@@ -16,9 +16,10 @@ namespace lu::common
         FixedString(const char* str):m_buffer{} { std::strncpy(m_buffer.data(), str, N); }
         
         void operator=(const std::string& str) { str.copy(m_buffer.data(), N);  }
+        void operator=(const char* str) {  std::strncpy(m_buffer.data(), str, N); }
         bool operator==(const FixedString<N>& other) const { return m_buffer ==  other.m_buffer; }
         bool operator==(const std::string& other) const { return other.size() <= N && other.compare(0, N, m_buffer.data()) == 0; }
-        bool operator==(const char* other) const { return std::strncmp(other, m_buffer.data(), N) == 0 ; }
+        bool operator==(const char* other) const { return std::strncmp(other, m_buffer.data(), N+1) == 0 ; }
         bool operator<(const FixedString<N>& other) const { return m_buffer <  other.m_buffer; }
 
         operator std::string() const { return std::string(m_buffer.data()); }

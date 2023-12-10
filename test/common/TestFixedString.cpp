@@ -34,9 +34,25 @@ TEST(TestFixedString, stringConstructor)
     EXPECT_FALSE(fixedString == fixedStringNotEqual);
 }
 
-TEST(TestFixedString, stringConstructorWithLargerSize)
+TEST(TestFixedString, constCharConstructorWithLargerSize)
 {
     FixedString<10> fixedString("TestStringExtra");
+    EXPECT_TRUE(fixedString == "TestString");
+    EXPECT_FALSE(fixedString == "TestStrin");
+    EXPECT_TRUE(std::strncmp(fixedString.getCString(), "TestString", 10) == 0);
+    EXPECT_FALSE(std::strncmp(fixedString.getCString(), "TestStringExtra", 15) == 0);
+    EXPECT_TRUE(fixedString == "TestString");
+    EXPECT_FALSE(fixedString == "TestStringExtra");
+    FixedString<10> fixedStringSame("TestString");
+    EXPECT_TRUE(fixedString == fixedStringSame);
+    FixedString<10> fixedStringNotEqual("");
+    EXPECT_FALSE(fixedString == fixedStringNotEqual);
+}
+
+TEST(TestFixedString, stringConstructorWithLargerSize)
+{
+    std::string str = "TestStringExtra";
+    FixedString<10> fixedString(str);
     EXPECT_TRUE(fixedString == "TestString");
     EXPECT_FALSE(fixedString == "TestStrin");
     EXPECT_TRUE(std::strncmp(fixedString.getCString(), "TestString", 10) == 0);
@@ -62,4 +78,10 @@ TEST(TestFixedString, charConstruct)
     EXPECT_TRUE(fixedString == fixedStringSame);
     FixedString<10> fixedStringNotEqual("");
     EXPECT_FALSE(fixedString == fixedStringNotEqual);
+}
+TEST(TestFixedString, implicitStringConversion)
+{
+    FixedString<10> fixedString("TestStr");
+    std::string str = fixedString;
+    EXPECT_TRUE(str == "TestStr");
 }
