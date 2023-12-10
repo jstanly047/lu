@@ -1,5 +1,5 @@
 #include <common/spinlock.h>
-#include <common/defs.h>
+#include <common/Defs.h>
 #include <cstdlib>
 
 using namespace lu::common;

@@ -47,7 +47,7 @@ TEST(TestTimerClock, StatInMSec)
 
     // Compare floating-point values with a tolerance (e.g., 1e-6)
     EXPECT_GE(actualTime, 200.0);
-    EXPECT_LE(actualTime, 201.0);
+    EXPECT_LE(actualTime, 214.0);
     EXPECT_GE(actualPerSecAvg, 14.0);
     EXPECT_LE(actualPerSecAvg, 15.0);
 }

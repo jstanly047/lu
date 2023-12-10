@@ -3,11 +3,54 @@
 #include <reflection/Reflection.h>
 #include <soci/soci.h>
 #include <type_traits>
+#include <common/FixedString.h>
 
 namespace lu::storage::db
 {
     
 }
+
+namespace soci
+{
+    template <std::size_t N>
+    struct type_conversion<lu::common::FixedString<N>>
+    {
+        typedef std::string base_type;
+
+        static void from_base(const std::string &str, soci::indicator /*ind*/, lu::common::FixedString<N> &fs)
+        {
+            fs = str;
+        }
+
+        static void to_base(const lu::common::FixedString<N> &fs, std::string &str, soci::indicator &ind)
+        {
+            str = fs;
+            ind = soci::i_ok;
+        }
+    };
+}
+
+/*namespace lu::storage::db
+{
+    template <typename T>
+    concept HasGetCString = requires(T t) 
+    {
+        { t.getCString() } -> std::same_as<const char*>;
+    };
+
+    template <typename T>
+    auto &&getForSociUse(T &&ts)
+    {
+        if constexpr (HasGetCString<std::decay_t<T>>)
+        {
+            return std::string(ts.getCString());
+        }
+        else
+        {
+            return std::forward<T>(ts);
+        }
+    }
+}*/
 
 #define MAKE_NAMES(...) #__VA_ARGS__,
 
@@ -66,7 +109,7 @@ namespace soci                                                                  
                                                                                         \
 namespace lu::storage::db                                                               \
 {                                                                                       \
-    [[maybe_unused]] inline static auto getDBReflection(STRUCT_NAME)             \
+    [[maybe_unused]] inline static auto getDBReflection(STRUCT_NAME)                    \
     {                                                                                   \
         struct DBReflection {                                                           \
         constexpr const char* getInsertSQL()                                            \

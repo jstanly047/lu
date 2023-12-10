@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/defs.h>
+#include <common/Defs.h>
 
 #include <algorithm>
 #include <cassert>

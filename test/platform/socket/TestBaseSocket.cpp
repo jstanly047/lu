@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <platform/socket/BaseSocket.h>
-#include <platform/defs.h>
+#include <platform/Defs.h>
 #include <utils/Utils.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

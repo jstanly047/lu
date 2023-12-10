@@ -44,8 +44,9 @@ namespace
         void onStart() {}
         void onExit() { ASSERT_EQ(m_expectedMsg, NUM_MSG_SEND);}
 
-        void onNewConnection([[maybe_unused]]StringDataSocket &dataSocket)
+        void onNewConnection(StringDataSocket &dataSocket)
         {
+            dataSocket.setCustomObjectPtr(this);
         }
 
         void onAppMsg([[maybe_unused]] void *msg)
@@ -56,8 +57,9 @@ namespace
         {
         }
 
-        void onClientClose([[maybe_unused]]StringDataSocket &dataSocket)
+        void onClientClose(StringDataSocket &dataSocket)
         {
+            EXPECT_EQ(dataSocket.getCustomObjectPtr(), this);
         }
 
         void onData(StringDataSocket &dataSocket, void *message)

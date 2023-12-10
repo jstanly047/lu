@@ -1,6 +1,6 @@
 #pragma once
 
-#include <platform/defs.h>
+#include <platform/Defs.h>
 
 #include <cstddef>
 

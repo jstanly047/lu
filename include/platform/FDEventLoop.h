@@ -1,7 +1,7 @@
 #pragma once
 
 #include <platform/IFDEventHandler.h>
-#include <platform/defs.h>
+#include <platform/Defs.h>
 #include <common/PointerComparator.h>
 #include <set>
 

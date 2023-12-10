@@ -1,5 +1,5 @@
 #include <common/barrier.h>
-#include <common/defs.h>
+#include <common/Defs.h>
 
 using namespace lu::common;
 

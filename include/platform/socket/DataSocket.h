@@ -3,7 +3,7 @@
 #include "BaseSocket.h"
 #include <common/TemplateConstraints.h>
 #include <platform/IFDEventHandler.h>
-#include <platform/defs.h>
+#include <platform/Defs.h>
 #include <utils/Utils.h>
 
 #include <sys/socket.h>
@@ -20,7 +20,7 @@
 
 namespace lu::platform::socket
 {
-    template <lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler>
+    template <lu::common::NonPtrClassOrStruct DataSocketCallback, lu::common::NonPtrClassOrStruct DataHandler, typename CustomObjectPtrType=void>
     class DataSocket : public lu::platform::IFDEventHandler
     {
     public:
@@ -180,6 +180,8 @@ namespace lu::platform::socket
         }
 
         int stop(ShutSide shutSide) { return m_baseSocket.stop(shutSide); }
+        void setCustomObjectPtr(CustomObjectPtrType * ptr) { m_customObjectPtr = ptr; }
+        CustomObjectPtrType* getCustomObjectPtr() const { return m_customObjectPtr; }
 
     private:
         inline void readMessages()
@@ -251,5 +253,6 @@ namespace lu::platform::socket
         ssize_t m_readOffset{};
         ssize_t m_numberOfBytesLeftToRead{};
         ssize_t m_numberOfBytesLeftToRecv{};
+        CustomObjectPtrType* m_customObjectPtr;
     };
 }

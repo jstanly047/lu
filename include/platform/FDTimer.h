@@ -2,7 +2,7 @@
 
 #include <platform/IFDEventHandler.h>
 #include <common/TemplateConstraints.h>
-#include <platform/defs.h>
+#include <platform/Defs.h>
 
 #include <time.h>
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <storage/db/MetaData.h>
+#include <common/FixedString.h>
 
 namespace lu::storage::db
 {
@@ -19,7 +20,15 @@ namespace lu::storage::db
         int age;
     };
 
+    struct FixedStr
+    {
+        lu::common::FixedString<15> name;
+        int age;
+        lu::common::FixedString<31> description;
+    };
+
 }
 
 DB_REFLECTION_ALIAS(lu::storage::db::GTestClass, gtest_class, name, age, salary);
 DB_REFLECTION_ALIAS(lu::storage::db::MyClass, MyClass, name, age);
+DB_REFLECTION_ALIAS(lu::storage::db::FixedStr, FixedStr, name, age, description);

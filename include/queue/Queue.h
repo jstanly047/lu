@@ -1,7 +1,7 @@
 #pragma once
 
-#include <common/common.h>
-#include <common/defs.h>
+#include <common/Common.h>
+#include <common/Defs.h>
 #include <atomic>
 #include <cassert>
 

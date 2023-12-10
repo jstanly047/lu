@@ -3,7 +3,7 @@
 #include <common/TemplateConstraints.h>
 #include <platform/thread/LuThread.h>
 #include <platform/thread/channel/TransferQueue.h>
-#include <common/defs.h>
+#include <common/Defs.h>
 
 namespace  lu::platform::thread
 {

@@ -109,6 +109,7 @@ if (UNIT_TEST)
     target_include_directories(luMockThread PUBLIC ${PROJ_TEST_INC_DIR} ${LU_PLATFORM_HEADRES})
 
     file(GLOB TEST_UTILS_SRC ./test/utils/*.cpp)
+    file(GLOB TEST_COMMON_SRC ./test/common/*.cpp)
     file(GLOB TEST_QUEUE_SRC ./test/queue/*.cpp)
     file(GLOB TEST_SOCKET_SRC ./test/platform/socket/*.cpp)
     file(GLOB TEST_THREAD_SRC ./test/platform/thread/*.cpp)
@@ -119,6 +120,7 @@ if (UNIT_TEST)
 
     add_executable(LuTests ./test/TestMain.cpp 
                             ${TEST_UTILS_SRC}
+                            ${TEST_COMMON_SRC}
                             ${TEST_QUEUE_SRC}
                             ${TEST_SOCKET_SRC}
                             ${TEST_THREAD_SRC}

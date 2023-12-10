@@ -1,6 +1,6 @@
 #include <platform/FDEventLoop.h>
-#include <common/defs.h>
-#include <platform/defs.h>
+#include <common/Defs.h>
+#include <platform/Defs.h>
 #include <glog/logging.h>
 
 #include <cassert>
