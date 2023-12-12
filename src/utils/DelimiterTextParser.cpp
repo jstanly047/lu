@@ -48,6 +48,20 @@ std::string_view DelimiterTextParser<DelimeterType>::next() const
     m_currentIndex++;
     auto len = endPos - m_startPos;
     auto retVal = std::string_view(m_line.data() + std::exchange(m_startPos, endPos + m_delimeterLen) , len);
+    auto start = retVal.find_first_not_of(' ');
+
+    if (start != std::string_view::npos)
+    {
+        retVal = retVal.substr(start);
+    }
+
+    auto end = retVal.find_last_not_of(' ');
+
+    if (end != std::string_view::npos)
+    {
+        retVal = retVal.substr(0,end+1);
+    }
+
     return retVal == "null" || retVal == "Null" || retVal == "NULL" ? std::string_view() : retVal;
 }
 

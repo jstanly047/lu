@@ -33,7 +33,7 @@ TEST(TestDelimiterTextParser, nullString)
 
     EXPECT_TRUE(input.next().empty());
     EXPECT_TRUE(input.next().empty());
-    EXPECT_TRUE(input.next() == "Test");
+    EXPECT_EQ(input.next(), "Test");
 }
 
 TEST(TestDelimiterTextParser, nonEmptyStringWithoutDelimiter)
@@ -41,7 +41,7 @@ TEST(TestDelimiterTextParser, nonEmptyStringWithoutDelimiter)
     std::string line = "Test";
     DelimiterTextParser input(line, TEXT_FILE_DELIMETER);
 
-    EXPECT_TRUE(input.next() == "Test");
+    EXPECT_EQ(input.next(), "Test");
     ASSERT_THROW({
         try 
         {
@@ -63,9 +63,9 @@ TEST(TestDelimiterTextParser, nonEmptyStringWithDelimiter)
     line += "Value3";
     DelimiterTextParser input(line, TEXT_FILE_DELIMETER);
 
-    EXPECT_TRUE(input.next() == "Value1");
-    EXPECT_TRUE(input.next() == "Value2");
-    EXPECT_TRUE(input.next() == "Value3");
+    EXPECT_EQ(input.next(), "Value1");
+    EXPECT_EQ(input.next(), "Value2");
+    EXPECT_EQ(input.next(), "Value3");
     ASSERT_THROW({
         try 
         {
@@ -94,12 +94,12 @@ TEST(TestDelimiterTextParser, checkNonStrings)
     DelimiterTextParser input(line, TEXT_FILE_DELIMETER);
     
 
-    EXPECT_TRUE(input.next() == "Value1");
-    EXPECT_TRUE(input.next() == "");
-    EXPECT_TRUE(input.nextInt() == 1);
-    EXPECT_TRUE(input.nextFloat() == 1.0F);
-    EXPECT_TRUE(input.nextDouble() == 2.0);
-    EXPECT_TRUE(input.nextChar() == 'C');
+    EXPECT_EQ(input.next(), "Value1");
+    EXPECT_EQ(input.next(), "");
+    EXPECT_EQ(input.nextInt(), 1);
+    EXPECT_EQ(input.nextFloat(), 1.0F);
+    EXPECT_EQ(input.nextDouble(), 2.0);
+    EXPECT_EQ(input.nextChar(), 'C');
     ASSERT_THROW({
         try 
         {
@@ -112,15 +112,39 @@ TEST(TestDelimiterTextParser, checkNonStrings)
         }} , std::logic_error);
 }
 
+TEST(TestDelimiterTextParser, checkNonStringsWithSpace)
+{
+    std::string line =  "  Value1 ";
+    line += TEXT_FILE_DELIMETER;
+    line += TEXT_FILE_DELIMETER;
+    line += "1 ";
+    line += TEXT_FILE_DELIMETER;
+    line += "  1.0";
+    line += TEXT_FILE_DELIMETER;
+    line += "2.0  ";
+    line += TEXT_FILE_DELIMETER;
+    line += "    C  ";
+    line += TEXT_FILE_DELIMETER;
+    DelimiterTextParser input(line, TEXT_FILE_DELIMETER);
+    
+
+    EXPECT_EQ(input.next(), "Value1");
+    EXPECT_EQ(input.next(), "");
+    EXPECT_EQ(input.nextInt(), 1);
+    EXPECT_EQ(input.nextFloat(), 1.0F);
+    EXPECT_EQ(input.nextDouble(), 2.0);
+    EXPECT_EQ(input.nextChar(), 'C');
+}
+
 TEST(TestDelimiterTextParser, boolValue)
 {
     std::string empty="0~1~~2";
     DelimiterTextParser input(empty, TEXT_FILE_DELIMETER);
 
-    EXPECT_TRUE(input.nextBool() == false);
-    EXPECT_TRUE(input.nextBool() == true);
-    EXPECT_TRUE(input.nextBool() == false);
-    EXPECT_TRUE(input.nextBool() == false);
+    EXPECT_EQ(input.nextBool(), false);
+    EXPECT_EQ(input.nextBool(), true);
+    EXPECT_EQ(input.nextBool(), false);
+    EXPECT_EQ(input.nextBool(), false);
     ASSERT_THROW({
         try 
         {
