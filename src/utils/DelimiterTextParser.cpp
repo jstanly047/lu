@@ -11,10 +11,11 @@ namespace
 }
 
 template <typename DelimeterType>
-DelimiterTextParser<DelimeterType>::DelimiterTextParser(const std::string& line, const DelimeterType&  delimeter):
+DelimiterTextParser<DelimeterType>::DelimiterTextParser(const std::string& line, const DelimeterType&  delimeter, int startLine):
     m_delimeter(delimeter),
     m_line(line.data()),
-    m_delimeterLen(getDelimiterSize(delimeter))
+    m_delimeterLen(getDelimiterSize(delimeter)),
+    m_lineNumber(startLine)
 {
 }
 
@@ -84,7 +85,61 @@ int DelimiterTextParser<DelimeterType>::nextInt() const
     }
     catch(const std::exception& e)
     {
-        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to integer, Item [" + std::to_string(m_currentIndex) + "] in line[" + std::to_string(m_lineNumber) + "]");
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to integer, Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber) + "]");
+    }
+
+    return retVal;
+}
+
+template <typename DelimeterType>
+unsigned int DelimiterTextParser<DelimeterType>::nextUInt() const
+{
+    auto strView = next();
+    unsigned int retVal;
+
+    try
+    {
+        retVal = strView.empty() ? 0U : std::stoul(std::string(strView));
+    }
+    catch(const std::exception& e)
+    {
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to unsigned integer, Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber) + "]");
+    }
+
+    return retVal;
+}
+
+template <typename DelimeterType>
+long long DelimiterTextParser<DelimeterType>::nextLongLong() const
+{
+    auto strView = next();
+    long long retVal;
+
+    try
+    {
+        retVal = strView.empty() ? 0U : std::stoll(std::string(strView));
+    }
+    catch(const std::exception& e)
+    {
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to long long, Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber) + "]");
+    }
+
+    return retVal;
+}
+
+template <typename DelimeterType>
+unsigned long long DelimiterTextParser<DelimeterType>::nextULongLong() const
+{
+    auto strView = next();
+    unsigned long long retVal;
+
+    try
+    {
+        retVal = strView.empty() ? 0U : std::stoull(std::string(strView));
+    }
+    catch(const std::exception& e)
+    {
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to unsigned long long, Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber) + "]");
     }
 
     return retVal;
@@ -102,7 +157,7 @@ bool DelimiterTextParser<DelimeterType>::nextBool() const
     }
     catch(const std::exception& e)
     {
-        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to boolean, Item [" + std::to_string(m_currentIndex) + "] in line[" + std::to_string(m_lineNumber ) + "]");
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to boolean, Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber ) + "]");
     }
 
     return retVal;
@@ -120,7 +175,7 @@ double DelimiterTextParser<DelimeterType>::nextDouble() const
     }
     catch(const std::exception& e)
     {
-        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to double, Item [" + std::to_string(m_currentIndex) + "] in line[" + std::to_string(m_lineNumber ) + "]");
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to double, Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber ) + "]");
     }
 
     return retVal;
@@ -138,7 +193,7 @@ float DelimiterTextParser<DelimeterType>::nextFloat() const
     }
     catch(const std::exception& e)
     {
-        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to float, Item [" + std::to_string(m_currentIndex + 1 ) + "] in line[" + std::to_string(m_lineNumber ) + "]");
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to float, Item [" + std::to_string(m_currentIndex + 1 ) + "] in line [" + std::to_string(m_lineNumber ) + "]");
     }
     
     return retVal;
@@ -152,7 +207,7 @@ std::time_t DelimiterTextParser<DelimeterType>::nextDateTime(const std::string f
 
     if (retVal == -1)
     {
-        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to time format " + format + ", Item [" + std::to_string(m_currentIndex) + "] in line[" + std::to_string(m_lineNumber ) + "]");
+        throw std::logic_error("Cannot convert '" + std::string(strView) + "' to time format " + format + ", Item [" + std::to_string(m_currentIndex) + "] in line [" + std::to_string(m_lineNumber ) + "]");
     }
     
     return retVal;

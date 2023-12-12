@@ -1,5 +1,7 @@
 #include <utils/DelimiterTextParser.h>
 #include <string>
+#include <limits>
+
 #include <gtest/gtest.h>
 
 using namespace lu::utils;
@@ -85,6 +87,12 @@ TEST(TestDelimiterTextParser, checkNonStrings)
     line += TEXT_FILE_DELIMETER;
     line += "1";
     line += TEXT_FILE_DELIMETER;
+    line += "4294967295";
+    line += TEXT_FILE_DELIMETER;
+    line += "1";
+    line += TEXT_FILE_DELIMETER;
+    line += "18446744073709551615";
+    line += TEXT_FILE_DELIMETER;
     line += "1.0";
     line += TEXT_FILE_DELIMETER;
     line += "2.0";
@@ -97,6 +105,9 @@ TEST(TestDelimiterTextParser, checkNonStrings)
     EXPECT_EQ(input.next(), "Value1");
     EXPECT_EQ(input.next(), "");
     EXPECT_EQ(input.nextInt(), 1);
+    EXPECT_EQ(input.nextUInt(), std::numeric_limits<unsigned int>::max());
+    EXPECT_EQ(input.nextLongLong(), 1);
+    EXPECT_EQ(input.nextULongLong(), std::numeric_limits<unsigned long long>::max());
     EXPECT_EQ(input.nextFloat(), 1.0F);
     EXPECT_EQ(input.nextDouble(), 2.0);
     EXPECT_EQ(input.nextChar(), 'C');
@@ -107,7 +118,7 @@ TEST(TestDelimiterTextParser, checkNonStrings)
         }
         catch(const std::logic_error& e)
         {
-            EXPECT_STREQ("Item [7] does not exist in line [1]", e.what());
+            EXPECT_STREQ("Item [10] does not exist in line [1]", e.what());
             throw;
         }} , std::logic_error);
 }
@@ -189,10 +200,13 @@ TEST(TestDelimiterTextParser, dateTimeTextTest)
 
 TEST(TestDelimiterTextParser, formatExceptions)
 {
-    std::string empty="A~B~C~D~E";
+    std::string empty="A~B~C~D~E~F~G~H";
     DelimiterTextParser input(empty, TEXT_FILE_DELIMETER);
 
     ASSERT_THROW(input.nextInt(), std::logic_error);
+    ASSERT_THROW(input.nextUInt(), std::logic_error);
+    ASSERT_THROW(input.nextLongLong(), std::logic_error);
+    ASSERT_THROW(input.nextULongLong(), std::logic_error);
     ASSERT_THROW(input.nextBool(), std::logic_error);
     ASSERT_THROW(input.nextDouble(), std::logic_error);
     ASSERT_THROW(input.nextFloat(), std::logic_error);

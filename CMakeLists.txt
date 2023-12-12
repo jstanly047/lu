@@ -132,6 +132,7 @@ if (UNIT_TEST)
     target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS} ${LU_PLATFORM_HEADRES} ${SQLite3_INCLUDE_DIRS})
 
     target_link_libraries(LuTests
+                            lucommon
                             luPlatform
                             utils
                             #thread
