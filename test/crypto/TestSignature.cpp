@@ -2,6 +2,9 @@
 #include <crypto/RSAPrivateKey.h>
 #include <crypto/RSAPublicKey.h>
 
+#include <fstream>
+#include <sstream>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -104,6 +107,24 @@ TEST(TestSignature, sing512WithSalt)
     ASSERT_EQ(rsaPrivateKey.load("resource/private.pem"), true);
     RSAPublicKey rsaPublicKey;
     ASSERT_EQ(rsaPublicKey.load("resource/publick_key.pem"), true);
+    std::string data = "User:Stanly, Calims:10001";
+    auto token = rsaPrivateKey.getBase64Signature<HashAlgo::SHA512>(data, "stanly");
+    ASSERT_EQ(rsaPublicKey.verifyBase64Signature<HashAlgo::SHA512>(data, token, "stanly"), true);
+    ASSERT_EQ(rsaPublicKey.verifyBase64Signature<HashAlgo::SHA512>(data, token, "stanly1"), false);
+}
+
+TEST(TestSignature, readPublicKeyFromString)
+{
+    std::ifstream keyFileStream("resource/publick_key.pem");
+    EXPECT_TRUE(keyFileStream.is_open());
+    std::stringstream keyStringStream;
+    keyStringStream << keyFileStream.rdbuf();
+    std::string publicKeyStr = keyStringStream.str();
+
+    RSAPrivateKey rsaPrivateKey;
+    ASSERT_EQ(rsaPrivateKey.load("resource/private.pem"), true);
+    RSAPublicKey rsaPublicKey;
+    ASSERT_EQ(rsaPublicKey.read(publicKeyStr), true);
     std::string data = "User:Stanly, Calims:10001";
     auto token = rsaPrivateKey.getBase64Signature<HashAlgo::SHA512>(data, "stanly");
     ASSERT_EQ(rsaPublicKey.verifyBase64Signature<HashAlgo::SHA512>(data, token, "stanly"), true);

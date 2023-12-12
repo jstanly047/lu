@@ -12,6 +12,7 @@ namespace lu::crypto
         template<HashAlgo Algo=HashAlgo::SHA256>
         bool verifyBase64Signature(const std::string& data, const std::string &signature, const std::string& salt="") const;
         bool load(const std::string& filePath);
+        bool read(const std::string& privateKey);
         ~RSAPublicKey();
 
     private:

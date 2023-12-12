@@ -17,6 +17,9 @@ namespace  lu::platform::thread
     template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
     class ConnectionThread;
 
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+    class ServerSingleThread;
+
     class LuThread
     {
         template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
@@ -24,6 +27,9 @@ namespace  lu::platform::thread
 
         template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
         friend class ConnectionThread;
+
+        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ServerSingleThread;
 
     public:
         LuThread(const std::string& name);

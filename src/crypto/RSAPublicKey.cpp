@@ -55,6 +55,20 @@ bool RSAPublicKey::load(const std::string& filePath)
     return  m_publicKey != nullptr;
 }
 
+bool RSAPublicKey::read(const std::string& publickey)
+{
+    BIO* keyBio = ::BIO_new_mem_buf((void*)publickey.data(), -1);
+    if (keyBio == nullptr) 
+    {
+        //LOG(ERROR) << "Can not open RSA Public key file " << filePath;
+        return false;
+    }
+
+    m_publicKey = ::PEM_read_bio_PUBKEY(keyBio, nullptr, nullptr, nullptr);
+    ::BIO_free(keyBio);
+    return  m_publicKey != nullptr;
+}
+
 RSAPublicKey::~RSAPublicKey()
 {
     if (m_publicKey == nullptr)

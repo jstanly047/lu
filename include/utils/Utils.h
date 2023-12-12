@@ -77,10 +77,6 @@ namespace lu::utils
 
         //TODO Change to C++23 or use chron 
         //static std::string getDateTimeStr(std::time_t time, const std::string& fromat="%Y%m%d%H%M%S");
-
-        static  void DieWithUserMessage(const char *msg, const char *detail);
-        static void DieWithSystemMessage(const char *msg);
-        static void PrintSocketAddress(const struct sockaddr &address, FILE *stream);
         static bool readDataSocket(int socketId, uint8_t *buf, size_t size, ssize_t &readCount);
         static bool readDataFile(int socketId, uint8_t *buf, size_t size, ssize_t &readCount);
 

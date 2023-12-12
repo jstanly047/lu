@@ -87,7 +87,7 @@ namespace lu::platform::socket
             if (fd == lu::platform::NULL_FD)
             {
                 ::freeaddrinfo(servAddr);
-                LOG(ERROR) << "Can create connection to " << m_host << ":" << m_service;
+                LOG(ERROR) << "Can not create connection to " << m_host << ":" << m_service;
                 return false;
             }
 
