@@ -21,6 +21,6 @@ namespace lu::platform::thread
         MOCK_METHOD(void, onConnection, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&)), (override));
         MOCK_METHOD(void, onClientClose, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&)), (override));
         MOCK_METHOD(void, onData, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&), void* ), (override));
-        MOCK_METHOD(void, onAppMsg, (void* ), (override));
+        MOCK_METHOD(void, onAppMsg, (void*, lu::platform::thread::channel::ChannelID), (override));
     };
 }

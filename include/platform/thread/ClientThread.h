@@ -61,9 +61,9 @@ namespace lu::platform::thread
             delete baseSocket;
         }
 
-        void onAppMsg(void* msg)
+        void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID channelID)
         {
-            this->m_clientThreadCallback.onAppMsg(msg);
+            this->m_clientThreadCallback.onAppMsg(msg, channelID);
         }
 
         const lu::platform::EventNotifier& getEventNotifier() const { return *m_eventNotifier; }

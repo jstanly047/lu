@@ -96,7 +96,7 @@ namespace lu::platform::thread
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
         {
             m_currentClientHandler = m_currentClientHandler % m_serverClientThreads.size();
-            m_serverClientThreads[m_currentClientHandler]->getEventNotifier().notify(lu::platform::EventData(lu::platform::EventData::NewConnection, baseSocket));
+            m_serverClientThreads[m_currentClientHandler]->getEventNotifier().notify(lu::platform::EventData(lu::platform::EventData::NewConnection, 0, baseSocket));
             m_currentClientHandler++;
         }
 

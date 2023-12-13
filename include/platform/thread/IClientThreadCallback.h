@@ -15,7 +15,7 @@ namespace lu::platform::thread
         virtual void onStart() = 0;
         virtual void onExit() = 0;
         virtual void onNewConnection(lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket) = 0;
-        virtual void onAppMsg(void* msg) = 0;
+        virtual void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID) = 0;
         virtual void onTimer(const lu::platform::FDTimer<IClientThreadCallback>&) = 0;
         virtual void onClientClose(lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&) = 0;
         virtual void onData(lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&, void* ) = 0;

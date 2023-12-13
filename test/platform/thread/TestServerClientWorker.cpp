@@ -49,7 +49,7 @@ public:
     {
     }
 
-    void onAppMsg([[maybe_unused]]void *msg)
+    void onAppMsg([[maybe_unused]]void *msg, [[maybe_unused]] lu::platform::thread::channel::ChannelID channelID)
     {
     }
 

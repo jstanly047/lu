@@ -14,7 +14,7 @@ class MockEventHandler
 {
 public:
     MOCK_METHOD(void, onNewConnection, (socket::BaseSocket *));
-    MOCK_METHOD(void, onAppMsg, (void *));
+    MOCK_METHOD(void, onAppMsg, (void *, lu::platform::thread::channel::ChannelID));
 };
 
 class MockThreadEventHandler
@@ -110,7 +110,7 @@ TEST(TestEventChannel, checkCallback)
     {
         if (i % 2 == 0)
         {
-            eventNotifier->notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
+            eventNotifier->notify(EventData(EventData::NewConnection, 0, new socket::BaseSocket()));
         }
         else
         {
@@ -124,7 +124,7 @@ TEST(TestEventChannel, checkCallback)
     {
         if (i % 2 == 0)
         {
-            eventNotifier->notify(EventData(EventData::NewConnection, new socket::BaseSocket()));
+            eventNotifier->notify(EventData(EventData::NewConnection, 0, new socket::BaseSocket()));
         }
         else
         {

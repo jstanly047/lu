@@ -2,6 +2,7 @@
 #include <common/TemplateConstraints.h>
 #include <platform/IFDEventHandler.h>
 #include <platform/socket/BaseSocket.h>
+#include <platform/thread/channel/TransferQueue.h>
 #include <utils/Utils.h>
 #include <memory>
 
@@ -18,7 +19,7 @@ namespace lu::platform
     #pragma pack(push, 1) 
     struct EventData
     {
-        enum EventType
+        enum EventType : int
         {
             None,
             NewConnection,
@@ -26,9 +27,11 @@ namespace lu::platform
         };
 
         EventType eventType;
+        lu::platform::thread::channel::ChannelID channelID;
         void *data;
 
-        EventData(EventType type = EventType::None, void *ptr = nullptr) : eventType(type), data(ptr) {}
+        EventData(EventType type = EventType::None, lu::platform::thread::channel::ChannelID cID= 0U, void *ptr = nullptr) : 
+            eventType(type), channelID(cID), data(ptr) {}
     };
     #pragma pack(pop)
 
@@ -122,7 +125,7 @@ namespace lu::platform
                     m_eventChannelHandler.onNewConnection(reinterpret_cast<lu::platform::socket::BaseSocket *>(eventData.data));
                     break;
                 case EventData::AppMessage:
-                    m_eventChannelHandler.onAppMsg(eventData.data);
+                    m_eventChannelHandler.onAppMsg(eventData.data, eventData.channelID);
                     break;
                 default:
                     break;

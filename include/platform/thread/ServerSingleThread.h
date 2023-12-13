@@ -83,9 +83,9 @@ namespace lu::platform::thread
             m_threadsConnecting.push_back(&thread);
         }
 
-        void onAppMsg(void* msg)
+        void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID channelID)
         {
-            this->m_serverThreadCallback.onAppMsg(msg);
+            this->m_serverThreadCallback.onAppMsg(msg, channelID);
         }
 
         const lu::platform::EventNotifier& getEventNotifier() const { return *m_eventNotifier; }

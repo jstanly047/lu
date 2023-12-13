@@ -76,9 +76,9 @@ namespace lu::platform::thread
         {
         }
 
-        void onAppMsg(void* msg)
+        void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID channelID)
         {
-            this->m_connectionThreadCallback.onAppMsg(msg);
+            this->m_connectionThreadCallback.onAppMsg(msg, channelID);
         }
 
     private:

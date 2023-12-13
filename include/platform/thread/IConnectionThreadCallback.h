@@ -3,6 +3,7 @@
 #include <platform/socket/DataSocket.h>
 #include <platform/socket/data_handler/String.h>
 #include <platform/socket/ConnectSocket.h>
+#include <platform/thread/channel/InputChannel.h>
 
 namespace lu::platform::thread
 {
@@ -17,6 +18,6 @@ namespace lu::platform::thread
         virtual void onConnection(lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& ) = 0;
         virtual void onClientClose(lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&) = 0;
         virtual void onData(lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&, void* ) = 0;
-        virtual void onAppMsg(void* ) = 0;
+        virtual void onAppMsg(void*, lu::platform::thread::channel::ChannelID ) = 0;
     };
 }

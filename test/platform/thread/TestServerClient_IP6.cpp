@@ -81,7 +81,7 @@ protected:
                 }));
 
 
-            EXPECT_CALL(*mockServerClientCallback,  onAppMsg(::testing::_)).Times(0);
+            EXPECT_CALL(*mockServerClientCallback,  onAppMsg(::testing::_, ::testing::_)).Times(0);
 
             EXPECT_CALL(*mockServerClientCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
                 [&]( lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket, void* message)
@@ -197,7 +197,7 @@ TEST_F(TestServerClient_IP6, TestPingPong)
         }));
     EXPECT_CALL(mockConnectionThreadCallback,  onExit()).Times(1);
     EXPECT_CALL(mockConnectionThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
-    EXPECT_CALL(mockConnectionThreadCallback, onAppMsg(::testing::_)).Times(0);
+    EXPECT_CALL(mockConnectionThreadCallback, onAppMsg(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(mockConnectionThreadCallback, onClientClose(::testing::_)).Times(3);
     connectionThread.init();
     connectionThread.start(true);

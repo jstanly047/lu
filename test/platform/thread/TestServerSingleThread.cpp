@@ -42,7 +42,7 @@ namespace
         {
         }
 
-        void onAppMsg(void *msg)
+        void onAppMsg(void *msg, [[maybe_unused]] lu::platform::thread::channel::ChannelID channelID)
         {
             auto replyMsg = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(msg);
             m_dataSocket->sendMsg(replyMsg, sizeof(lu::platform::socket::data_handler::String::Message));
@@ -178,7 +178,7 @@ TEST_F(TestServerSingleThread, TestPingPong)
 
     EXPECT_CALL(mockConnectionThreadCallback,  onExit()).Times(1);
     EXPECT_CALL(mockConnectionThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
-    EXPECT_CALL(mockConnectionThreadCallback, onAppMsg(::testing::_)).Times(0);
+    EXPECT_CALL(mockConnectionThreadCallback, onAppMsg(::testing::_, ::testing::_)).Times(0);
     EXPECT_CALL(mockConnectionThreadCallback, onClientClose(::testing::_)).Times(0);
     connectionThread.init();
     connectionThread.start(true);

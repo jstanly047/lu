@@ -75,7 +75,7 @@ void LuThread::transferMsg(unsigned int threadIndex, void *msg)
 
 void LuThread::transferMsgToServerThread(channel::ChannelID channelID, void *msg)
 {
-    m_sCurrentLuThread->m_eventNotifiers[channelID]->notify(lu::platform::EventData(lu::platform::EventData::AppMessage, msg));
+    m_sCurrentLuThread->m_eventNotifiers[channelID]->notify(lu::platform::EventData(lu::platform::EventData::AppMessage, m_sCurrentLuThread->m_channelID, msg));
 }
 
  channel::ChannelID LuThread::getCurrentThreadChannelID()

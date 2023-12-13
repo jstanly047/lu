@@ -49,7 +49,7 @@ namespace
             dataSocket.setCustomObjectPtr(this);
         }
 
-        void onAppMsg([[maybe_unused]] void *msg)
+        void onAppMsg([[maybe_unused]] void *msg, [[maybe_unused]] lu::platform::thread::channel::ChannelID channelID)
         {
         }
 
@@ -108,7 +108,7 @@ namespace
          using StringDataSocket=lu::platform::socket::DataSocketV<ConnectionThreadCallback, lu::platform::socket::data_handler::StringV>;
         bool onInit() { return true; }
         void onStart() {}
-        void onAppMsg([[maybe_unused]]void*) {}
+        void onAppMsg([[maybe_unused]]void*, [[maybe_unused]]lu::platform::thread::channel::ChannelID channelID) {}
 
         // EXPECT_CALL(connectionThreadCallback,  onStartComplete());
         void onConnection(StringDataSocket &dataSocket)

@@ -44,7 +44,7 @@ namespace
         using StringDataSocket=lu::platform::socket::DataSocket<ConnectionThreadCallback, lu::platform::socket::data_handler::String>;
         bool onInit() { return true; }
         void onStart() {}
-        void onAppMsg(void* msg) 
+        void onAppMsg(void* msg, [[maybe_unused]] lu::platform::thread::channel::ChannelID channelID) 
         {
             auto value = reinterpret_cast<int*>(msg);
             EXPECT_EQ(100, *value);
