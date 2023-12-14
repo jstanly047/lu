@@ -1,6 +1,7 @@
 #pragma once
 #include <platform/thread/EventThread.h>
 #include <platform/socket/ConnectSocket.h>
+#include <platform/thread/ServerThread.h>
 
 #include <memory>
 #include <list>
@@ -70,6 +71,18 @@ namespace lu::platform::thread
         void connectFrom(LuThread& thread)
         {
             m_threadsConnecting.push_back(&thread);
+        }
+
+
+        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct STDataSocketType, 
+            lu::common::NonPtrClassOrStruct ClientThreadCallback, 
+            lu::common::NonPtrClassOrStruct BaseClientThreadCallback>
+        void connectFrom(ServerThread<ServerThreadCallback, STDataSocketType, ClientThreadCallback, BaseClientThreadCallback>& serverThread)
+        {
+            for (auto &clientThread : serverThread.m_serverClientThreads)
+            {
+                connectFrom(*clientThread);
+            }
         }
 
         void onNewConnection([[maybe_unused]]lu::platform::socket::BaseSocket *baseSocket)

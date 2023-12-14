@@ -99,7 +99,7 @@ const T &Configurations::getValue(const std::string &group, const std::string &c
         }
     }
 
-    LOG(ERROR) << "Can not find group [" << group << "] in configurations";
+    LOG(ERROR) << "Can not find config [" << group << "][" << configName << "]in configurations";
     static T t{};
     return t;
 }

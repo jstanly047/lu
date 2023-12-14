@@ -9,6 +9,8 @@ namespace lu::platform::thread
     template <typename Base, typename Derived>
     concept BaseOrSameClass = std::is_base_of_v<Base, Derived> || std::is_same_v<Base, Derived>;
 
+    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct CTDataSocketType>
+    class ConnectionThread;
 
     template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType, 
             lu::common::NonPtrClassOrStruct ClientThreadCallback, 
@@ -16,6 +18,10 @@ namespace lu::platform::thread
     class ServerThread : public EventThread<ServerThreadCallback>
     {
         static_assert(BaseOrSameClass<BaseClientThreadCallback, ClientThreadCallback>);
+
+        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct CTDataSocketType>
+        friend class ConnectionThread;
+
     public:
         ServerThread(ServerThread&& other) = delete;
         ServerThread& operator=(ServerThread&& other) = delete;
