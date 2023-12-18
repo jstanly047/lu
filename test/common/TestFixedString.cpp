@@ -1,6 +1,7 @@
 #include <common/FixedString.h>
 #include <gtest/gtest.h>
 #include <tuple>
+#include <unordered_map>
 
 using namespace lu::common;
 
@@ -79,9 +80,32 @@ TEST(TestFixedString, charConstruct)
     FixedString<10> fixedStringNotEqual("");
     EXPECT_FALSE(fixedString == fixedStringNotEqual);
 }
+
 TEST(TestFixedString, implicitStringConversion)
 {
     FixedString<10> fixedString("TestStr");
     std::string str = fixedString;
     EXPECT_TRUE(str == "TestStr");
+}
+
+TEST(TestFixedString, TestHasFunction)
+{
+    FixedString<10> fixedString1("TestStr");
+    FixedString<10> fixedString2("TestStr1");
+    FixedString<10> fixedString3("TestStr");
+    EXPECT_NE(fixedString1.hash(), fixedString2.hash());
+    EXPECT_EQ(fixedString1.hash(), fixedString3.hash());
+}
+
+TEST(TestFixedString, storeInUnorderdMap)
+{
+    FixedString<10> fixedString1("TestStr1");
+    FixedString<10> fixedString2("TestStr2");
+    FixedString<10> fixedString3("TestStr1");
+    std::unordered_map<FixedString<10>, int> tempMap;
+    tempMap.emplace(fixedString1, 10);
+    tempMap.emplace(fixedString2, 20);
+    EXPECT_EQ(tempMap.find("TestStr1")->second, 10);
+    EXPECT_EQ(tempMap.find("TestStr2")->second, 20);
+    EXPECT_EQ(tempMap.emplace(fixedString3, 30).second, false);
 }

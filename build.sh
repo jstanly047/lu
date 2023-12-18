@@ -90,6 +90,7 @@ printf  "\n${PURPLE}======================> Done Building Engines & SO...${NC}\n
 
 if [ $exportPackage = true ]; then
     printf  "\n${BOLD_BLUE}=====================> Exporting to local conan...${NC}\n"
+    conan remove -c lu_pl*
     printf "$EXPORT_CMD"
     $EXPORT_CMD
     printf  "\n${BOLD_BLUE}=====================> Done exporting to local conan...${NC}\n"

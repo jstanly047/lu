@@ -25,8 +25,21 @@ namespace lu::common
         operator std::string() const { return std::string(m_buffer.data()); }
         auto size() const { return N; }
         auto getCString() const { return m_buffer.data(); }
+        std::size_t hash() const { return std::hash<std::string_view>{}(std::string_view(m_buffer.data(), N+1));}
 
     private:
         std::array<char, N+1> m_buffer{};
+    };
+}
+
+namespace std
+{
+    template <std::size_t N>
+    struct hash<lu::common::FixedString<N>>
+    {
+        std::size_t operator()(const lu::common::FixedString<N> &fixedString) const
+        {
+            return fixedString.hash();
+        }
     };
 }
