@@ -25,6 +25,7 @@ namespace lu::common
         operator std::string() const { return std::string(m_buffer.data()); }
         auto size() const { return N; }
         auto getCString() const { return m_buffer.data(); }
+        bool empty() const { return m_buffer[0] == '\0'; }
         std::size_t hash() const { return std::hash<std::string_view>{}(std::string_view(m_buffer.data(), N+1));}
 
     private:

@@ -9,6 +9,7 @@ TEST(TestFixedString, emptyFixedString)
 {
     FixedString<10> fixedString;
     EXPECT_TRUE(fixedString == "");
+    EXPECT_TRUE(fixedString.empty());
     EXPECT_FALSE(fixedString == "A");
     EXPECT_TRUE(std::strncmp(fixedString.getCString(), "", 3) == 0);
     EXPECT_FALSE(std::strncmp(fixedString.getCString(), "A", 3) == 0);
@@ -25,6 +26,7 @@ TEST(TestFixedString, stringConstructor)
     FixedString<10> fixedString("TestString");
     EXPECT_TRUE(fixedString == "TestString");
     EXPECT_FALSE(fixedString == "TestStrin");
+    EXPECT_FALSE(fixedString.empty());
     EXPECT_TRUE(std::strncmp(fixedString.getCString(), "TestString", 10) == 0);
     EXPECT_FALSE(std::strncmp(fixedString.getCString(), "TestStrings", 11) == 0);
     EXPECT_TRUE(fixedString == std::string("TestString"));
@@ -40,6 +42,7 @@ TEST(TestFixedString, constCharConstructorWithLargerSize)
     FixedString<10> fixedString("TestStringExtra");
     EXPECT_TRUE(fixedString == "TestString");
     EXPECT_FALSE(fixedString == "TestStrin");
+    EXPECT_FALSE(fixedString.empty());
     EXPECT_TRUE(std::strncmp(fixedString.getCString(), "TestString", 10) == 0);
     EXPECT_FALSE(std::strncmp(fixedString.getCString(), "TestStringExtra", 15) == 0);
     EXPECT_TRUE(fixedString == "TestString");
