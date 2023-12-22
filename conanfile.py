@@ -48,6 +48,7 @@ class snapafwRecipe(ConanFile):
         self.requires("sqlite3/3.44.2")
         # there is version conflict for this library so it override the requirement#
         self.requires("zlib/1.2.13", override=True)
+        self.requires("openssl/3.1.0")
         
 
     def generate(self):

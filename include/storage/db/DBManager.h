@@ -26,6 +26,13 @@ namespace lu::storage::db
         }
 
         template<typename T>
+        soci::rowset<T> load(const std::string& whereClause)
+        {
+            static T t;
+            return m_dbReader.load<T>(whereClause);
+        }
+
+        template<typename T>
         bool store(const T& t)
         {
             return m_dbWriter.store(t);

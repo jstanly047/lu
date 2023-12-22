@@ -14,6 +14,13 @@ namespace lu::storage::db
             static T t;
             return getDBReflection(t).getFromDB(m_sociSession);
         }
+
+        template<typename T>
+        soci::rowset<T> load(const std::string& whereClause)
+        {
+            static T t;
+            return getDBReflection(t).getFromDB(m_sociSession, whereClause);
+        }
         
     private:
         soci::session& m_sociSession;

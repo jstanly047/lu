@@ -96,3 +96,37 @@ TEST_F(TestMetaData, checkReflectionWithFixedString)
     ASSERT_EQ(temp->description, obj.description);
     //m_dbManger.truncate<MyClass>();
 }
+
+
+TEST_F(TestMetaData, checkDBQueryWithWhereClause)
+{
+    m_dbManger.execute(createFixedStr);
+    FixedStr obj1 = {"filter1", 30, "Test filter1"};
+    m_dbManger.store(obj1);
+    FixedStr obj2 = {"filter2", 31, "Test filter3"};
+    m_dbManger.store(obj2);
+    FixedStr obj3 = {"filter2", 31, "Test filter2"};
+    m_dbManger.store(obj3);
+    auto rows = m_dbManger.load<FixedStr>();
+    std::size_t rowCount = 0;
+    for ([[maybe_unused]]auto row: rows) 
+    {
+        rowCount++;
+    }
+    EXPECT_EQ(rowCount, 3);
+    rows = m_dbManger.load<FixedStr>("name='filter1'");
+    rowCount = 0;
+    for ([[maybe_unused]]auto row: rows) 
+    {
+        rowCount++;
+    }
+    EXPECT_EQ(rowCount, 1);
+    rows = m_dbManger.load<FixedStr>("age=31");
+    rowCount = 0;
+    for ([[maybe_unused]]auto row: rows) 
+    {
+        rowCount++;
+    }
+    EXPECT_EQ(rowCount, 2);
+    //m_dbManger.truncate<MyClass>();
+}

@@ -57,8 +57,8 @@ namespace lu::common
     public:
         Configurations(const Configurations&) = delete;
         Configurations operator=(const Configurations&) = delete;
-        Configurations(const Configurations&&) = delete;
-        Configurations& operator=(const Configurations&&) = delete;
+        Configurations(Configurations&&) = delete;
+        Configurations& operator=(Configurations&&) = delete;
 
         static bool loadFromFile(const std::string& fileName);
         template <typename T>

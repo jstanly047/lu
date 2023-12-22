@@ -131,6 +131,16 @@ namespace lu::storage::db                                                       
             return retVal;                                                              \
         }                                                                               \
                                                                                         \
+        soci::rowset<STRUCT_NAME> getFromDB(soci::session& session,                     \
+                                            const std::string& whereClause)             \
+        {                                                                               \
+            std::string sql = CONCAT_REC("SELECT * FROM ",CONV_TO_STRING(TABLE_NAME))   \
+                " where " + whereClause;                                                \
+            soci::rowset<STRUCT_NAME> retVal =                                          \
+            session.prepare << sql;                                                     \
+            return retVal;                                                              \
+        }                                                                               \
+                                                                                        \
         void truncate(soci::session& session)                                           \
         {                                                                               \
             session << CONCAT_REC("TRUNCATE TABLE ",CONV_TO_STRING(TABLE_NAME));        \
