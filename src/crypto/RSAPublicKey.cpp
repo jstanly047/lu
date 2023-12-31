@@ -35,7 +35,7 @@ bool RSAPublicKey::verifyBase64Signature(const std::string& data, const std::str
         return false;
     }
 
-    int AuthStatus = ::EVP_DigestVerifyFinal(rsaVerifyCtx, decodedSignature.getData(), decodedSignature.getLength());
+    int AuthStatus = ::EVP_DigestVerifyFinal(rsaVerifyCtx, decodedSignature.getData(), decodedSignature.getCapacity());
     ::EVP_MD_CTX_destroy(rsaVerifyCtx);
     return AuthStatus == 1;
 }

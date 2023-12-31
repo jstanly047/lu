@@ -28,6 +28,17 @@ std::string Hash<Algo>::getBase64Hash(const std::string &data)
 }
 
 template <HashAlgo Algo>
+DataWrap Hash<Algo>::getHash(const void* data, std::size_t length)
+{
+    DataWrap dataWrap(HashTraits<Algo>::HASH_SIZE);
+    ::EVP_DigestInit_ex(m_mdctx, m_md, NULL);
+    ::EVP_DigestUpdate(m_mdctx, data, length);
+    unsigned int md_len = 0;
+    ::EVP_DigestFinal_ex(m_mdctx, dataWrap.getData(), &md_len);
+    return dataWrap;
+}
+
+template <HashAlgo Algo>
 Hash<Algo>::~Hash()
 {
     if (m_mdctx == nullptr)

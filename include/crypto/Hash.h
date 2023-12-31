@@ -12,6 +12,7 @@ namespace lu::crypto
     public:
         bool init();
         std::string getBase64Hash(const std::string& data);
+        DataWrap getHash(const void*, std::size_t);
         ~Hash();
 
     private:

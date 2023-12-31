@@ -3,6 +3,7 @@
 #include <array>
 #include <string>
 #include <cstring>
+#include <ostream>
 
 namespace lu::common
 {
@@ -27,6 +28,12 @@ namespace lu::common
         auto getCString() const { return m_buffer.data(); }
         bool empty() const { return m_buffer[0] == '\0'; }
         std::size_t hash() const { return std::hash<std::string_view>{}(std::string_view(m_buffer.data(), N+1));}
+
+        friend  std::ostream& operator<<(std::ostream& os,  const FixedString<N>& fixedString)
+        {
+            os << fixedString.getCString();
+            return os;
+        }
 
     private:
         std::array<char, N+1> m_buffer{};

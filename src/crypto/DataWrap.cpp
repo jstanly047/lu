@@ -24,3 +24,15 @@ DataWrap &DataWrap::operator=(DataWrap &&other) noexcept
 
     return *this;
 }
+
+bool DataWrap::append(const void* data, std::size_t length)
+{
+    if (m_offset + length > m_length)
+    {
+        return false;
+    }
+
+    std::memcpy(m_data.get() + m_offset, data, length);
+    m_offset += length;
+    return true;
+}

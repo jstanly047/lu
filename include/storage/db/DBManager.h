@@ -21,14 +21,12 @@ namespace lu::storage::db
         template<typename T>
         soci::rowset<T> load()
         {
-            static T t;
             return m_dbReader.load<T>();
         }
 
         template<typename T>
         soci::rowset<T> load(const std::string& whereClause)
         {
-            static T t;
             return m_dbReader.load<T>(whereClause);
         }
 

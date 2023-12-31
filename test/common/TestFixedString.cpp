@@ -112,3 +112,16 @@ TEST(TestFixedString, storeInUnorderdMap)
     EXPECT_EQ(tempMap.find("TestStr2")->second, 20);
     EXPECT_EQ(tempMap.emplace(fixedString3, 30).second, false);
 }
+
+TEST(TestFixedString, outputStreamOperator)
+{
+    FixedString<10> myString("Hello");
+    std::ostringstream oss;
+    oss << myString;
+    EXPECT_EQ(oss.str(), "Hello");
+
+    FixedString<10> emptyString;
+    oss.str("");
+    oss << emptyString;
+    EXPECT_EQ(oss.str(), "");
+}

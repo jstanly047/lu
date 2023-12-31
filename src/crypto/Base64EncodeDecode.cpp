@@ -31,7 +31,7 @@ std::string Base64EncodeDecode::encode(DataWrap& data)
     auto *bio = ::BIO_new(BIO_s_mem());
     bio = ::BIO_push(b64, bio);
 
-    ::BIO_write(bio, data.getData(), static_cast<int>(data.getLength()));
+    ::BIO_write(bio, data.getData(), static_cast<int>(data.getCapacity()));
     BIO_flush(bio);
     BIO_get_mem_ptr(bio, &bptr);
     std::string result(bptr->data, bptr->length);

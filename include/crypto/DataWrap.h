@@ -15,12 +15,15 @@ namespace lu::crypto
 
         const unsigned char* getData() const { return m_data.get(); }
         unsigned char* getData() { return m_data.get(); }
-        std::size_t getLength() const { return m_length; }
+        std::size_t getCapacity() const { return m_length; }
+        bool append(const void* data, std::size_t length);
+        auto getDataLength() const { return m_offset; }
 
     private:
         
          
         std::unique_ptr<unsigned char[]> m_data;
-        std::size_t m_length;
+        std::size_t m_length{};
+        std::size_t m_offset{};
     };
 }
