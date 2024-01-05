@@ -14,6 +14,7 @@
 using namespace lu::crypto;
 
 template<HashAlgo Algo>
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 bool RSAPublicKey::verifyBase64Signature(const std::string& data, const std::string &signature, const std::string& salt) const
 {
     assert(m_publicKey != nullptr);

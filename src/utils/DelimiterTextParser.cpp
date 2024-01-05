@@ -5,10 +5,6 @@
 
 using namespace lu::utils;
 
-namespace 
-{
-    std::string emptyString;
-}
 
 template <typename DelimeterType>
 DelimiterTextParser<DelimeterType>::DelimiterTextParser(const std::string& line, const DelimeterType&  delimeter, int startLine):
@@ -40,10 +36,9 @@ std::string_view DelimiterTextParser<DelimeterType>::next() const
             logOutOfRange();
             return std::string_view();
         }
-        else
-        {
-            endPos =  m_line.size();
-        }
+        
+                    endPos =  m_line.size();
+       
     }
 
     m_currentIndex++;
@@ -77,7 +72,7 @@ template <typename DelimeterType>
 int DelimiterTextParser<DelimeterType>::nextInt() const
 {
     auto strView = next();
-    int retVal;
+    int retVal = 0;
 
     try
     {
@@ -95,7 +90,7 @@ template <typename DelimeterType>
 unsigned int DelimiterTextParser<DelimeterType>::nextUInt() const
 {
     auto strView = next();
-    unsigned int retVal;
+    unsigned int retVal = 0;
 
     try
     {
@@ -113,7 +108,7 @@ template <typename DelimeterType>
 long long DelimiterTextParser<DelimeterType>::nextLongLong() const
 {
     auto strView = next();
-    long long retVal;
+    long long retVal = 0;
 
     try
     {
@@ -131,7 +126,7 @@ template <typename DelimeterType>
 unsigned long long DelimiterTextParser<DelimeterType>::nextULongLong() const
 {
     auto strView = next();
-    unsigned long long retVal;
+    unsigned long long retVal = 0;
 
     try
     {
@@ -185,7 +180,7 @@ template <typename DelimeterType>
 float DelimiterTextParser<DelimeterType>::nextFloat() const
 {
     auto strView = next();    
-    float retVal = 0.0f;
+    float retVal = 0.0F;
 
     try
     {
@@ -200,7 +195,7 @@ float DelimiterTextParser<DelimeterType>::nextFloat() const
 }
 
 template <typename DelimeterType>
-std::time_t DelimiterTextParser<DelimeterType>::nextDateTime(const std::string format) const
+std::time_t DelimiterTextParser<DelimeterType>::nextDateTime(const std::string& format) const
 {
     auto strView = next();
     std::time_t retVal = Utils::getDateTime(std::string(strView), format);

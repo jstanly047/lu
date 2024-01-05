@@ -16,11 +16,11 @@ namespace lu::common
             helper(helper const &) = default;
             helper(T *p) : ptr(p) {}
             
-            template <class U, class... Ts>
-            helper(std::shared_ptr<U, Ts...> const &sp) : ptr(sp.get()) {}
+            template <class U>
+            helper(std::shared_ptr<U> const &sp) : ptr(sp.get()) {}
 
-            template <class U, class... Ts>
-            helper(std::unique_ptr<U, Ts...> const &up) : ptr(up.get()) {}
+            template <class U>
+            helper(std::unique_ptr<U> const &up) : ptr(up.get()) {}
 
             bool operator<(helper o) const
             {

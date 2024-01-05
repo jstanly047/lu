@@ -21,7 +21,7 @@ namespace lu::utils
         bool nextBool() const;
         double nextDouble() const;
         float nextFloat() const;
-        std::time_t nextDateTime(const std::string timeFormat="%Y%m%d%H%M%S") const;
+        std::time_t nextDateTime(const std::string& timeFormat="%Y%m%d%H%M%S") const;
         int getLineNumber() const { return m_lineNumber; }
 
 

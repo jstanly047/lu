@@ -46,7 +46,7 @@ bool FDEventLoop::add(IFDEventHandler &event) const
 
 bool FDEventLoop::add(std::unique_ptr<IFDEventHandler>&& event) 
 {
-    if (add(*event.get()) == false)
+    if (!add(*event))
     {
         return false;
     }
@@ -72,9 +72,9 @@ void FDEventLoop::start(int maxEvents)
         for (int i = 0; i < numberEvents; ++i) 
         {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            auto iFDEventHandler = (reinterpret_cast<IFDEventHandler*>(events[i].data.ptr));
+            auto *iFDEventHandler = (reinterpret_cast<IFDEventHandler*>(events[i].data.ptr));
 
-            if (iFDEventHandler->onEvent(events[i]) == false)
+            if (!iFDEventHandler->onEvent(events[i]))
             {
                 ::epoll_ctl(m_epollFD, EPOLL_CTL_DEL, events[i].data.fd, nullptr);
 

@@ -25,7 +25,7 @@ bool Configurations::loadFile(const std::string &fileName)
 {
     std::ifstream inputFileRead(fileName, std::ios_base::in);
 
-    if (inputFileRead.is_open() == false)
+    if (!inputFileRead.is_open())
     {
         LOG(ERROR) << "Can not open configuration files [" << fileName << "]";
         return false;
@@ -82,6 +82,7 @@ bool Configurations::loadFile(const std::string &fileName)
     return true;
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 template <typename T>
 const T &Configurations::getValue(const std::string &group, const std::string &configName)
 {
@@ -100,8 +101,8 @@ const T &Configurations::getValue(const std::string &group, const std::string &c
     }
 
     LOG(ERROR) << "Can not find config [" << group << "][" << configName << "] in configurations";
-    static T t{};
-    return t;
+    static T configSetting{};
+    return configSetting;
 }
 
 template const bool& lu::common::Configurations::getValue<bool>(const std::string &group, const std::string &configName);

@@ -12,9 +12,12 @@ namespace lu::common
     {
     public:
         FixedString():m_buffer{}{}
-        FixedString(const std::string& str):m_buffer{} { str.copy(m_buffer.data(), N); }
-        FixedString(char c):m_buffer{} { m_buffer[0] = c; }
-        FixedString(const char* str):m_buffer{} { std::strncpy(m_buffer.data(), str, N); }
+        FixedString(const std::string& str):m_buffer{} { str.copy(m_buffer.data(), N); m_buffer[N] = 0; }
+        FixedString(char c):m_buffer{} {  m_buffer[0] = c; m_buffer[1] = 0; }
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wstringop-truncation"
+        FixedString(const char* str):m_buffer{} {  std::strncpy(m_buffer.data(), str, N);  m_buffer[N] = 0; }
+        #pragma GCC diagnostic pop
         
         void operator=(const std::string& str) { str.copy(m_buffer.data(), N);  }
         void operator=(const char* str) {  std::strncpy(m_buffer.data(), str, N); }
