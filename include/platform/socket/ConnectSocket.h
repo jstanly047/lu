@@ -101,6 +101,8 @@ namespace lu::platform::socket
         const std::string& getService() const { return m_service; }
         BaseSocket* getBaseSocket() { return m_dataSocket == nullptr ? nullptr : &m_dataSocket->getBaseSocket(); }
         std::unique_ptr<DataSocketType>& getDataSocket() { return m_dataSocket; }
+        bool Receive() { return m_dataSocket->Receive(); }
+        int sendMsg(void *buffer, ssize_t size) { return m_dataSocket->sendMsg(buffer, size); }
 
     private:
         std::unique_ptr<DataSocketType> m_dataSocket = nullptr;
