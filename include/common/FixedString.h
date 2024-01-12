@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <ostream>
+#include <cassert>
 
 namespace lu::common
 {
@@ -12,11 +13,18 @@ namespace lu::common
     {
     public:
         FixedString():m_buffer{}{}
-        FixedString(const std::string& str):m_buffer{} { str.copy(m_buffer.data(), N); m_buffer[N] = 0; }
-        FixedString(char c):m_buffer{} {  m_buffer[0] = c; m_buffer[1] = 0; }
+        FixedString(const std::string& str) { str.copy(m_buffer.data(), N); m_buffer[N] = 0; }
+        FixedString(char c) {  m_buffer[0] = c; m_buffer[1] = 0; }
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wstringop-truncation"
-        FixedString(const char* str):m_buffer{} {  std::strncpy(m_buffer.data(), str, N);  m_buffer[N] = 0; }
+        FixedString(const char* str) {  std::strncpy(m_buffer.data(), str, N);  m_buffer[N] = 0; }
+        FixedString(const char* str, std::size_t size)
+        {  
+            assert(size <= N);
+            std::strncpy(m_buffer.data(), str, size); 
+            m_buffer[size] = 0; 
+        }
+
         #pragma GCC diagnostic pop
         
         void operator=(const std::string& str) { str.copy(m_buffer.data(), N);  }
@@ -26,9 +34,25 @@ namespace lu::common
         bool operator==(const char* other) const { return std::strncmp(other, m_buffer.data(), N+1) == 0 ; }
         bool operator<(const FixedString<N>& other) const { return m_buffer <  other.m_buffer; }
 
+        void append(char c, std::size_t position) 
+        {
+            assert(position <= N);
+            m_buffer[position] = c;
+            m_buffer[position+1] = '\0';
+        }
+
+        void append(const char* src, std::size_t startOffset, std::size_t size) 
+        {
+            assert(startOffset < N);
+            assert(startOffset + size <= N);
+            std::strncpy(m_buffer.data() + startOffset, src, size);
+            m_buffer[startOffset + size] = '\0';
+        }
+
         operator std::string() const { return std::string(m_buffer.data()); }
         auto size() const { return N; }
         auto getCString() const { return m_buffer.data(); }
+        auto data() { return m_buffer.data(); }
         bool empty() const { return m_buffer[0] == '\0'; }
         std::size_t hash() const { return std::hash<std::string_view>{}(std::string_view(m_buffer.data(), N+1));}
 

@@ -125,3 +125,18 @@ TEST(TestFixedString, outputStreamOperator)
     oss << emptyString;
     EXPECT_EQ(oss.str(), "");
 }
+
+TEST(TestFixedString, append)
+{
+    FixedString<10> myString("Hello");
+    std::ostringstream oss;
+    oss << myString;
+    EXPECT_EQ(oss.str(), "Hello");
+
+    myString.append('C', 0U);
+    EXPECT_EQ(std::string(myString.getCString()), "C");
+
+
+    myString.append("Test", 1, 4);
+    EXPECT_EQ(std::string(myString.getCString()), "CTest");
+}

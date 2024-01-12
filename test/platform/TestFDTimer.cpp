@@ -8,7 +8,7 @@
 #include <gmock/gmock.h>
 
 
-class MockTimerCallback : public lu::platform::ITimerCallback
+class MockFDTimerCallback : public lu::platform::ITimerCallback
 {
 public:
     MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<lu::platform::ITimerCallback>&), (override));
@@ -35,7 +35,7 @@ protected:
         ASSERT_EQ(flags, lu::platform::NULL_FD);
     }
 
-    MockTimerCallback mockTimerCallback;
+    MockFDTimerCallback mockTimerCallback;
     lu::platform::FDTimer<lu::platform::ITimerCallback>* fdTimer = nullptr;
     int fd = lu::platform::NULL_FD;
 };

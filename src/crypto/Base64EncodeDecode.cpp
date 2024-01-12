@@ -1,5 +1,4 @@
 #include <crypto/Base64EncodeDecode.h>
-#include <openssl/pem.h>
 
 using namespace lu::crypto;
 
@@ -21,22 +20,47 @@ namespace
 
         return (len * 3) / 4 - padding;
     }
+
+    ::BIO *b64 = ::BIO_new(BIO_f_base64());
+}
+
+::BIO *Base64EncodeDecode::bio = ::BIO_new(BIO_s_mem());
+
+::BIO* Base64EncodeDecode::b64Encoder()
+{
+    static ::BIO *b64_instance = []
+    {
+        ::BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+        return ::BIO_push(b64, bio);
+    }();
+    return b64_instance;
 }
 
 std::string Base64EncodeDecode::encode(DataWrap& data) 
 {
     ::BUF_MEM *bptr = nullptr;
-    auto *b64 = ::BIO_new(BIO_f_base64());
-    ::BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    auto *bio = ::BIO_new(BIO_s_mem());
-    bio = ::BIO_push(b64, bio);
-
-    ::BIO_write(bio, data.getData(), static_cast<int>(data.getCapacity()));
-    BIO_flush(bio);
-    BIO_get_mem_ptr(bio, &bptr);
+    //auto *b64 = ::BIO_new(BIO_f_base64());
+    //::BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    //auto *bio = ::BIO_new(BIO_s_mem());
+    //bio = ::BIO_push(b64, bio);
+    BIO_reset(bio);
+    ::BIO_write(b64Encoder(), data.getData(), static_cast<int>(data.getCapacity()));
+    BIO_flush(b64Encoder());
+    BIO_get_mem_ptr(b64Encoder(), &bptr);
     std::string result(bptr->data, bptr->length);
-    ::BIO_free_all(bio);
+    //::BIO_free_all(bio);
     return result;
+}
+
+void Base64EncodeDecode::encode(void *ptr, int size, void *dest, std::size_t maxLength)
+{
+    ::BUF_MEM *bptr = nullptr;
+    BIO_reset(bio);
+    ::BIO_write(b64Encoder(), ptr, size);
+    BIO_flush(b64Encoder());
+    BIO_get_mem_ptr(b64Encoder(), &bptr);
+    auto len = maxLength < bptr->length ? maxLength : bptr->length;
+    std::memcpy(dest, bptr->data, len);
 }
 
 DataWrap Base64EncodeDecode::decode(const std::string& b64message) 
