@@ -55,7 +55,7 @@ namespace lu::platform::thread
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
         {
             std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_serverThreadCallback, std::move(*baseSocket)));
-            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) baseSocket->getFD() << "] "
+            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
                         << " IP[" << baseSocket->getIP() << ":" << baseSocket->getPort()  << "]";
             this->m_serverThreadCallback.onNewConnection(*dataSocket.get());
             this->addToEventLoop(std::move(dataSocket));

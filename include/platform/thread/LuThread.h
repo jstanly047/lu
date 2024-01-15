@@ -62,11 +62,11 @@ namespace  lu::platform::thread
         std::string m_name;
         std::thread m_thread;
         channel::InputChannel m_inputChannel;
-       
 
-    private:
-        void connectTo(channel::ChannelID channelID, lu::platform::EventNotifier* eventNotifier);
         void threadRun();
+       
+    private:
+        void connectTo(channel::ChannelID channelID, lu::platform::EventNotifier* eventNotifier);  
 
         channel::OutputChannel m_outputChannel;
         channel::ChannelID m_channelID{};
