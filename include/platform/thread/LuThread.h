@@ -42,7 +42,7 @@ namespace  lu::platform::thread
         static const std::string& getCurrentThreadName();
         static void transferMsg(const std::string& threadName, void * msg);
         static void transferMsg(unsigned int threadIndex, void * msg);
-        static void transferMsgToServerThread(channel::ChannelID channelID, void *msg);
+        static void transferMsgToIOThread(channel::ChannelID channelID, void *msg);
         static channel::ChannelID getCurrentThreadChannelID();
         static unsigned int getThreadIndex(const std::string& threadName);
 

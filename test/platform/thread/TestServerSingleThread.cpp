@@ -172,7 +172,7 @@ TEST_F(TestServerSingleThread, TestPingPong)
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(channelData.data);
             EXPECT_EQ(strMessage->getString(), "GetName");
             auto reply = new lu::platform::socket::data_handler::String::Message(LuThread::getCurrentThreadName());
-            LuThread::transferMsgToServerThread(channelData.channelID, reply);
+            LuThread::transferMsgToIOThread(channelData.channelID, reply);
             delete strMessage;
         }));
 

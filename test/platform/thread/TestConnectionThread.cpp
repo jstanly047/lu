@@ -122,7 +122,7 @@ TEST_F(TestConnectionThread, TestEventChannel)
         [&]()
         {
             waitForConnectionThread.wait();
-            lu::platform::thread::LuThread::transferMsgToServerThread(connectionThread.getChannelID(), new int(100));
+            lu::platform::thread::LuThread::transferMsgToIOThread(connectionThread.getChannelID(), new int(100));
         }));
 
     EXPECT_CALL(mockConsumerCallback,  onExit()).Times(1);

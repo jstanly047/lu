@@ -73,7 +73,7 @@ void LuThread::transferMsg(unsigned int threadIndex, void *msg)
     m_sCurrentLuThread->m_outputChannel.transferMsg(threadIndex, msg);
 }
 
-void LuThread::transferMsgToServerThread(channel::ChannelID channelID, void *msg)
+void LuThread::transferMsgToIOThread(channel::ChannelID channelID, void *msg)
 {
     m_sCurrentLuThread->m_eventNotifiers[channelID]->notify(lu::platform::EventData(lu::platform::EventData::AppMessage, m_sCurrentLuThread->m_channelID, msg));
 }

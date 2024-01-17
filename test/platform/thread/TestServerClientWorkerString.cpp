@@ -263,7 +263,7 @@ TEST_F(TestServerClientWorkerString, TestPingPong)
                 stopCount++;
             }
 
-            LuThread::transferMsgToServerThread(channelData.channelID, replyMsg);
+            LuThread::transferMsgToIOThread(channelData.channelID, replyMsg);
             
             delete strMessage;
 
