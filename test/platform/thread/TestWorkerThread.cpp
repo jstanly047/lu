@@ -112,7 +112,7 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
         [&]()
         {
             consumerIndx = LuThread::getThreadIndex(m_workerConsumer.getName());
-            m_workerProducer.transferMsg(consumerIndx, new int(++count));
+            m_workerProducer.thisTransferMsg(consumerIndx, new int(++count));
         }));
     EXPECT_CALL(m_mockProducerCallback,  onMsg(::testing::_)).WillRepeatedly(::testing::Invoke(
         [&](channel::ChannelData channelData)
@@ -130,7 +130,7 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
 
             stopCount++;
             EXPECT_EQ(producerExpectedValue, *data);
-            m_workerProducer.transferMsg(consumerIndx, new int(++count));
+            m_workerProducer.thisTransferMsg(consumerIndx, new int(++count));
             producerExpectedValue += 2;
             delete data;
         }));
@@ -149,7 +149,7 @@ TEST_F(TestWorkerThread, TestMessageTransferByTreadIndex)
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerExpectedValue, *data);
-            m_workerConsumer.transferMsg(producerIndx, new int(*data  * 2));
+            m_workerConsumer.thisTransferMsg(producerIndx, new int(*data  * 2));
             consumerExpectedValue++;
             delete data;
 
@@ -196,12 +196,12 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
                 if (count%2 == 0)
                 {
                     consumerSecondIndx = m_workerProducer.getThreadIndex(m_workerConsumerSecond.getName());
-                    m_workerProducer.transferMsg(consumerSecondIndx, new int(count));
+                    m_workerProducer.thisTransferMsg(consumerSecondIndx, new int(count));
                 }
                 else
                 {
                     consumerIndx = m_workerProducer.getThreadIndex(m_workerConsumer.getName());
-                    m_workerProducer.transferMsg(consumerIndx, new int(count));
+                    m_workerProducer.thisTransferMsg(consumerIndx, new int(count));
                 }
             }
 
@@ -246,7 +246,7 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerExpectedValue, *data);
-            m_workerConsumer.transferMsg(producerIndx, new int(*data  * 2));
+            m_workerConsumer.thisTransferMsg(producerIndx, new int(*data  * 2));
             consumerExpectedValue += 2;
             delete data;
 
@@ -270,7 +270,7 @@ TEST_F(TestWorkerThread, multipleProducerAndOneConsumer)
             auto data = reinterpret_cast<unsigned int*>(channelData.data);
             EXPECT_EQ(channelData.channelID, m_workerProducer.getChannelID());
             EXPECT_EQ(consumerSecondExpectedValue, *data);
-            m_workerConsumerSecond.transferMsg(producerSecondIndx, new int(*data  * 2));
+            m_workerConsumerSecond.thisTransferMsg(producerSecondIndx, new int(*data  * 2));
             consumerSecondExpectedValue += 2;
             delete data;
 

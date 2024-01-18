@@ -94,6 +94,35 @@ namespace lu::platform::thread
             this->m_connectionThreadCallback.onAppMsg(msg, channelID);
         }
 
+        void connect()
+        {
+            std::list<Service*> servicesConnected;
+            for (auto& service : m_services)
+            {
+                if (service.connection->getDataSocket() != nullptr)
+                {
+                    continue;
+                }
+
+                if (service.connection->connectToTCP(m_connectionThreadCallback))
+                {
+                    servicesConnected.push_back(&service);
+                }
+            }
+            
+            for (auto service : servicesConnected)
+            {
+                if (service->connection->getDataSocket() == nullptr)
+                {
+                    continue;
+                }
+
+                m_connectionThreadCallback.onConnection(*(service->connection->getDataSocket()));
+                this->addToEventLoop(std::move(service->connection->getDataSocket()));
+                assert(service->connection->getDataSocket() == nullptr);
+            }
+        }
+
     private:
         void run() override final
         {
@@ -111,23 +140,7 @@ namespace lu::platform::thread
                 this->addToEventLoop(m_eventChannelForConnectingThreads.back());
             }
             
-            for (Service& service : m_services)
-            {
-                service.connection->connectToTCP(m_connectionThreadCallback);
-            }
-            
-            for (Service& service : m_services)
-            {
-                if (service.connection->getDataSocket() == nullptr)
-                {
-                    continue;
-                }
-
-                m_connectionThreadCallback.onConnection(*(service.connection->getDataSocket()));
-                //service.connection->getDataSocket()->getBaseSocket().setNonBlocking();
-                this->addToEventLoop(std::move(service.connection->getDataSocket()));
-            }
-
+            connect();
             EventThread<ConnectionThreadCallback>::run();
         }
 
