@@ -55,7 +55,12 @@ void LuThread::join()
 
 void LuThread::connect(LuThread &readerThread)
 {
-    m_outputChannel.add(readerThread.getName(), readerThread.m_inputChannel.getTransferQueue());
+    if (readerThread.isIOThread() == false)
+    {
+        m_outputChannel.add(readerThread.getName(), readerThread.m_inputChannel.getTransferQueue());
+    }
+    
+    readerThread.addToThreadSendingMsg(*this);
 }
 
 void LuThread::connectTo(channel::ChannelID channelID, lu::platform::EventNotifier* eventNotifier)
@@ -91,4 +96,9 @@ void LuThread::transferMsgToIOThread(channel::ChannelID channelID, void *msg)
 unsigned int LuThread::getThreadIndex(const std::string& threadName) 
 {
     return m_sCurrentLuThread->m_outputChannel.getThreadIndx(threadName);
+}
+
+void LuThread::addToThreadSendingMsg(LuThread& sender)
+{
+    m_threadsSendingMsg.emplace_back(sender);
 }

@@ -95,7 +95,7 @@ public:
 protected:
     void SetUp() override 
     {
-        connectionThread.connectFrom(workerConsumer);
+        workerConsumer.connect(connectionThread);
         EXPECT_CALL(mockConsumerCallback,  onInit()).WillOnce(::testing::Return(true));
         workerConsumer.init();
     }

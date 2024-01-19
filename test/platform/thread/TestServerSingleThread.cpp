@@ -101,8 +101,8 @@ public:
 protected:
     void SetUp() override 
     {
-        serverThread.connectTo(workerConsumer);
-        serverThread.connectFrom(workerConsumer);
+        serverThread.connect(workerConsumer);
+        workerConsumer.connect(serverThread);
         serverThread.init();
         serverThread.start();
         serverSingleThreadCallback.setWorkerThread(workerConsumer);

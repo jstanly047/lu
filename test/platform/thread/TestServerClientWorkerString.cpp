@@ -210,8 +210,8 @@ protected:
     void SetUp() override 
     {
         EXPECT_EQ(serverThread.getName(),"TestServer");
-        serverThread.connectTo(workerConsumer);
-        serverThread.connectFrom(workerConsumer);
+        serverThread.connect(workerConsumer);
+        workerConsumer.connect(serverThread);
         
         for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {

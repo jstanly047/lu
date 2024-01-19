@@ -74,6 +74,11 @@ namespace lu::platform::thread
         {
             for (auto &serverClientThread : m_serverClientThreads)
             {
+                for (auto &threadSendingMessage : this->m_threadsSendingMsg)
+                {
+                    threadSendingMessage.get().connect(*serverClientThread);
+                }
+
                 serverClientThread->init();
             }
 
@@ -126,7 +131,7 @@ namespace lu::platform::thread
             EventThread<ServerThreadCallback>::stop();
         }
 
-        void connectTo(LuThread& luThread)
+        void connect(LuThread& luThread)
         {
             for (auto& serverClientThread : m_serverClientThreads)
             {
@@ -134,17 +139,11 @@ namespace lu::platform::thread
             }
         }
 
-        void connectFrom(LuThread& thread)
-        {
-            for (auto& clientThread : m_serverClientThreads)
-            {
-                clientThread->addConnectingThread(thread);
-            }
-        }
-
         std::vector<BaseClientThreadCallback*>& getClientThreadCallbacks() { return m_serverClientThreadsCallbacksPtr; }
 
     private:
+        bool isIOThread() override final { return true; }
+
         void run() override final
         {
             if (m_serverSocket.setUpTCP(m_serverConfig.NUMBER_OF_CONNECTION_IN_WAITING_QUEUE, m_serverConfig.IPV6) == false)

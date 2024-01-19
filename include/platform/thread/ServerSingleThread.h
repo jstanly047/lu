@@ -72,17 +72,6 @@ namespace lu::platform::thread
             EventThread<ServerThreadCallback>::stop();
         }
 
-        void connectTo(LuThread &luThread)
-        {
-
-            this->connect(luThread);
-        }
-
-        void connectFrom(LuThread& thread)
-        {
-            m_threadsConnecting.push_back(&thread);
-        }
-
         void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID channelID)
         {
             this->m_serverThreadCallback.onAppMsg(msg, channelID);
@@ -92,9 +81,11 @@ namespace lu::platform::thread
         ServerThreadCallback& getCallback() { return m_serverThreadCallback; }
 
     private:
+        bool isIOThread() override final { return true; }
+
         void run() override final
         {
-            for (auto thread : m_threadsConnecting)
+            for (auto& thread : this->m_threadsSendingMsg)
             {
                 this->m_eventChannelForConnectingThreads.emplace_back(*this, this->getName());
                 if (m_eventChannelForConnectingThreads.back().init() == false)
@@ -103,8 +94,8 @@ namespace lu::platform::thread
                     std::abort();
                 }
 
-                thread->connectTo(this->getChannelID(), m_eventChannelForConnectingThreads.back().getEventNotifier());
-                LOG(INFO) << "Connect thread " << thread->getName() << " to server thread " << this->getName(); 
+                thread.get().connectTo(this->getChannelID(), m_eventChannelForConnectingThreads.back().getEventNotifier());
+                LOG(INFO) << "Connect thread " << thread.get().getName() << " to server thread " << this->getName(); 
                 this->addToEventLoop(m_eventChannelForConnectingThreads.back());
             }
 
@@ -130,6 +121,5 @@ namespace lu::platform::thread
         lu::utils::WaitForCount m_syncStart;
         std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
         std::list<lu::platform::EventChannel<ServerSingleThread>> m_eventChannelForConnectingThreads;
-        std::vector<LuThread*> m_threadsConnecting;
     };
 }

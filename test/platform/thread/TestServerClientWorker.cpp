@@ -112,7 +112,7 @@ protected:
         EXPECT_CALL(mockServerThreadCallback,  onExit()).Times(1);
         EXPECT_CALL(mockServerThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
 
-        serverThread.connectTo(workerConsumer);
+        serverThread.connect(workerConsumer);
         
         for (auto& callbacks : serverThread.getClientThreadCallbacks())
         {

@@ -2,24 +2,13 @@
 
 #include <platform/thread/EventThread.h>
 #include <utils/WaitForCount.h>
-
 #include <list>
 
 namespace lu::platform::thread
 {
-    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct ServerDataSocketType, 
-            lu::common::NonPtrClassOrStruct ServerClientThreadCallback, 
-            lu::common::NonPtrClassOrStruct ServerBaseClientThreadCallback>
-    class ServerThread;
-
     template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
     class ClientThread : public EventThread<ClientThreadCallback>
     {
-        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct ServerDataSocketType, 
-            lu::common::NonPtrClassOrStruct ServerClientThreadCallback, 
-            lu::common::NonPtrClassOrStruct ServerBaseClientThreadCallback>
-        friend class ServerThread;
-
     public:
         ClientThread(const ClientThread&) = delete;
         ClientThread& operator=(const ClientThread&) = delete;
@@ -70,19 +59,22 @@ namespace lu::platform::thread
         ClientThreadCallback& getCallback() { return m_clientThreadCallback; }
 
     private:
+        bool isIOThread() override final { return true; }
+        
         void run() override final
         {
-            for (auto thread : m_threadsConnecting)
+            for (auto& thread : this->m_threadsSendingMsg)
             {
                 this->m_eventChannelForConnectingThreads.emplace_back(*this, this->getName());
+
                 if (m_eventChannelForConnectingThreads.back().init() == false)
                 {
                     LOG(ERROR) << "Failed to init event channel!";
                     std::abort();
                 }
 
-                thread->connectTo(this->getChannelID(), m_eventChannelForConnectingThreads.back().getEventNotifier());
-                LOG(INFO) << "Connect thread " << thread->getName() << " to server thread " << this->getName(); 
+                thread.get().connectTo(this->getChannelID(), m_eventChannelForConnectingThreads.back().getEventNotifier());
+                LOG(INFO) << "Connect thread " << thread.get().getName() << " to server thread " << this->getName(); 
                 this->addToEventLoop(m_eventChannelForConnectingThreads.back());
             }
 
@@ -91,16 +83,10 @@ namespace lu::platform::thread
             EventThread<ClientThreadCallback>::run();
         }
 
-        void addConnectingThread(LuThread& thread)
-        {
-            m_threadsConnecting.push_back(&thread);
-        }
-
         ClientThreadCallback& m_clientThreadCallback;
         lu::platform::EventChannel<ClientThread> m_eventChannel;
         lu::utils::WaitForCount& m_syncStart;
         std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
         std::list<lu::platform::EventChannel<ClientThread>> m_eventChannelForConnectingThreads;
-        std::vector<LuThread*> m_threadsConnecting;
     };
 }

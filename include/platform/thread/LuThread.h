@@ -63,15 +63,20 @@ namespace  lu::platform::thread
         std::string m_name;
         std::thread m_thread;
         channel::InputChannel m_inputChannel;
+        std::vector<std::reference_wrapper<LuThread>> m_threadsSendingMsg;
 
         void threadRun();
+        virtual bool isIOThread() { return false; }
        
     private:
         void connectTo(channel::ChannelID channelID, lu::platform::EventNotifier* eventNotifier);  
+        void addToThreadSendingMsg(LuThread& sender);
+       
 
         channel::OutputChannel m_outputChannel;
         channel::ChannelID m_channelID{};
         std::unordered_map<channel::ChannelID, std::unique_ptr<lu::platform::EventNotifier>> m_eventNotifiers;
+        
         //static thread_local std::string m_sThreadLocalName;
     };
 } 
