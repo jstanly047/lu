@@ -44,11 +44,6 @@ namespace lu::platform::thread
 
         bool init()
         {
-            for (Service& service : m_services)
-            {
-                service.connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>(service.host, service.service));
-            }
-
             return EventThread<ConnectionThreadCallback>::init();
         }
 
@@ -63,9 +58,21 @@ namespace lu::platform::thread
             lu::platform::thread::LuThread::start();
         }
 
-        void connectTo(const std::string& host, const std::string& service)
+        void connectTo(const std::string& host, const std::string& service, bool duplicateCheck = true)
         {
-            m_services.emplace_back(Service{host, service});
+            if (duplicateCheck)
+            {
+                auto itr = std::find_if(m_services.begin(), m_services.end(), [&](const Service &item)
+                                    { return item.host == host && item.service == service; });
+
+                if (itr != m_services.end())
+                {
+                    return;
+                }
+            }
+
+            m_services.push_back(Service{host, service});
+            m_services.back().connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>(host, service));
         }
 
         void onNewConnection([[maybe_unused]]lu::platform::socket::BaseSocket *baseSocket)
@@ -84,30 +91,24 @@ namespace lu::platform::thread
 
         void connect()
         {
-            std::list<Service*> servicesConnected;
-            for (auto& service : m_services)
+            for (auto serviceItr = m_services.begin() ; serviceItr != m_services.end(); )
             {
-                if (service.connection->getDataSocket() != nullptr)
+                if (serviceItr->connection->getDataSocket() != nullptr)
                 {
+                    serviceItr++;
                     continue;
                 }
 
-                if (service.connection->connectToTCP(m_connectionThreadCallback))
+                if (serviceItr->connection->connectToTCP(m_connectionThreadCallback))
                 {
-                    servicesConnected.push_back(&service);
-                }
-            }
-            
-            for (auto service : servicesConnected)
-            {
-                if (service->connection->getDataSocket() == nullptr)
-                {
+                    m_connectionThreadCallback.onConnection(*(serviceItr->connection->getDataSocket()));
+                    this->addToEventLoop(std::move(serviceItr->connection->getDataSocket()));
+                    assert(serviceItr->connection->getDataSocket() == nullptr);
+                    serviceItr = m_services.erase(serviceItr);
                     continue;
                 }
-
-                m_connectionThreadCallback.onConnection(*(service->connection->getDataSocket()));
-                this->addToEventLoop(std::move(service->connection->getDataSocket()));
-                assert(service->connection->getDataSocket() == nullptr);
+                
+                serviceItr++;
             }
         }
 

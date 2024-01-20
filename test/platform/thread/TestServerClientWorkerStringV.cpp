@@ -197,8 +197,8 @@ public:
                     connectionThread("Client",connectionThreadCallback, EventThreadConfig(getServerConfig())),
                     workerConsumer("TestConsumer", mockConsumerCallback)
     {
-        connectionThread.connectTo("localhost", "10000");
-        connectionThread.connectTo("localhost", "10000");
+        connectionThread.connectTo("localhost", "10000", false);
+        connectionThread.connectTo("localhost", "10000", false);
     }
 protected:
     void SetUp() override 

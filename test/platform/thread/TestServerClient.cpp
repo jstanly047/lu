@@ -40,9 +40,9 @@ public:
                     serverThread("TestServer", mockServerThreadCallback, "10000", getServerConfig()),
                     connectionThread("Client",mockConnectionThreadCallback, EventThreadConfig(getServerConfig()))
     {
-        connectionThread.connectTo("localhost", "10000");
-        connectionThread.connectTo("localhost", "10000");
-        connectionThread.connectTo("localhost", "10000");
+        connectionThread.connectTo("localhost", "10000", false);
+        connectionThread.connectTo("localhost", "10000", false);
+        connectionThread.connectTo("localhost", "10000", false);
     }
 protected:
     void SetUp() override 
