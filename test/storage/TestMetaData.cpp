@@ -32,6 +32,14 @@ namespace
             description TEXT
         )
     )";
+
+    const std::string create_CompositionTest = R"(
+        CREATE TABLE CompositionTest  (
+            "myClass.name" TEXT,
+            "myClass.age" INTEGER,
+            count INTEGER
+        )
+    )";
 }
 
 class TestMetaData : public ::testing::Test
@@ -72,6 +80,19 @@ TEST_F(TestMetaData, checkReflectionDB)
     auto rows = m_dbManger.load<MyClass>();
     ASSERT_EQ(rows.begin()->name, obj.name);
     //m_dbManger.truncate<MyClass>();
+}
+
+
+TEST_F(TestMetaData, checkCompositionTest)
+{
+    m_dbManger.execute(create_CompositionTest);
+    CompositionTest obj = {"test2", 25, 10};
+    m_dbManger.store(obj);
+    auto rows = m_dbManger.load<CompositionTest>();
+    auto temp = rows.begin();
+    ASSERT_EQ(temp->myClass.name, obj.myClass.name);
+    ASSERT_EQ(temp->myClass.age, obj.myClass.age);
+    ASSERT_EQ(temp->count, obj.count);
 }
 
 TEST_F(TestMetaData, DBReaderAndWriter)

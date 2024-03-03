@@ -4,7 +4,7 @@
 
 namespace lu::platform::thread
 {
-    struct SeverConfig
+    struct ServerConfig
     {
         bool CREATE_NEW_THREAD = false;
         //bool ACT_AS_CLIENT_HANDLER = false;
@@ -20,7 +20,7 @@ namespace lu::platform::thread
 
     struct EventThreadConfig
     {
-        EventThreadConfig(const SeverConfig& serverConfig):
+        EventThreadConfig(const ServerConfig& serverConfig):
             NUMBER_OF_EVENTS_PER_HANDLE(serverConfig.CLIENT_HANDLER_NUMBER_OF_EVENTS_PER_HANDLE),
             TIMER_IN_MSEC(serverConfig.TIMER_IN_MSEC),
             TIMER_NAME(serverConfig.TIMER_NAME),

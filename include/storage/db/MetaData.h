@@ -50,6 +50,16 @@ namespace soci
             return std::forward<T>(ts);
         }
     }
+}
+
+template<size_t N>
+constexpr std::string replaceDotByDash(const char (&str)[N]) {
+    std::string modified(str); // Initialize with original string
+    for (size_t i = 0; i < N; ++i) {
+        if (modified[i] == '.')
+            modified[i] = '_';
+    }
+    return modified;
 }*/
 
 #define MAKE_NAMES(...) #__VA_ARGS__,
@@ -83,8 +93,12 @@ namespace soci
 #define POPULATE_SOCI_TO_BASE(values, obj, ...)                                      \
     __VA_OPT__(EXPAND(POPULATE_SOCI_TO_BASE_HELPER(values, obj, __VA_ARGS__)))
 
-
-
+#define CREAT_BIND_LIST_HELPER(counter, str, ...) \
+    ":"#counter \
+    __VA_OPT__("," CREAT_BIND_LIST_AGAIN PARENS (MACRO_CONCAT(counter, X), __VA_ARGS__))
+#define CREAT_BIND_LIST_AGAIN() CREAT_BIND_LIST_HELPER
+#define CREAT_BIND_LIST(...) \
+    __VA_OPT__(EXPAND(CREAT_BIND_LIST_HELPER(X, __VA_ARGS__)))
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #define MAKE_META_DB_DATA_IMPL(STRUCT_NAME, TABLE_NAME, N,...)                          \
@@ -115,8 +129,8 @@ namespace lu::storage::db                                                       
         constexpr const char* getInsertSQL()                                            \
         {                                                                               \
             return CONCAT_REC("INSERT INTO " , CONV_TO_STRING(TABLE_NAME) ,             \
-                "(" , CREAT_STRING_LIST(",", "", "", __VA_ARGS__ ) ,                    \
-                ") VALUES (" , CREAT_STRING_LIST(",",":","", __VA_ARGS__)  , ")");      \
+            "(" , CREAT_STRING_LIST(",", "\"", "\"", __VA_ARGS__ ) ,                    \
+            ") VALUES (" , CREAT_BIND_LIST(__VA_ARGS__)  , ")");      \
         }                                                                               \
                                                                                         \
         void writeToDB(soci::session& session, const STRUCT_NAME & obj)                 \

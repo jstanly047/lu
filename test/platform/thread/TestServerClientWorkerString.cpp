@@ -22,9 +22,9 @@ namespace
 {
     constexpr unsigned int NUM_MSG_SEND = 1000u;
 
-    SeverConfig getServerConfig()
+    ServerConfig getServerConfig()
     {
-        SeverConfig serverConfig{};
+        ServerConfig serverConfig{};
         serverConfig.TIMER_IN_MSEC = 100u;
         serverConfig.CREATE_NEW_THREAD = true;
         serverConfig.NUMBER_OF_CLIENT_HANDLE_THREADS = 1u;

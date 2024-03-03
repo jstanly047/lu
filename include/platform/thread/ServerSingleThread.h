@@ -17,7 +17,7 @@ namespace lu::platform::thread
         ServerSingleThread& operator=(const ServerSingleThread&) = delete;
 
         ServerSingleThread(const std::string& name, ServerThreadCallback& serverThreadCallback, const std::string& service, 
-                    SeverConfig serverConfig = SeverConfig{}, bool reuseAddAndPort = true)
+                    ServerConfig serverConfig = ServerConfig{}, bool reuseAddAndPort = true)
                     :
                     EventThread<ServerThreadCallback>(serverThreadCallback, name, EventThreadConfig(serverConfig)),
                     m_serverThreadCallback(serverThreadCallback),
@@ -117,7 +117,7 @@ namespace lu::platform::thread
 
         ServerThreadCallback& m_serverThreadCallback;
         lu::platform::socket::ServerSocket<ServerSingleThread> m_serverSocket;
-        SeverConfig m_serverConfig;
+        ServerConfig m_serverConfig;
         lu::utils::WaitForCount m_syncStart;
         std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
         std::list<lu::platform::EventChannel<ServerSingleThread>> m_eventChannelForConnectingThreads;

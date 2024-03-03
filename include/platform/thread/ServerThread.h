@@ -29,7 +29,7 @@ namespace lu::platform::thread
         ServerThread& operator=(const ServerThread&) = delete;
 
         ServerThread(const std::string& name, ServerThreadCallback& serverThreadCallback, const std::string& service, 
-                    SeverConfig serverConfig = SeverConfig{}, bool reuseAddAndPort = true)
+                    ServerConfig serverConfig = ServerConfig{}, bool reuseAddAndPort = true)
                     :
                     EventThread<ServerThreadCallback>(serverThreadCallback, name, EventThreadConfig(serverConfig)),
                     m_serverThreadCallback(serverThreadCallback),
@@ -172,7 +172,7 @@ namespace lu::platform::thread
         std::vector<ClientThreadCallback> m_serverClientThreadsCallbacks;
         std::vector<BaseClientThreadCallback*> m_serverClientThreadsCallbacksPtr;
         std::vector<std::unique_ptr<ClientThread<BaseClientThreadCallback, DataSocketType>>> m_serverClientThreads;
-        SeverConfig m_serverConfig;
+        ServerConfig m_serverConfig;
         lu::utils::WaitForCount m_syncStart;
     };
 }

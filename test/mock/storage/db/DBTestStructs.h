@@ -27,8 +27,15 @@ namespace lu::storage::db
         lu::common::FixedString<31> description;
     };
 
+    struct CompositionTest
+    {
+        MyClass myClass;
+        int count;
+    };
+
 }
 
 DB_REFLECTION_ALIAS(lu::storage::db::GTestClass, gtest_class, name, age, salary);
 DB_REFLECTION_ALIAS(lu::storage::db::MyClass, MyClass, name, age);
 DB_REFLECTION_ALIAS(lu::storage::db::FixedStr, FixedStr, name, age, description);
+DB_REFLECTION_ALIAS(lu::storage::db::CompositionTest, CompositionTest, myClass.name, myClass.age, count);

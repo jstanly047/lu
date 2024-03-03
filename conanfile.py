@@ -42,12 +42,17 @@ class snapafwRecipe(ConanFile):
     def requirements(self):
         if self.options.UNIT_TEST:
             self.test_requires("gtest/1.14.0")
+        
         self.requires("glog/0.6.0")
+        self.requires("libunwind/1.6.2", override=True)
+        self.requires("lz4/1.9.4", override=True)
+        self.requires("xz_utils/5.4.4", override=True)
+        self.requires("zstd/1.5.5", override=True)
+        # there is version conflict for this library so it override the requirement#
+        self.requires("zlib/1.2.13", override=True)
         self.requires("soci/4.0.3")
         self.requires("libmysqlclient/8.1.0")
         self.requires("sqlite3/3.44.2")
-        # there is version conflict for this library so it override the requirement#
-        self.requires("zlib/1.2.13", override=True)
         self.requires("openssl/3.1.0")
         
 
