@@ -80,7 +80,14 @@ constexpr std::string replaceDotByDash(const char (&str)[N]) {
     __VA_OPT__(EXPAND(POPULATE_SOCI_USE_HELPER(obj, __VA_ARGS__)))
 
 #define POPULATE_SOCI_FROM_BASE_HELPER(values, obj, member, ...)                     \
-        obj.member =  values.get<decltype(obj.member)>(#member);                     \
+        if constexpr (std::is_same_v<decltype(obj.member), char>)                    \
+            obj.member = static_cast<char>(values.get<int>(#member));                \
+        else if constexpr (std::is_same_v<decltype(obj.member), short>)              \
+            obj.member = static_cast<short>(values.get<int>(#member));               \
+        else if constexpr (std::is_same_v<decltype(obj.member), long>)               \
+            obj.member = values.get<long long>(#member);                             \
+        else                                                                         \
+            obj.member = values.get<decltype(obj.member)>(#member);                  \
         __VA_OPT__(POPULATE_SOCI_FROM_BASE_AGAIN PARENS (values, obj, __VA_ARGS__))
 #define POPULATE_SOCI_FROM_BASE_AGAIN() POPULATE_SOCI_FROM_BASE_HELPER
 #define POPULATE_SOCI_FROM_BASE(values, obj, ...)                                    \

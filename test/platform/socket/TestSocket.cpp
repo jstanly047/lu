@@ -138,8 +138,8 @@ TEST_F(TestSocket, setTCPNoDelay)
 TEST_F(TestSocket, setRxBufferSize)
 {
     auto& socketObject = *connectSocket.getBaseSocket();
-    socketObject.setRxBufferSize(512);
-    ASSERT_EQ(socketObject.getRxBufferSize(), 2304);
+    socketObject.setRxBufferSize(212992);
+    ASSERT_EQ(socketObject.getRxBufferSize(), 212992 * 2);
 }
 
 TEST_F(TestSocket, setTxBufferSize)
