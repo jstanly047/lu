@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <cstring>
+#include <common/FixedString.h>
 
 using namespace lu::crypto;
 

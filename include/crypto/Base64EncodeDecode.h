@@ -2,7 +2,6 @@
 #include <crypto/DataWrap.h>
 #include <openssl/types.h>
 #include <string>
-#include <common/FixedString.h>
 #include <openssl/pem.h>
 
 namespace lu::crypto

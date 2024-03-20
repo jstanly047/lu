@@ -1,4 +1,5 @@
 #include <crypto/Base64EncodeDecode.h>
+#include <cstring>
 
 using namespace lu::crypto;
 
