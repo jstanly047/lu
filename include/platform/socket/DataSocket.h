@@ -195,6 +195,12 @@ namespace lu::platform::socket
                     // TODO the reader function must handle the alignment and endianess
                     expectedMsgSize = m_dataHandler.readHeader(m_readOffset);
                     // updateForDataRead(m_headerSize);
+
+                    if (expectedMsgSize == 0U)
+                    {
+                        LOG(ERROR) << "Invalid message size 0 in [" <<  m_baseSocket.getIP() << "]";
+                        this->stop(ShutdownReadWrite);
+                    }
                 }
                 else
                 {
