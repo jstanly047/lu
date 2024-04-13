@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdlib>
-
+#include <cstdint>
 
 namespace lu::common
 {
@@ -74,5 +74,18 @@ namespace lu::common
         static_assert(std::atomic<T>::is_always_lock_free, "Element type T is not atomic.");
     #endif
         return {};
+    }
+
+    constexpr bool isLittleEndian()
+    {
+        // Use a union to interpret the bytes of an integer
+        union
+        {
+            uint32_t i;
+            char c[4];
+        } endianCheck = {0x01020304};
+
+        // If the first byte is 1, it's little-endian
+        return (endianCheck.c[0] == 1);
     }
 }

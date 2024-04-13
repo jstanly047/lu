@@ -25,6 +25,11 @@ void DBManager::commit()
     m_sociSession.commit();
 }
 
+void DBManager::begin()
+{
+    m_sociSession.begin();
+}
+
 void DBManager::execute(const std::string& sql)
 {
     m_sociSession << sql;

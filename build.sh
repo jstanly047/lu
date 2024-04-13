@@ -69,8 +69,8 @@ else
     EXPORT_CMD="$EXPORT_CMD -s build_type=Release"
 fi
 
-EXPORT_CMD="$EXPORT_CMD  -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True"
-BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True --build=missing"
+EXPORT_CMD="$EXPORT_CMD  -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True -s xz_utils/*:build_type=Release"
+BUILD_CMD="$BUILD_CMD -o soci/4.0.3:with_mysql=True -o soci/4.0.3:with_sqlite3=True --build=missing -s xz_utils/*:build_type=Release"
 
 RED='\033[0;31m'
 PURPLE='\033[0;35m'

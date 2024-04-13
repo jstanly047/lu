@@ -37,8 +37,12 @@ namespace lu::storage::db
         }
 
         void commit();
+        
+        void begin();
 
         void execute(const std::string& sql);
+
+        
 
     private:
         soci::session m_sociSession;

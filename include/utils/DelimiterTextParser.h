@@ -11,6 +11,7 @@ namespace lu::utils
     {
     public:
         DelimiterTextParser(const std::string& line, const DelimeterType&  delimeter, int startLine=1);
+        DelimiterTextParser(std::string_view& line, const DelimeterType&  delimeter, int startLine=1);
         void nextLine(const std::string& line);
         std::string_view next() const;
         char nextChar() const;

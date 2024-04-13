@@ -16,6 +16,15 @@ DelimiterTextParser<DelimeterType>::DelimiterTextParser(const std::string& line,
 }
 
 template <typename DelimeterType>
+DelimiterTextParser<DelimeterType>::DelimiterTextParser(std::string_view& line, const DelimeterType&  delimeter, int startLine):
+    m_delimeter(delimeter),
+    m_line(line),
+    m_delimeterLen(getDelimiterSize(delimeter)),
+    m_lineNumber(startLine)
+{
+}
+
+template <typename DelimeterType>
 void DelimiterTextParser<DelimeterType>::nextLine(const std::string& line)
 {
     m_line = std::string_view(line.data());
