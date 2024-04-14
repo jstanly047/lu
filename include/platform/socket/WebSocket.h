@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseSocket.h"
+#include <platform/socket/BaseSocket.h>
 #include <platform/socket/websocket/HandshakeRequest.h>
 #include <platform/socket/websocket/HandshakeResponse.h>
 #include <platform/socket/websocket/Frame.h>
@@ -312,14 +312,12 @@ namespace lu::platform::socket
                             if (m_isFragmented)
                             {
                                 std::span payload(m_message.data(), m_message.size());
-                                //TODO Callback use m_message
                                 m_dataSocketCallback.onData(*this, payload);
                                 m_message.clear();
                             }
                             else
                             {
                                 std::span payload(socketData.data + socketData.readOffset, m_frame.getPayloadLength());
-                                //TODO callback use m_buffer
                                 m_dataSocketCallback.onData(*this, payload);
                             }
                         }
@@ -349,13 +347,11 @@ namespace lu::platform::socket
             case websocket::Frame::Ping:
             {
                 m_dataSocketCallback.onPing(*this);
-                // TODO Callback ping
                 break;
             }
             case websocket::Frame::Pong:
             {
                 m_dataSocketCallback.onPong(*this);
-                // TODO callback pong
                 break;
             }
             case websocket::Frame::Close:
@@ -395,7 +391,6 @@ namespace lu::platform::socket
                     }
                 }
 
-                // TODO close callback
                 m_dataSocketCallback.onClose(*this, closeCode);
                 break;
             }
