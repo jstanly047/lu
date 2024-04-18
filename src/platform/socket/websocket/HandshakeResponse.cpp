@@ -6,15 +6,6 @@ using namespace lu::platform::socket::websocket;
 
 namespace
 {
-    std::string getAcceptKey(const std::string& key)
-    {
-        const std::string tempKey = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-        // TODO: thread local hash instance
-        lu::crypto::Hash<lu::crypto::HashAlgo::SHA> hash;
-        hash.init();
-        return hash.getBase64Hash(tempKey);
-    }
-
     std::vector<int> listIntersection(std::vector<int> list1, std::vector<int> list2)
     {
         std::vector<int> result;
@@ -52,4 +43,13 @@ HandshakeResponse::HandshakeResponse(const HandshakeRequest &handshakeRequest, c
     m_response += "\r\n";
     m_response += "Sec-WebSocket-Protocol: " + supportedProtocol;
     m_response += "\r\n\r\n";
+}
+
+std::string HandshakeResponse::getAcceptKey(const std::string &key)
+{
+    const std::string tempKey = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    // TODO: thread local hash instance
+    lu::crypto::Hash<lu::crypto::HashAlgo::SHA> hash;
+    hash.init();
+    return hash.getBase64Hash(tempKey);
 }

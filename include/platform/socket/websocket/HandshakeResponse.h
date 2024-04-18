@@ -3,7 +3,6 @@
 #include <platform/socket/BaseSocket.h>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace lu::platform::socket::websocket
 {
@@ -19,6 +18,7 @@ namespace lu::platform::socket::websocket
 
         HandshakeResponse(const HandshakeRequest &handshakeRequest, const std::vector<int>& supportedVersions, const std::string& supportedProtocol);
         auto& getResponse() const { return m_response; }
+        static std::string getAcceptKey(const std::string& key);
 
     private:
         std::string m_response;

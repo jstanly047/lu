@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cwctype>
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -95,4 +96,14 @@ bool Utils::readDataFile(int socketId, uint8_t *buf, size_t size, ssize_t &readC
     }
 
     return readCount != 0;
+}
+
+std::string &Utils::toLower(std::string &str)
+{
+    for (auto &c : str)
+    {
+        c = std::towlower(c);
+    }
+
+    return str;
 }

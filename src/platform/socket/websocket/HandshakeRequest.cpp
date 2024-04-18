@@ -1,27 +1,21 @@
 #include <platform/socket/websocket/HandshakeRequest.h>
 #include <utils/DelimiterTextParser.h>
+#include <crypto/Base64EncodeDecode.h>
+#include <utils/Utils.h>
 #include <string_view>
+#include <sstream>
+#include <random>
 
 #include <glog/logging.h>
 
 using namespace lu::platform::socket::websocket;
-
-std::string& toLower(std::string &str) 
-{
-    for (auto& c: str)
-    {
-        c = std::towlower(c);
-    }
-
-    return str;
-}
 
 HandshakeRequest::HandshakeRequest(const lu::platform::socket::BaseSocket& baseSocket):
     m_baseSocket(baseSocket)
 {
 }
 
-bool HandshakeRequest::readRequest(const char *request, unsigned int length, const char* expectedResource)
+bool HandshakeRequest::readServerRequest(const char *request, unsigned int length, const char* expectedResource)
 {
     unsigned int readHeader = 0U;
     std::string_view dataStringView(request, length);
@@ -41,26 +35,33 @@ bool HandshakeRequest::readRequest(const char *request, unsigned int length, con
 
         if (m_keyValue.empty())
         {
-            static char requestDelimiter = ' ';
-            lu::utils::DelimiterTextParser requestParser(line, requestDelimiter);
-            const std::string verb(requestParser.next());
-            const std::string resource(requestParser.next());
-            const std::string httpProtocol(requestParser.next());
-
-            static char httpVersionDelimiter = '/';
-            lu::utils::DelimiterTextParser httpProtocolParser(httpProtocol, httpVersionDelimiter);
-            const std::string protocol(httpProtocolParser.next());
-            const float httpVersion = httpProtocolParser.nextFloat();
-            m_keyValue.emplace("request-method", line);
-
-            if (verb != "GET" || resource != std::string(expectedResource) || httpVersion < 1.1F)
+            try
             {
-                LOG(ERROR) << "Invalid request [" << line << "] from [" << m_baseSocket.getIP() << "]";
+                static char requestDelimiter = ' ';
+                lu::utils::DelimiterTextParser requestParser(line, requestDelimiter);
+                const std::string verb(requestParser.next());
+                const std::string resource(requestParser.next());
+                const std::string httpProtocol(requestParser.next());
+
+                static char httpVersionDelimiter = '/';
+                lu::utils::DelimiterTextParser httpProtocolParser(httpProtocol, httpVersionDelimiter);
+                const std::string protocol(httpProtocolParser.next());
+                const float httpVersion = httpProtocolParser.nextFloat();
+                m_keyValue.emplace("request-method", line);
+
+                if (verb != "GET" || resource != std::string(expectedResource) || httpVersion < 1.1F)
+                {
+                    LOG(ERROR) << "Invalid request [" << line << "] from [" << m_baseSocket.getIP() << "]";
+                    return false;
+                }
+
+                readHeader = location + 2u;
+                continue;
+            }
+            catch (const std::exception &e)
+            {
                 return false;
             }
-
-            readHeader = location + 2u;
-            continue;
         }
 
         auto delimiterPos = line.find(":");
@@ -72,12 +73,32 @@ bool HandshakeRequest::readRequest(const char *request, unsigned int length, con
         }
 
         std::string key(line.substr(0, delimiterPos));
-        toLower(key);
+        lu::utils::Utils::toLower(key);
         m_keyValue.emplace(key, line.substr(delimiterPos + 2));
         readHeader = location + 2u;   
     }
 
-    auto itr = m_keyValue.find("sec-websocket-key");
+    auto itr = m_keyValue.find("upgrade");
+
+    if (itr == m_keyValue.end())
+    {
+        LOG(ERROR) << "Incorrect 'Upgrade'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
+        return false;
+    }
+
+    // This not websocket 
+    if (itr->second == "tcp")
+    {
+        return true;
+    }
+
+    if (itr->second != "websocket")
+    {
+        LOG(ERROR) << "Incorrect 'Upgrade'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
+        return false;
+    }
+
+    itr = m_keyValue.find("sec-websocket-key");
 
     if (itr == m_keyValue.end())
     {
@@ -87,17 +108,10 @@ bool HandshakeRequest::readRequest(const char *request, unsigned int length, con
 
     m_key = itr->second;
 
-    itr = m_keyValue.find("upgrade");
-
-    if (itr == m_keyValue.end() || itr->second != "websocket")
-    {
-        LOG(ERROR) << "Incorrect 'Upgrade'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
-    }
-
+    
     itr = m_keyValue.find("connection");
 
-    if (itr == m_keyValue.end() || toLower(itr->second) != "upgrade")
+    if (itr == m_keyValue.end() || lu::utils::Utils::toLower(itr->second) != "upgrade")
     {
         LOG(ERROR) << "Incorrect 'Connection'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
         return false;
@@ -105,7 +119,7 @@ bool HandshakeRequest::readRequest(const char *request, unsigned int length, con
 
     itr = m_keyValue.find("sec-websocket-protocol");
 
-    if (itr == m_keyValue.end())
+    if (itr == m_keyValue.end() || itr->second.empty())
     {
         LOG(ERROR) << "Sec-Websocket-Protocol missing!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
         return false;
@@ -154,7 +168,7 @@ bool HandshakeRequest::readRequest(const char *request, unsigned int length, con
     
     if (m_protocols.empty())
     {
-        LOG(ERROR) << "Incorrect 'sec-websocket-protocol'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
+        LOG(ERROR) << "Incorrect 'Sec-Websocket-Protocol'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
         return false;
     }
 
@@ -167,4 +181,65 @@ bool HandshakeRequest::readRequest(const char *request, unsigned int length, con
     }*/
 
     return true;
+}
+
+std::string HandshakeRequest::createHandShakeRequest(const InitialRequestInfo& handshakeInfo, const std::string& key)
+{
+    std::stringstream handshakeRequest;
+    handshakeRequest << "GET " << handshakeInfo.resourceName << " HTTP/1.1\r\n" <<
+                        "Host: " <<  handshakeInfo.host << "\r\n"
+                        "Upgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: " << key << "\r\n";
+    
+    if (!handshakeInfo.origin.empty())
+    {
+        handshakeRequest << "Origin: " << handshakeInfo.origin << "\r\n";
+    }
+
+    handshakeRequest << "Sec-WebSocket-Version: " << handshakeInfo.wsVersion << "\r\n";
+
+    if (handshakeInfo.extensions.empty() == false)
+    {
+        handshakeRequest << "Sec-WebSocket-Extensions: " << handshakeInfo.extensions << "\r\n";
+    }
+
+    if (handshakeInfo.protocols.empty() == false) 
+    {
+        handshakeRequest << "Sec-WebSocket-Protocol: " << handshakeInfo.protocols[0];
+
+        for (unsigned int i = 1; i < handshakeInfo.protocols.size(); i++)
+        {
+            handshakeRequest << ", " << handshakeInfo.protocols[i];
+        }
+
+        handshakeRequest << "\r\n";
+    }
+
+    for (const auto &header : handshakeInfo.headers)
+    {
+        handshakeRequest << header.first << ": " << header.second << "\r\n";
+    }
+
+    handshakeRequest << "\r\n";
+
+    return handshakeRequest.str();
+}
+
+std::string HandshakeRequest::generateKey()
+{
+    thread_local std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis;
+    dis(gen);
+
+    lu::crypto::DataWrap dataWrap(4 * sizeof(uint32_t));
+
+    for (int i = 0; i < 4; ++i) 
+    {
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<uint32_t> dis;
+        uint32_t value = dis(gen);
+        dataWrap.append(static_cast<const char *>(static_cast<const void *>(&value)), sizeof(uint32_t));
+    }
+
+    return lu::crypto::Base64EncodeDecode::encode(dataWrap);
 }

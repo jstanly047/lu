@@ -41,7 +41,7 @@ namespace lu::platform::socket
         }
 
         virtual ~DataSocket() {}
-
+       
         bool Receive()
         {
             for(;;)

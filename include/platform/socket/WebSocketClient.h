@@ -2,7 +2,7 @@
 
 #include <platform/socket/BaseSocket.h>
 #include <platform/socket/websocket/HandshakeRequest.h>
-#include <platform/socket/websocket/HandshakeResponse.h>
+#include <platform/socket/websocket/HandshakeSeverResponse.h>
 #include <platform/socket/websocket/Frame.h>
 #include <common/TemplateConstraints.h>
 #include <common/Defs.h>
@@ -34,8 +34,6 @@ namespace lu::platform::socket
         {
             Connecting,
             Connected,
-            ConnectedAsWebSocket,
-            ConnectedAsTCP,
             Closing
         };
 
@@ -67,6 +65,13 @@ namespace lu::platform::socket
         }
 
         virtual ~WebSocket() {}
+
+        void startHandshake(const websocket::InitialRequestInfo& initialRequestInfo)
+        {
+            m_key = websocket::HandshakeRequest::generateKey();
+            auto request = websocket::HandshakeRequest::createHandShakeRequest(initialRequestInfo, m_key);
+            send(request.data(), request.size());
+        }
 
         bool Receive()
         {
@@ -189,7 +194,7 @@ namespace lu::platform::socket
         {
             if (m_socketStatus == SocketStatus::Connecting)
             {
-                processHandshake();
+                processServerReply();
 
                 if (m_socketStatus == SocketStatus::Connecting)
                 {
@@ -200,7 +205,7 @@ namespace lu::platform::socket
             updateForDataRead(processMessage());
         }
 
-        inline void processHandshake()
+        inline void processServerReply()
         {
             std::string_view dataStringView(reinterpret_cast<const char*>(m_buffer.data()) + m_readWebsocketHeaderOffset, m_numberOfBytesLeftToRead - m_readWebsocketHeaderOffset);
 
@@ -216,9 +221,9 @@ namespace lu::platform::socket
                 if (location == m_readWebsocketHeaderOffset) // End of header
                 {
                     m_readWebsocketHeaderOffset += 2U;
-                    websocket::HandshakeRequest handshakeRequest(m_baseSocket);
+                    websocket::HandshakeSeverResponse handshakeSeverResponse(m_baseSocket);
 
-                    if (handshakeRequest.readServerRequest(reinterpret_cast<const char*>(m_buffer.data()), m_readWebsocketHeaderOffset, RESOURCE) == false)
+                    if (handshakeSeverResponse.readServerResponse(reinterpret_cast<const char*>(m_buffer.data()), m_readWebsocketHeaderOffset, m_key) == false)
                     {
                         this->stop(ShutdownReadWrite);
                         return;
@@ -226,18 +231,8 @@ namespace lu::platform::socket
 
                     updateForDataRead(m_readWebsocketHeaderOffset);
                     m_readWebsocketHeaderOffset = 0U;
-                    static std::vector<int> supportedVersion = {13};
-                    websocket::HandshakeResponse response(handshakeRequest, supportedVersion, "LuBinary");
-
-                    if (response.getResponse().empty())
-                    {
-                        LOG(ERROR) << "Invalid version or protocol [" << m_baseSocket.getIP() << "]"; 
-                        this->stop(ShutdownReadWrite);
-                        return;
-                    }
-
-                    this->send(response.getResponse().data(), response.getResponse().size());
                     m_socketStatus = SocketStatus::Connected;
+                    m_dataSocketCallback.onOpen((this));
                     return;
                 }
 
@@ -528,6 +523,7 @@ namespace lu::platform::socket
         bool m_isFragmented = false;
         websocket::Frame::OpCode m_opCode = websocket::Frame::OpCode::Close;
         bool m_isControlFrame = false;
-        bool m_mustMask = false;
+        bool m_mustMask = true;
+        std::string m_key;
     };
 }

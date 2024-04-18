@@ -81,5 +81,6 @@ namespace lu::utils
         static bool readDataFile(int socketId, uint8_t *buf, size_t size, ssize_t &readCount);
 
         static bool readDataSocket(int socketId,struct iovec* dataBufferVec, int numOfVBuffers, ssize_t &readCount);
+        static std::string &toLower(std::string &str);
     };
 }

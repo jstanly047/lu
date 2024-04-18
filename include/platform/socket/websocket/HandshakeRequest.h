@@ -6,6 +6,18 @@
 
 namespace lu::platform::socket::websocket
 {
+    struct InitialRequestInfo
+    {
+        std::string resourceName;
+        std::string host;
+        std::string port;
+        std::string origin;
+        std::string wsVersion;
+        std::string extensions;
+        std::vector<std::string> protocols;
+        std::vector<std::pair<std::string, std::string>> headers;
+    };
+    
     class HandshakeRequest
     {
     public:
@@ -15,11 +27,14 @@ namespace lu::platform::socket::websocket
         HandshakeRequest& operator=(HandshakeRequest&& other)   = delete;
         
         HandshakeRequest(const lu::platform::socket::BaseSocket& baseSocket);
-        bool readRequest(const char* request, unsigned int length, const char* expectedResource);
+        bool readServerRequest(const char* request, unsigned int length, const char* expectedResource);
+        static std::string createHandShakeRequest(const InitialRequestInfo& handshakeInfo, const std::string& key);
+        static std::string generateKey();
+
         auto& getKey() const { return m_key; }
 
         auto& getProtocols() const { return m_protocols; }
-        auto&getWebsocketVersions() const { return m_websocketVersions; }
+        auto& getWebsocketVersions() const { return m_websocketVersions; }
         
 
     private:

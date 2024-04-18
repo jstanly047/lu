@@ -2,28 +2,42 @@
 #include <platform/thread/EventThread.h>
 #include <platform/socket/ConnectSocket.h>
 #include <platform/thread/ServerThread.h>
+#include <platform/socket/websocket/HandshakeRequest.h>
 
 #include <memory>
 #include <list>
 
 namespace lu::platform::thread
 {
+    template <typename T, typename = void>
+    struct HasStartHandshake : std::false_type
+    {
+    };
+
+    template <typename T>
+    struct HasStartHandshake<T, std::void_t<decltype(std::declval<T>().startHandshake(std::declval<const  lu::platform::socket::websocket::InitialRequestInfo& >()))>> : std::true_type
+    {
+    };
+
     template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
     class ConnectionThread : public EventThread<ConnectionThreadCallback>
     {
         struct Service
         {
-            Service(const std::string& h, const std::string& s)
+            Service(const std::string& h, const std::string& s, bool isWebSocketPara = false)
                 :
                 host(h),
                 service(s),
+                isWebSocket(isWebSocketPara),
                 connection()
             {
             }
 
             std::string host;
             std::string service;
+            bool isWebSocket;
             std::unique_ptr<lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>> connection;
+            
         };
 
     public:
@@ -75,6 +89,23 @@ namespace lu::platform::thread
             m_services.back().connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>(host, service));
         }
 
+        void connectTo(lu::platform::socket::websocket::InitialRequestInfo initialRequestInfo, bool duplicateCheck = true)
+        {
+            if (duplicateCheck)
+            {
+                auto itr = std::find_if(m_websocketServices.begin(), m_websocketServices.end(), [&](auto &item)
+                                    { return item.host == initialRequestInfo.host && item.port == initialRequestInfo.port; });
+
+                if (itr != m_websocketServices.end())
+                {
+                    return;
+                }
+            }
+
+            m_services.push_back(Service{initialRequestInfo.host, initialRequestInfo.port, true});
+            m_services.back().connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>(initialRequestInfo.host, initialRequestInfo.port));
+        }
+
         void onNewConnection([[maybe_unused]]lu::platform::socket::BaseSocket *baseSocket)
         {
         }
@@ -102,6 +133,21 @@ namespace lu::platform::thread
                 if (serviceItr->connection->connectToTCP(m_connectionThreadCallback))
                 {
                     m_connectionThreadCallback.onConnection(*(serviceItr->connection->getDataSocket()));
+
+                    if constexpr (HasStartHandshake<DataSocketType>::value)
+                    {
+                        if (serviceItr->isWebSocket)
+                        {
+                            auto itr = std::find_if(m_websocketServices.begin(), m_websocketServices.end(), [&](auto &item)
+                                                    { return item.host == serviceItr->host && item.port == serviceItr->port; });
+
+                            if (itr != m_websocketServices.end())
+                            {
+                                serviceItr->connection->startHandshake(*itr);
+                            }
+                        }
+                    }
+
                     this->addToEventLoop(std::move(serviceItr->connection->getDataSocket()));
                     assert(serviceItr->connection->getDataSocket() == nullptr);
                     serviceItr = m_services.erase(serviceItr);
@@ -137,6 +183,7 @@ namespace lu::platform::thread
 
         ConnectionThreadCallback& m_connectionThreadCallback;
         std::list<Service> m_services;
+        std::list<lu::platform::socket::websocket::InitialRequestInfo> m_websocketServices;
         std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
         std::list<lu::platform::EventChannel<ConnectionThread>> m_eventChannelForConnectingThreads;
     };
