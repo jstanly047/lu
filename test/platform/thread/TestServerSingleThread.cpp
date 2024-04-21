@@ -138,14 +138,21 @@ TEST_F(TestServerSingleThread, TestPingPong)
     EXPECT_CALL(mockConnectionThreadCallback,  onInit()).WillOnce(::testing::Return(true));
     EXPECT_CALL(mockConnectionThreadCallback,  onStart());
     
-    EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::_)).Times(1).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).Times(1).WillRepeatedly(::testing::Invoke(
         [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& dataSocket)
         { 
             lu::platform::socket::data_handler::String::Message request("Ping");
             dataSocket.sendMsg(&request, sizeof(lu::platform::socket::data_handler::String::Message));
         }));
 
-    EXPECT_CALL(mockConnectionThreadCallback, onData(::testing::_, ::testing::_)).Times(2).WillRepeatedly(::testing::Invoke([&](lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String> &dataSocket, void *message)
+    /*EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String, lu::platform::socket::SSLSocket>&>(::testing::_))).Times(1).WillRepeatedly(::testing::Invoke(
+        [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String, lu::platform::socket::SSLSocket>& dataSocket)
+        { 
+            lu::platform::socket::data_handler::String::Message request("Ping");
+            dataSocket.sendMsg(&request, sizeof(lu::platform::socket::data_handler::String::Message));
+        }));*/
+        
+    EXPECT_CALL(mockConnectionThreadCallback, onData(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_), ::testing::_)).Times(2).WillRepeatedly(::testing::Invoke([&](lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String> &dataSocket, void *message)
         { 
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
             static int count = 0;
@@ -179,7 +186,7 @@ TEST_F(TestServerSingleThread, TestPingPong)
     EXPECT_CALL(mockConnectionThreadCallback,  onExit()).Times(1);
     EXPECT_CALL(mockConnectionThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
     EXPECT_CALL(mockConnectionThreadCallback, onAppMsg(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(mockConnectionThreadCallback, onClientClose(::testing::_)).Times(0);
+    EXPECT_CALL(mockConnectionThreadCallback, onClientClose(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).Times(0);
     connectionThread.init();
     connectionThread.start(true);
     waitForCount.wait();

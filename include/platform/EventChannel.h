@@ -2,6 +2,7 @@
 #include <common/TemplateConstraints.h>
 #include <platform/IFDEventHandler.h>
 #include <platform/socket/BaseSocket.h>
+#include <platform/socket/SSLSocket.h>
 #include <platform/thread/channel/TransferQueue.h>
 #include <utils/Utils.h>
 #include <memory>

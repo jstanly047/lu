@@ -1,5 +1,6 @@
 #pragma once
 #include  <platform/socket/DataSocket.h>
+#include <platform/socket/SSLSocket.h>
 #include <common/TemplateConstraints.h>
 
 #include <sys/types.h>
@@ -44,7 +45,7 @@ namespace lu::platform::socket
         }
         ~ConnectSocket() {}
 
-        bool connectToTCP(DataSocketCallback &dataSocketCallback)
+        bool connectToTCP(DataSocketCallback &dataSocketCallback, ::SSL_CTX* sslCtx = nullptr)
         {
             struct addrinfo addrCriteria;
             ::memset(&addrCriteria, 0, sizeof(addrCriteria));
@@ -91,7 +92,35 @@ namespace lu::platform::socket
                 return false;
             }
 
-            m_dataSocket.reset(new DataSocketType(dataSocketCallback, BaseSocket(fd, *connectAddr->ai_addr)));
+            if constexpr (std::is_same_v<decltype(std::declval<DataSocketType>().getSocket()), lu::platform::socket::SSLSocket&>)
+            {
+                ::SSL *ssl = ::SSL_new(sslCtx);
+
+                if (ssl == nullptr)
+                {
+                    LOG(ERROR) << "Error performing TLS handshake [" << m_host << ":" << m_service << "]";
+                    ::close(fd);
+                    return false;
+                }
+
+                ::SSL_set_fd(ssl, fd);
+
+                if (::SSL_connect(ssl) <= 0)
+                {
+                    LOG(ERROR) << "Error performing TLS handshake [" <<m_host << ":" << m_service << "]";
+                    ::close(fd);
+                    ::SSL_free(ssl);
+                    return false;
+                }
+
+                m_dataSocket.reset(new DataSocketType(dataSocketCallback, SSLSocket(ssl, fd, *connectAddr->ai_addr)));
+            }
+            else
+            {
+                m_dataSocket.reset(new DataSocketType(dataSocketCallback, BaseSocket(fd, *connectAddr->ai_addr)));
+            }
+
+            
             DLOG(INFO) << "Connecting to " << m_dataSocket->getIP() << ":" << m_dataSocket->getPort();
             ::freeaddrinfo(servAddr);
             return true;

@@ -10,6 +10,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
+#include <sys/sendfile.h>
 #include <unistd.h>
 
 #include <glog/logging.h>
@@ -225,7 +227,6 @@ void BaseSocket::getIPAndPort(const struct sockaddr &address)
     
 }
 
-
 template<typename T>
 bool BaseSocket::setSocketOption(int level, int option, const T& value)
 {
@@ -259,7 +260,100 @@ int BaseSocket::close()
     return m_fd->close();
 }
 
+bool BaseSocket::readDataSocket(uint8_t *buf, size_t size, ssize_t &readCount)
+{
+    return lu::utils::Utils::readDataSocket(*m_fd, buf, size, readCount);
+}
 
+bool BaseSocket::readDataSocket(struct iovec *dataBufferVec, int numOfVBuffers, ssize_t &readCount)
+{
+    return lu::utils::Utils::readDataSocket(*m_fd, dataBufferVec, numOfVBuffers, readCount);
+}
+
+ssize_t BaseSocket::send(void *buffer, ssize_t size)
+{
+    if (*m_fd == nullptr)
+    {
+        return 0;
+    }
+
+    ssize_t totalSent = 0;
+    auto uint8_tBuffer = reinterpret_cast<uint8_t *>(buffer);
+
+    while (totalSent < size)
+    {
+        // TODO we can try replace this by ::writev (scatter/gather IO)
+        ssize_t numBytesSend = ::send(*m_fd, uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
+
+        if (numBytesSend < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                continue;
+            }
+
+            return totalSent;
+        }
+        else if (numBytesSend != size)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
+            {
+                totalSent += numBytesSend;
+                size -= numBytesSend;
+                continue;
+            }
+
+            return totalSent;
+        }
+
+        totalSent += numBytesSend;
+    }
+
+    return totalSent;
+}
+
+ssize_t BaseSocket::sendfile(int fileDescriptor, ssize_t size)
+{
+    off_t offset = 0;
+    ssize_t sendBytes = ::sendfile(*m_fd, fileDescriptor, &offset, size);
+
+    if (sendBytes == -1)
+    {
+        return false;
+    }
+
+    ssize_t totalSent = 0;
+
+    while (totalSent < size)
+    {
+        ssize_t numBytesSend = ::sendfile(*m_fd, fileDescriptor, &offset, size);
+
+        if (numBytesSend < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                continue;
+            }
+
+            return totalSent;
+        }
+        else if (numBytesSend != size)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
+            {
+                totalSent += numBytesSend;
+                size -= numBytesSend;
+                continue;
+            }
+
+            return totalSent;
+        }
+
+        totalSent += numBytesSend;
+    }
+
+    return sendBytes;
+}
 
 template bool lu::platform::socket::BaseSocket::setSocketOption<int>(int level, int option, const int& value);
 template int lu::platform::socket::BaseSocket::getSocketOption<int>(int level, int option) const;

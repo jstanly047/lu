@@ -37,7 +37,6 @@ namespace lu::platform::thread
             std::string service;
             bool isWebSocket;
             std::unique_ptr<lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>> connection;
-            
         };
 
     public:
@@ -54,10 +53,32 @@ namespace lu::platform::thread
 
         }
 
-        virtual ~ConnectionThread() {}
+        virtual ~ConnectionThread()
+        {
+           if (m_sslCtx != nullptr)
+            {
+                ::SSL_CTX_free(m_sslCtx);
+                ERR_free_strings();
+                EVP_cleanup();
+            } 
+        }
 
         bool init()
         {
+            if constexpr (std::is_same_v<decltype(std::declval<DataSocketType>().getSocket()), lu::platform::socket::SSLSocket&>)
+            {
+                SSL_library_init();
+                OpenSSL_add_all_algorithms();
+                SSL_load_error_strings();
+                m_sslCtx = ::SSL_CTX_new(::TLS_client_method());
+
+                if (m_sslCtx == nullptr)
+                {
+                    LOG(ERROR) << "Can not create TLS context";
+                    return false;
+                }
+            }
+
             return EventThread<ConnectionThreadCallback>::init();
         }
 
@@ -110,6 +131,10 @@ namespace lu::platform::thread
         {
         }
 
+        void onNewConnection([[maybe_unused]]lu::platform::socket::SSLSocket *sslSocket)
+        {
+        }
+
         void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID channelID)
         {
             this->m_connectionThreadCallback.onAppMsg(msg, channelID);
@@ -130,7 +155,7 @@ namespace lu::platform::thread
                     continue;
                 }
 
-                if (serviceItr->connection->connectToTCP(m_connectionThreadCallback))
+                if (serviceItr->connection->connectToTCP(m_connectionThreadCallback, m_sslCtx))
                 {
                     m_connectionThreadCallback.onConnection(*(serviceItr->connection->getDataSocket()));
 
@@ -186,6 +211,7 @@ namespace lu::platform::thread
         std::list<lu::platform::socket::websocket::InitialRequestInfo> m_websocketServices;
         std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
         std::list<lu::platform::EventChannel<ConnectionThread>> m_eventChannelForConnectingThreads;
+        ::SSL_CTX* m_sslCtx{};
     };
 }
 

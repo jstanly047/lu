@@ -63,6 +63,12 @@ namespace lu::platform::socket
         int stop(ShutSide);
         int close();
 
+        bool readDataSocket(uint8_t *buf, size_t size, ssize_t &readCount);
+        bool readDataSocket(struct iovec* dataBufferVec, int numOfVBuffers, ssize_t &readCount);
+
+        ssize_t send(void *buffer, ssize_t size);
+        ssize_t sendfile( int fileDescriptor, ssize_t size);
+
     protected:
         
 

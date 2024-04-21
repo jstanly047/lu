@@ -21,9 +21,27 @@
 
 namespace lu::platform::socket
 {
+    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ClientThread;
+
+    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ConnectionThread;
+
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+    class ServerSingleThread;
+
     template <lu::common::NonPtrClassOrStruct DataSocketCallback, unsigned int MaxMessageSize, typename CustomObjectPtrType=void>
     class WebSocket : public lu::platform::IFDEventHandler
     {
+        template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ClientThread;
+
+        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ConnectionThread;
+
+        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ServerSingleThread;
+        
         enum struct SocketStatus
         {
             Connecting,
@@ -65,7 +83,7 @@ namespace lu::platform::socket
             {
                 ssize_t numberOfBytesRead = 0;
 
-                if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_buffer.data() + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+                if (m_baseSocket.readDataSocket(m_buffer.data() + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
                 {
                     return false;
                 }
@@ -113,7 +131,7 @@ namespace lu::platform::socket
             while (totalSent < size)
             {
                 // TODO we can try replace this by ::writev (scatter/gather IO)
-                ssize_t numBytesSend = ::send(m_baseSocket.getFD(), uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
+                ssize_t numBytesSend = m_baseSocket.send(uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
 
                 if (numBytesSend < 0)
                 {

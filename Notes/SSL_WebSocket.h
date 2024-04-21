@@ -105,8 +105,8 @@ int main() {
     if (SSL_connect(ssl) <= 0) {
         cerr << "Error establishing SSL connection" << endl;
         close(clientSocket);
-        SSL_free(ssl);
-        SSL_CTX_free(sslContext);
+        ::SSL_free(ssl);
+        ::SSL_CTX_free(sslContext);
         return -1;
     }
 
@@ -162,10 +162,10 @@ int main() {
         }
     } while (true);
 
-    SSL_shutdown(ssl);
-    SSL_free(ssl);
-    SSL_CTX_free(sslContext);
-    close(clientSocket);
+    ::SSL_shutdown(ssl);
+    ::SSL_free(ssl);
+    ::SSL_CTX_free(sslContext);
+    ::close(clientSocket);
 
     return 0;
 }

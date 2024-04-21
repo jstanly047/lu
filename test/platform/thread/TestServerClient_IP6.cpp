@@ -74,16 +74,16 @@ protected:
             EXPECT_CALL(*mockServerClientCallback,  onInit()).WillOnce(::testing::Return(true));
             EXPECT_CALL(*mockServerClientCallback,  onStart());
             //EXPECT_CALL(*mockServerClientCallback,  onStartComplete());
-            EXPECT_CALL(*mockServerClientCallback,  onNewConnection(::testing::_)).WillRepeatedly(::testing::Invoke(
+
+            EXPECT_CALL(*mockServerClientCallback,  onNewConnection(::testing::MatcherCast<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).WillRepeatedly(::testing::Invoke(
                 [&]([[maybe_unused]]lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket)
                 {
                     
                 }));
 
-
             EXPECT_CALL(*mockServerClientCallback,  onAppMsg(::testing::_, ::testing::_)).Times(0);
 
-            EXPECT_CALL(*mockServerClientCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+            EXPECT_CALL(*mockServerClientCallback,  onData(::testing::MatcherCast<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_), ::testing::_)).WillRepeatedly(::testing::Invoke(
                 [&]( lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>& dataSocket, void* message)
                 { 
                     auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
@@ -117,7 +117,7 @@ protected:
                 }));
             EXPECT_CALL(*mockServerClientCallback,  onExit()).Times(1);
             EXPECT_CALL(*mockServerClientCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
-            EXPECT_CALL(*mockServerClientCallback, onClientClose(::testing::_)).WillRepeatedly(testing::DoDefault());
+            EXPECT_CALL(*mockServerClientCallback, onClientClose(::testing::MatcherCast<lu::platform::socket::DataSocket<IClientThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).WillRepeatedly(testing::DoDefault());
         }
 
         serverThread.init();
@@ -157,7 +157,7 @@ TEST_F(TestServerClient_IP6, TestPingPong)
     std::vector<std::pair<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>*, int>> clientSideDataSocket;
     std::vector<std::string> expected = {"TestServer_1", "TestServer_2", "TestServer_1"};
     //EXPECT_CALL(mockConnectionThreadCallback,  onStartComplete());
-    EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::_)).Times(3).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).Times(3).WillRepeatedly(::testing::Invoke(
         [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& dataSocket)
         { 
             static int pingNumber = 1;
@@ -167,7 +167,7 @@ TEST_F(TestServerClient_IP6, TestPingPong)
             pingNumber++;
         }));
 
-    EXPECT_CALL(mockConnectionThreadCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(mockConnectionThreadCallback,  onData(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_), ::testing::_)).WillRepeatedly(::testing::Invoke(
         [&]( lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>& dataSocket, void* message)
         { 
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
@@ -198,7 +198,7 @@ TEST_F(TestServerClient_IP6, TestPingPong)
     EXPECT_CALL(mockConnectionThreadCallback,  onExit()).Times(1);
     EXPECT_CALL(mockConnectionThreadCallback, onTimer(::testing::_)).WillRepeatedly(testing::DoDefault());
     EXPECT_CALL(mockConnectionThreadCallback, onAppMsg(::testing::_, ::testing::_)).Times(0);
-    EXPECT_CALL(mockConnectionThreadCallback, onClientClose(::testing::_)).Times(3);
+    EXPECT_CALL(mockConnectionThreadCallback, onClientClose(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).Times(3);
     connectionThread.init();
     connectionThread.start(true);
     

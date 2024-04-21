@@ -22,9 +22,27 @@
 
 namespace lu::platform::socket
 {
-    template <lu::common::NonPtrClassOrStruct DataSocketCallback, unsigned int MaxMessageSize, lu::common::NonPtrClassOrStruct DataHandler, typename CustomObjectPtrType=void>
+    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ClientThread;
+
+    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ConnectionThread;
+
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+    class ServerSingleThread;
+
+    template <lu::common::NonPtrClassOrStruct DataSocketCallback, unsigned int MaxMessageSize, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct SocketType=BaseSocket, typename CustomObjectPtrType=void>
     class HybridDataSocket : public lu::platform::IFDEventHandler
     {
+        template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ClientThread;
+
+        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ConnectionThread;
+
+        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ServerSingleThread;
+        
         enum struct SocketStatus : char
         {
             Connecting = 'C',
@@ -47,8 +65,8 @@ namespace lu::platform::socket
         HybridDataSocket(HybridDataSocket &&other) = delete;
         HybridDataSocket &operator=(HybridDataSocket &&other) = delete;
 
-        HybridDataSocket(DataSocketCallback &dataSocketCallback, BaseSocket &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
-                                                                                      m_baseSocket(std::move(baseSocket)),
+        HybridDataSocket(DataSocketCallback &dataSocketCallback, SocketType &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
+                                                                                      m_socket(std::move(baseSocket)),
                                                                                       m_dataSocketCallback(dataSocketCallback),
                                                                                       m_dataHandler(m_buffer.data()),
                                                                                       m_socketStatus(SocketStatus::Connecting),
@@ -67,7 +85,7 @@ namespace lu::platform::socket
             {
                 ssize_t numberOfBytesRead = 0;
 
-                if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_buffer.data() + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
+                if (m_socket.readDataSocket(m_buffer.data() + m_readOffset + m_numberOfBytesLeftToRead, m_numberOfBytesLeftToRecv, numberOfBytesRead) == false)
                 {
                     return false;
                 }
@@ -111,13 +129,13 @@ namespace lu::platform::socket
             return 0;
         }
 
-        BaseSocket &getBaseSocket() { return m_baseSocket; }
-        const std::string &getIP() const { return m_baseSocket.getIP(); }
-        int getPort() const { return m_baseSocket.getPort(); }
+        BaseSocket &getBaseSocket() { return m_socket; }
+        const std::string &getIP() const { return m_socket.getIP(); }
+        int getPort() const { return m_socket.getPort(); }
 
         int close()
         {
-            int retVal = m_baseSocket.close();
+            int retVal = m_socket.close();
 
             if (retVal = 0)
             {
@@ -129,7 +147,7 @@ namespace lu::platform::socket
 
         int send(const void *buffer, ssize_t size)
         {
-            if (m_baseSocket.getFD() == nullptr)
+            if (m_socket.getFD() == nullptr)
             {
                 return false;
             }
@@ -140,7 +158,7 @@ namespace lu::platform::socket
             while (totalSent < size)
             {
                 // TODO we can try replace this by ::writev (scatter/gather IO)
-                ssize_t numBytesSend = ::send(m_baseSocket.getFD(), uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
+                ssize_t numBytesSend = m_socket.send(uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
 
                 if (numBytesSend < 0)
                 {
@@ -169,7 +187,9 @@ namespace lu::platform::socket
             return totalSent;
         }
 
-        int stop(ShutSide shutSide) { return m_baseSocket.stop(shutSide); }
+        BaseSocket &getBaseSocket() { return m_socket; }
+        SocketType &getSocket() { return m_socket; }
+        int stop(ShutSide shutSide) { return m_socket.stop(shutSide); }
         void setCustomObjectPtr(CustomObjectPtrType * ptr) { m_customObjectPtr = ptr; }
         CustomObjectPtrType* getCustomObjectPtr() const { return m_customObjectPtr; }
 
@@ -202,7 +222,7 @@ namespace lu::platform::socket
             }
             else
             {
-                LOG(ERROR) << "Unknown protocol " << (char) m_socketStatus << " [" <<  m_baseSocket.getIP() << "]";
+                LOG(ERROR) << "Unknown protocol " << (char) m_socketStatus << " [" <<  m_socket.getIP() << "]";
                 this->stop(ShutdownReadWrite);
             }
         }
@@ -221,7 +241,7 @@ namespace lu::platform::socket
 
                     if (expectedMsgSize == 0U)
                     {
-                        LOG(ERROR) << "Invalid message size 0 in [" <<  m_baseSocket.getIP() << "]";
+                        LOG(ERROR) << "Invalid message size 0 in [" <<  m_socket.getIP() << "]";
                         this->stop(ShutdownReadWrite);
                     }
                 }
@@ -257,14 +277,14 @@ namespace lu::platform::socket
                 if (location == m_readWebsocketHeaderOffset) // End of header
                 {
                     m_readWebsocketHeaderOffset += 2U;
-                    websocket::HandshakeRequest handshakeRequest(m_baseSocket);
+                    websocket::HandshakeRequest handshakeRequest(m_socket);
                     std::string_view dataStringView(reinterpret_cast<const char*>(m_buffer.data()), m_readWebsocketHeaderOffset);
                     static std::vector<int> supportedVersion = {13};
                     auto response  = handshakeRequest.getResponse(dataStringView, RESOURCE, "LuBinary", supportedVersion);
 
                     if (response.empty())
                     {
-                        LOG(ERROR) << "Invalid request [" << m_baseSocket.getIP() << "]"; 
+                        LOG(ERROR) << "Invalid request [" << m_socket.getIP() << "]"; 
                         this->stop(ShutdownReadWrite);
                         return;
                     }
@@ -290,7 +310,7 @@ namespace lu::platform::socket
 
             if (m_numberOfBytesLeftToRecv == 0)
             {
-                LOG(ERROR) << "Too large header [" << m_baseSocket.getIP() << "]";
+                LOG(ERROR) << "Too large header [" << m_socket.getIP() << "]";
                 this->stop(ShutdownReadWrite);
             }
         }
@@ -316,7 +336,7 @@ namespace lu::platform::socket
             if (Receive() == false)
             {
                 // TODO : May be different callback since this some IO read error
-                LOG(ERROR) << "Read failed for data socket FD[" << (int) m_baseSocket.getFD() << "]!";
+                LOG(ERROR) << "Read failed for data socket FD[" << (int) m_socket.getFD() << "]!";
                 m_dataSocketCallback.onClientClose(*this);
                 return false;
             }
@@ -324,10 +344,10 @@ namespace lu::platform::socket
             return true;
         }
 
-        const lu::platform::FileDescriptor &getFD() const override final { return m_baseSocket.getFD(); }
+        const lu::platform::FileDescriptor &getFD() const override final { return m_socket.getFD(); }
 
     protected:
-        BaseSocket m_baseSocket;
+        SocketType m_socket;
         DataSocketCallback &m_dataSocketCallback;
         ssize_t m_receiveBufferShiftSize{};
         ssize_t m_numberOfBytesInBuffer{};

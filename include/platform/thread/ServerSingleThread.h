@@ -1,6 +1,8 @@
 #pragma once
 #include <platform/socket/ServerSocket.h>
 #include <platform/thread/ClientThread.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <memory>
 #include <vector>
 #include <list>
@@ -25,6 +27,25 @@ namespace lu::platform::thread
                     m_serverConfig(serverConfig),
                     m_syncStart(0u)
         {
+            if constexpr (std::is_same_v<decltype(std::declval<DataSocketType>().getSocket()), lu::platform::socket::SSLSocket&>)
+            {
+                SSL_library_init();
+                OpenSSL_add_all_algorithms();
+                SSL_load_error_strings();
+                m_sslCtx = ::SSL_CTX_new(::TLS_server_method());
+
+                if (::SSL_CTX_use_certificate_file(m_sslCtx, "resource/server.crt", SSL_FILETYPE_PEM) <= 0)
+                {
+                    LOG(ERROR) << "Error loading certificate";
+                    std::abort();
+                }
+                if (::SSL_CTX_use_PrivateKey_file(m_sslCtx, "resource/server.key", SSL_FILETYPE_PEM) <= 0)
+                {
+                    LOG(ERROR) << "Error loading private key";
+                    std::abort();
+                }
+            }
+
             if (m_serverConfig.CREATE_NEW_THREAD)
             {
                 m_syncStart.update(1u);
@@ -32,7 +53,15 @@ namespace lu::platform::thread
         }
 
 
-        ~ServerSingleThread() {}
+        ~ServerSingleThread() 
+        {
+            if (m_sslCtx != nullptr)
+            {
+                ::SSL_CTX_free(m_sslCtx);
+                ERR_free_strings();
+                EVP_cleanup();
+            }
+        }
 
         bool init()
         {
@@ -54,12 +83,43 @@ namespace lu::platform::thread
 
         void onNewConnection(lu::platform::socket::BaseSocket* baseSocket)
         {
-            std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_serverThreadCallback, std::move(*baseSocket)));
-            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
-                        << " IP[" << baseSocket->getIP() << ":" << baseSocket->getPort()  << "]";
-            this->m_serverThreadCallback.onNewConnection(*dataSocket.get());
-            this->addToEventLoop(std::move(dataSocket));
-            delete baseSocket;
+            if constexpr (std::is_same_v<decltype(std::declval<DataSocketType>().getSocket()), lu::platform::socket::SSLSocket&>)
+            {
+                ::SSL *ssl = ::SSL_new(m_sslCtx);
+
+                if (ssl == nullptr)
+                {
+                    LOG(ERROR) << "Error performing TLS handshake [" << baseSocket->getIP() << ":" << baseSocket->getPort() << "]";
+                    delete baseSocket;
+                    return;
+                }
+
+                ::SSL_set_fd(ssl, baseSocket->getFD());
+
+                if (::SSL_accept(ssl) <= 0) 
+                {
+                    LOG(ERROR) << "Error performing TLS handshake [" << baseSocket->getIP() << ":" << baseSocket->getPort() << "]";
+                    ::SSL_free(ssl);
+                    delete baseSocket;
+                    return;
+                }
+
+                std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_serverThreadCallback, lu::platform::socket::SSLSocket(ssl, std::move(*baseSocket))));
+                LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
+                            << " IP[" << dataSocket->getIP() << ":" << dataSocket->getPort()  << "]";
+                this->m_serverThreadCallback.onNewConnection(*dataSocket.get());
+                this->addToEventLoop(std::move(dataSocket));
+                delete baseSocket;
+            }
+            else
+            {
+                std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_serverThreadCallback, std::move(*baseSocket)));
+                LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
+                            << " IP[" <<dataSocket->getIP() << ":" << dataSocket->getPort()  << "]";
+                this->m_serverThreadCallback.onNewConnection(*dataSocket.get());
+                this->addToEventLoop(std::move(dataSocket));
+                delete baseSocket;
+            }
         }
 
         void join()
@@ -121,5 +181,6 @@ namespace lu::platform::thread
         lu::utils::WaitForCount m_syncStart;
         std::unique_ptr<lu::platform::EventNotifier> m_eventNotifier;
         std::list<lu::platform::EventChannel<ServerSingleThread>> m_eventChannelForConnectingThreads;
+        ::SSL_CTX *m_sslCtx{};
     };
 }

@@ -40,14 +40,29 @@ namespace lu::platform::thread
 
         void onNewConnection(lu::platform::socket::BaseSocket *baseSocket)
         {
-            std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket)));
-            LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
-                        << " IP[" << baseSocket->getIP() << ":" << baseSocket->getPort()  << "]";
-            // TODO check onNewCOnnection used should be able to send an data
-            this->m_clientThreadCallback.onNewConnection(*dataSocket.get());
-            //dataSocket->getBaseSocket().setNonBlocking();
-            this->addToEventLoop(std::move(dataSocket));
-            delete baseSocket;
+            if constexpr (std::is_same_v<decltype(std::declval<DataSocketType>().getSocket()), lu::platform::socket::SSLSocket&>)
+            {
+                auto sslSocket = static_cast<lu::platform::socket::SSLSocket*>(baseSocket);
+                std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_clientThreadCallback, std::move(*sslSocket)));
+                LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
+                            << " IP[" <<dataSocket->getIP() << ":" << dataSocket->getPort()  << "]";
+                // TODO check onNewCOnnection used should be able to send an data
+                this->m_clientThreadCallback.onNewConnection(*dataSocket.get());
+                //dataSocket->getBaseSocket().setNonBlocking();
+                this->addToEventLoop(std::move(dataSocket));
+                delete sslSocket;
+            }
+            else
+            {
+                std::unique_ptr<DataSocketType> dataSocket(new DataSocketType(this->m_clientThreadCallback, std::move(*baseSocket)));
+                LOG(INFO) << "[" << this->getName() << "] New connection Socket[" << dataSocket.get() << "] FD[" << (int) dataSocket->getBaseSocket().getFD() << "] "
+                            << " IP[" <<dataSocket->getIP() << ":" << dataSocket->getPort()  << "]";
+                // TODO check onNewCOnnection used should be able to send an data
+                this->m_clientThreadCallback.onNewConnection(*dataSocket.get());
+                //dataSocket->getBaseSocket().setNonBlocking();
+                this->addToEventLoop(std::move(dataSocket));
+                delete baseSocket;
+            }
         }
 
         void onAppMsg(void* msg, lu::platform::thread::channel::ChannelID channelID)

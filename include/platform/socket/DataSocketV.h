@@ -21,17 +21,35 @@
 
 namespace lu::platform::socket
 {
-    template <lu::common::NonPtrClassOrStruct DataSocketVCallback, lu::common::NonPtrClassOrStruct DataHandler, typename CustomObjectPtrType=void>
+    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ClientThread;
+
+    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+    class ConnectionThread;
+
+    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+    class ServerSingleThread;
+
+    template <lu::common::NonPtrClassOrStruct DataSocketVCallback, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct SocketType=BaseSocket, typename CustomObjectPtrType=void>
     class DataSocketV : public lu::platform::IFDEventHandler
     {
+        template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ClientThread;
+
+        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ConnectionThread;
+
+        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
+        friend class ServerSingleThread;
+        
     public:
         DataSocketV(const DataSocketV &) = delete;
         DataSocketV &operator=(const DataSocketV &) = delete;
         DataSocketV(DataSocketV &&other) = delete;
         DataSocketV &operator=(DataSocketV &&other) = delete;
 
-        DataSocketV(DataSocketVCallback &dataSocketCallback, BaseSocket &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
-                                                                                      m_baseSocket(std::move(baseSocket)),
+        DataSocketV(DataSocketVCallback &dataSocketCallback, SocketType &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
+                                                                                      m_socket(std::move(baseSocket)),
                                                                                       m_dataSocketCallback(dataSocketCallback),
                                                                                       m_dataHandler(),
                                                                                       m_headerSize(m_dataHandler.getHeaderSize()),
@@ -51,7 +69,7 @@ namespace lu::platform::socket
                 auto writeableOffset = m_readOffset + m_numberOfBytesLeftToRead;
                 int numbOfDataBuffer = m_dataHandler.getNumberOfBuffers(writeableOffset);
 
-                if (lu::utils::Utils::readDataSocket(m_baseSocket.getFD(), m_dataHandler.getIOVect(), numbOfDataBuffer, numberOfBytesRead) == false)
+                if (m_socket.readDataSocket(m_dataHandler.getIOVect(), numbOfDataBuffer, numberOfBytesRead) == false)
                 {
                     return false;
                 }
@@ -84,94 +102,20 @@ namespace lu::platform::socket
 
         int sendMsg(void *buffer, ssize_t size)
         {
-            if (m_baseSocket.getFD() == nullptr)
-            {
-                return false;
-            }
-
-            ssize_t totalSent = 0;
-            auto uint8_tBuffer = reinterpret_cast<uint8_t *>(buffer);
-
-            while (totalSent < size)
-            {
-                // TODO we can try replace this by ::writev (scatter/gather IO)
-                ssize_t numBytesSend = ::send(m_baseSocket.getFD(), uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
-
-                if (numBytesSend < 0)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    {
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-                else if (numBytesSend != size)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
-                    {
-                        totalSent += numBytesSend;
-                        size -= numBytesSend;
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-
-                totalSent += numBytesSend;
-            }
-
-            return totalSent;
+            return m_socket.send(buffer, size);
         }
 
         int sendFile(int fileDescriptor, int size)
         {
-            off_t offset = 0;
-            ssize_t sendBytes = ::sendfile(m_baseSocket.getFD(), fileDescriptor, &offset, size);
-
-            if (sendBytes == -1)
-            {
-                return false;
-            }
-
-            int totalSent = 0;
-
-            while (totalSent < size)
-            {
-                ssize_t numBytesSend = ::sendfile(m_baseSocket.getFD(), fileDescriptor, &offset, size);
-
-                if (numBytesSend < 0)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    {
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-                else if (numBytesSend != (ssize_t)size)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
-                    {
-                        totalSent += numBytesSend;
-                        size -= numBytesSend;
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-
-                totalSent += numBytesSend;
-            }
-
-            return sendBytes;
+            return m_socket.sendfile(fileDescriptor, size);
         }
 
-        BaseSocket &getBaseSocket() { return m_baseSocket; }
-        const std::string &getIP() const { return m_baseSocket.getIP(); }
-        int getPort() const { return m_baseSocket.getPort(); }
+        BaseSocket &getBaseSocket() { return m_socket; }
+        SocketType &getSocket() { return m_socket; }
+        const std::string &getIP() const { return m_socket.getIP(); }
+        int getPort() const { return m_socket.getPort(); }
 
-        int stop(ShutSide shutSide) { return m_baseSocket.stop(shutSide); }
+        int stop(ShutSide shutSide) { return m_socket.stop(shutSide); }
         void setCustomObjectPtr(CustomObjectPtrType * ptr) { m_customObjectPtr = ptr; }
         CustomObjectPtrType* getCustomObjectPtr() const { return m_customObjectPtr; }
 
@@ -190,7 +134,7 @@ namespace lu::platform::socket
 
                     if (expectedMsgSize == 0U)
                     {
-                        LOG(ERROR) << "Invalid message size 0 in [" <<  m_baseSocket.getIP() << "]";
+                        LOG(ERROR) << "Invalid message size 0 in [" <<  m_socket.getIP() << "]";
                         this->stop(ShutdownReadWrite);
                     }
                 }
@@ -231,7 +175,7 @@ namespace lu::platform::socket
             if (Receive() == false)
             {
                 // TODO : Instead of calling close better call different callback
-                LOG(ERROR) << "Read failed for data socket FD[" << (int) m_baseSocket.getFD() << "]!";
+                LOG(ERROR) << "Read failed for data socket FD[" << (int) m_socket.getFD() << "]!";
                 m_dataSocketCallback.onClientClose(*this);
                 return false;
             }
@@ -239,10 +183,10 @@ namespace lu::platform::socket
             return true;
         }
 
-        const lu::platform::FileDescriptor &getFD() const override final { return m_baseSocket.getFD(); }
+        const lu::platform::FileDescriptor &getFD() const override final { return m_socket.getFD(); }
 
     protected:
-        BaseSocket m_baseSocket;
+        SocketType m_socket;
         DataSocketVCallback &m_dataSocketCallback;
         DataHandler m_dataHandler;
         ssize_t m_headerSize{};

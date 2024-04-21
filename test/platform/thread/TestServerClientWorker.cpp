@@ -156,7 +156,7 @@ TEST_F(TestServerClientWorker, TestPingPong)
     std::vector<std::pair<StringDataSocket*, int>> clientSideDataSocket;
     std::vector<std::string> expected = {"TestServer_1", "TestServer_2", "TestServer_1"};
     //EXPECT_CALL(mockConnectionThreadCallback,  onStartComplete());
-    EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::_)).Times(3).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(mockConnectionThreadCallback,  onConnection(::testing::MatcherCast<lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&>(::testing::_))).Times(3).WillRepeatedly(::testing::Invoke(
         [&]( StringDataSocket& dataSocket)
         { 
             lu::platform::socket::data_handler::String::Message request("Ping");
@@ -164,7 +164,7 @@ TEST_F(TestServerClientWorker, TestPingPong)
             clientSideDataSocket.push_back({&dataSocket, 0});
         }));
 
-    EXPECT_CALL(mockConnectionThreadCallback,  onData(::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+    EXPECT_CALL(mockConnectionThreadCallback,  onData(::testing::MatcherCast<StringDataSocket&>(::testing::_), ::testing::_)).WillRepeatedly(::testing::Invoke(
         [&]( StringDataSocket& dataSocket, void* message)
         { 
             auto* strMessage = reinterpret_cast<lu::platform::socket::data_handler::String::Message*>(message);
