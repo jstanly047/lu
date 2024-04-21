@@ -118,46 +118,9 @@ namespace lu::platform::socket
             return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, isBinary, m_mustMask);
         }
 
-        int send(const void *buffer, ssize_t size)
+        int send(void *buffer, ssize_t size)
         {
-            if (m_baseSocket.getFD() == nullptr)
-            {
-                return false;
-            }
-
-            ssize_t totalSent = 0;
-            auto uint8_tBuffer = reinterpret_cast<const uint8_t *>(buffer);
-
-            while (totalSent < size)
-            {
-                // TODO we can try replace this by ::writev (scatter/gather IO)
-                ssize_t numBytesSend = m_baseSocket.send(uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
-
-                if (numBytesSend < 0)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    {
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-                else if (numBytesSend != size)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
-                    {
-                        totalSent += numBytesSend;
-                        size -= numBytesSend;
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-
-                totalSent += numBytesSend;
-            }
-
-            return totalSent;
+            return m_baseSocket.send(buffer, size);
         }
 
         BaseSocket &getBaseSocket() { return m_baseSocket; }

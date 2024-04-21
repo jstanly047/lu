@@ -129,10 +129,6 @@ namespace lu::platform::socket
             return 0;
         }
 
-        BaseSocket &getBaseSocket() { return m_socket; }
-        const std::string &getIP() const { return m_socket.getIP(); }
-        int getPort() const { return m_socket.getPort(); }
-
         int close()
         {
             int retVal = m_socket.close();
@@ -145,50 +141,15 @@ namespace lu::platform::socket
             return retVal;
         }
 
-        int send(const void *buffer, ssize_t size)
+        int send(void *buffer, ssize_t size)
         {
-            if (m_socket.getFD() == nullptr)
-            {
-                return false;
-            }
-
-            ssize_t totalSent = 0;
-            auto uint8_tBuffer = reinterpret_cast<const uint8_t *>(buffer);
-
-            while (totalSent < size)
-            {
-                // TODO we can try replace this by ::writev (scatter/gather IO)
-                ssize_t numBytesSend = m_socket.send(uint8_tBuffer + totalSent, size, MSG_DONTWAIT);
-
-                if (numBytesSend < 0)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    {
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-                else if (numBytesSend != size)
-                {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ENOBUFS)
-                    {
-                        totalSent += numBytesSend;
-                        size -= numBytesSend;
-                        continue;
-                    }
-
-                    return totalSent;
-                }
-
-                totalSent += numBytesSend;
-            }
-
-            return totalSent;
+            return m_socket.send(buffer, size);
         }
 
         BaseSocket &getBaseSocket() { return m_socket; }
         SocketType &getSocket() { return m_socket; }
+        const std::string &getIP() const { return m_socket.getIP(); }
+        int getPort() const { return m_socket.getPort(); }
         int stop(ShutSide shutSide) { return m_socket.stop(shutSide); }
         void setCustomObjectPtr(CustomObjectPtrType * ptr) { m_customObjectPtr = ptr; }
         CustomObjectPtrType* getCustomObjectPtr() const { return m_customObjectPtr; }
