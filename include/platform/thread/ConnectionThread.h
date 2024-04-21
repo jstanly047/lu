@@ -101,7 +101,7 @@ namespace lu::platform::thread
                     return;
                 }
             }
-
+            m_websocketServices.push_back(initialRequestInfo);
             m_services.push_back(Service{initialRequestInfo.host, initialRequestInfo.port, true});
             m_services.back().connection.reset(new lu::platform::socket::ConnectSocket<ConnectionThreadCallback, DataSocketType>(initialRequestInfo.host, initialRequestInfo.port));
         }
@@ -139,11 +139,11 @@ namespace lu::platform::thread
                         if (serviceItr->isWebSocket)
                         {
                             auto itr = std::find_if(m_websocketServices.begin(), m_websocketServices.end(), [&](auto &item)
-                                                    { return item.host == serviceItr->host && item.port == serviceItr->port; });
+                                                    { return item.host == serviceItr->host && item.port == serviceItr->service; });
 
                             if (itr != m_websocketServices.end())
                             {
-                                serviceItr->connection->startHandshake(*itr);
+                                serviceItr->connection->getDataSocket()->startHandshake(*itr);
                             }
                         }
                     }

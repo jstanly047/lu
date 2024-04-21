@@ -89,11 +89,15 @@ target_include_directories(luStorageDB PUBLIC ${PROJ_INC_DIR}
                                               ${glog_INCLUDE_DIRS} 
                                               ${gflags_INCLUDE_DIRS})
 
-
 file(GLOB LU_CRYPTO_SRC  ./src/crypto/*.cpp)
 add_library(luCrypto STATIC ${LU_CRYPTO_SRC})
 target_include_directories(luCrypto PUBLIC ${PROJ_INC_DIR} ${OpenSSL_INCLUDE_DIRS})
 target_link_libraries(luCrypto OpenSSL::Crypto OpenSSL::SSL)
+
+file(GLOB LU_REST_API_SRC ./src/restapi/*.cpp)
+add_library(luRestAPI STATIC ${LU_REST_API_SRC})
+target_include_directories(luRestAPI PUBLIC ${PROJ_INC_DIR})
+target_link_libraries(luRestAPI lucommon)
 
 #file(GLOB THREAD_SRC  ./src/thread/*.cpp)
 #add_library(thread STATIC ${THREAD_SRC})
@@ -121,6 +125,7 @@ if (UNIT_TEST)
     file(GLOB TEST_REFLECTION_SRC ./test/reflection/*.cpp)
     file(GLOB TEST_STORAGE_SRC ./test/storage/*.cpp)
     file(GLOB TEST_CRYPTO_SRC ./test/crypto/*.cpp)
+    file(GLOB TEST_REST_API_SRC ./test/restapi/*.cpp)
 
     add_executable(LuTests ./test/TestMain.cpp 
                             ${TEST_UTILS_SRC}
@@ -131,7 +136,8 @@ if (UNIT_TEST)
                             ${TEST_PlATFORM_SRC}
                             ${TEST_REFLECTION_SRC}
                             ${TEST_STORAGE_SRC}
-                            ${TEST_CRYPTO_SRC})
+                            ${TEST_CRYPTO_SRC}
+                            ${TEST_REST_API_SRC})
 
     target_include_directories(LuTests PRIVATE ${GTEST_INCLUDE_DIRS} ${LU_PLATFORM_HEADRES} ${SQLite3_INCLUDE_DIRS})
 
@@ -145,11 +151,13 @@ if (UNIT_TEST)
                             luThread
                             luStorageDB
                             luCrypto
+                            luRestAPI
                             luMockThread
                             glog::glog
                             GTest::gtest
                             GTest::gmock
                             SOCI::soci_sqlite3_static
+                            curl
                             )
 
 endif(UNIT_TEST)

@@ -95,7 +95,7 @@ class snapafwRecipe(ConanFile):
         self.cpp_info.set_property("cmake_find_mode", "both")
         self.cpp_info.set_property("cmake_file_name", "lu_platform")
         self.cpp_info.set_property("cmake_file", "lu_platform-config.cmake")
-        self.cpp_info.libs = ['liblucommon.a', 'libutils.a', 'libluSocket.a', 'libluPlatform.a', 'libluSocketDataHandler.a', 'libluWebsocket.a', 'libluThread.a', 'libluThreadChannel.a', 'libluStorageDB.a', 'libluCrypto.a']
+        self.cpp_info.libs = ['liblucommon.a', 'libutils.a', 'libluSocket.a', 'libluPlatform.a', 'libluSocketDataHandler.a', 'libluWebsocket.a', 'libluThread.a', 'libluThreadChannel.a', 'libluStorageDB.a', 'libluCrypto.a', 'libluRestAPI.a']
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "lu_platform"

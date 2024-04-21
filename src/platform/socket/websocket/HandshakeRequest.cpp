@@ -1,4 +1,5 @@
 #include <platform/socket/websocket/HandshakeRequest.h>
+#include <platform/socket/websocket/HandshakeResponse.h>
 #include <utils/DelimiterTextParser.h>
 #include <crypto/Base64EncodeDecode.h>
 #include <utils/Utils.h>
@@ -15,10 +16,10 @@ HandshakeRequest::HandshakeRequest(const lu::platform::socket::BaseSocket& baseS
 {
 }
 
-bool HandshakeRequest::readServerRequest(const char *request, unsigned int length, const char* expectedResource)
+std::string HandshakeRequest::getResponse(std::string_view& dataStringView, const std::string& expectedResource, 
+    const std::string& supportedProtocol, const std::vector<int>& supportedVersion)
 {
     unsigned int readHeader = 0U;
-    std::string_view dataStringView(request, length);
     DLOG(INFO) << "Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
 
     for (;;)
@@ -31,7 +32,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
             break;
         }
 
-        std::string_view line(request + readHeader, location - readHeader);
+        std::string_view line(dataStringView.data() + readHeader, location - readHeader);
 
         if (m_keyValue.empty())
         {
@@ -52,7 +53,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
                 if (verb != "GET" || resource != std::string(expectedResource) || httpVersion < 1.1F)
                 {
                     LOG(ERROR) << "Invalid request [" << line << "] from [" << m_baseSocket.getIP() << "]";
-                    return false;
+                    return std::string();
                 }
 
                 readHeader = location + 2u;
@@ -60,7 +61,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
             }
             catch (const std::exception &e)
             {
-                return false;
+                return  std::string();
             }
         }
 
@@ -69,7 +70,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
         if (delimiterPos == std::string::npos)
         {
             LOG(ERROR) << "Incorrect line [" << line << "] from [" << m_baseSocket.getIP() << "]";
-            return false;
+            return  std::string();
         }
 
         std::string key(line.substr(0, delimiterPos));
@@ -83,19 +84,23 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
     if (itr == m_keyValue.end())
     {
         LOG(ERROR) << "Incorrect 'Upgrade'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
-    // This not websocket 
+    m_upgrade = itr->second;
+
+    //****** This not standard Websocket Start******
     if (itr->second == "tcp")
     {
-        return true;
+        HandshakeResponse response(*this, supportedVersion, supportedProtocol);
+        return  std::move(response.getResponse());
     }
 
+    //****** This not standard Websocket End******
     if (itr->second != "websocket")
     {
         LOG(ERROR) << "Incorrect 'Upgrade'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
     itr = m_keyValue.find("sec-websocket-key");
@@ -103,7 +108,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
     if (itr == m_keyValue.end())
     {
         LOG(ERROR) << "Sec-Websocket-Key missing!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
     m_key = itr->second;
@@ -114,7 +119,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
     if (itr == m_keyValue.end() || lu::utils::Utils::toLower(itr->second) != "upgrade")
     {
         LOG(ERROR) << "Incorrect 'Connection'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
     itr = m_keyValue.find("sec-websocket-protocol");
@@ -122,7 +127,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
     if (itr == m_keyValue.end() || itr->second.empty())
     {
         LOG(ERROR) << "Sec-Websocket-Protocol missing!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
     static std::string valueDelimeter = ", ";
@@ -147,7 +152,7 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
     if (itr == m_keyValue.end())
     {
         LOG(ERROR) << "Sec-WebSocket-Version missing!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
     protocolsParse.nextLine(itr->second);
@@ -169,27 +174,32 @@ bool HandshakeRequest::readServerRequest(const char *request, unsigned int lengt
     if (m_protocols.empty())
     {
         LOG(ERROR) << "Incorrect 'Sec-Websocket-Protocol'!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
+        return  std::string();
     }
 
-    /*itr = m_keyValue.find("sec-websocket-extensions");
+    HandshakeResponse response(*this, supportedVersion, supportedProtocol);
 
-    if (itr == m_keyValue.end())
-    {
-        LOG(ERROR) << "Sec-Websocket-Extensions missing!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";;
-        return false;
-    }*/
-
-    return true;
+    return std::move(response.getResponse());
 }
 
 std::string HandshakeRequest::createHandShakeRequest(const InitialRequestInfo& handshakeInfo, const std::string& key)
 {
     std::stringstream handshakeRequest;
     handshakeRequest << "GET " << handshakeInfo.resourceName << " HTTP/1.1\r\n" <<
-                        "Host: " <<  handshakeInfo.host << "\r\n"
-                        "Upgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: " << key << "\r\n";
+                        "Host: " <<  handshakeInfo.host << "\r\n";
+                       
     
+    if (handshakeInfo.upgrade.empty())
+    {
+         handshakeRequest << "Upgrade: websocket\r\n";
+    }
+    else
+    {
+         handshakeRequest << "Upgrade: " <<  handshakeInfo.upgrade << "\r\n";
+    }
+
+    handshakeRequest << "Connection: Upgrade\r\nSec-WebSocket-Key: " << key << "\r\n";
+
     if (!handshakeInfo.origin.empty())
     {
         handshakeRequest << "Origin: " << handshakeInfo.origin << "\r\n";

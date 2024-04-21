@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <random>
 
 
 using namespace lu::utils;
@@ -106,4 +107,12 @@ std::string &Utils::toLower(std::string &str)
     }
 
     return str;
+}
+
+uint32_t Utils::generateRandomUint32()
+{
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis;
+    return dis(gen);
 }

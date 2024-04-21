@@ -36,3 +36,8 @@ bool DataWrap::append(const void* data, std::size_t length)
     m_offset += length;
     return true;
 }
+
+void DataWrap::clear() noexcept
+{
+    m_offset = 0;
+}

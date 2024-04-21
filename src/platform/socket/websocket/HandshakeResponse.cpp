@@ -28,6 +28,14 @@ HandshakeResponse::HandshakeResponse(const HandshakeRequest &handshakeRequest, c
                 return it == handshakeRequest.getProtocols().end() ? "" : *it;
             }();
 
+    //****** This not standard Websocket Start******
+    if (handshakeRequest.getUpgrade() == "tcp")
+    {
+        m_response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: tcp\r\n\r\n";
+        return;
+    }
+    //****** This not standard Websocket End******
+
     const std::vector<int> matchingVersions = listIntersection(supportedVersions, handshakeRequest.getWebsocketVersions());
 
     if (protocol.empty() || matchingVersions.empty())

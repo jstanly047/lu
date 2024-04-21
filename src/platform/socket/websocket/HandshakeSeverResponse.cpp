@@ -77,7 +77,20 @@ bool HandshakeSeverResponse::readServerResponse(const char *request, unsigned in
 
     auto itr = m_keyValue.find("upgrade");
 
-    if (itr == m_keyValue.end() || itr->second != "websocket")
+    if (itr == m_keyValue.end())
+    {
+        LOG(ERROR) << "Incorrect 'Upgrade'!! Response [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
+        return false;
+    }
+
+    //****** This not standard Websocket Start******
+    if (itr->second == "tcp")
+    {
+        return true;
+    }
+    //****** This not standard Websocket end******
+
+    if (itr->second != "websocket")
     {
         LOG(ERROR) << "Incorrect 'Upgrade'!! Response [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
         return false;
@@ -131,4 +144,11 @@ bool HandshakeSeverResponse::readServerResponse(const char *request, unsigned in
     }
 
     return true;
+}
+
+const std::string& HandshakeSeverResponse::getUpgrade() const
+{
+    static std::string emptyString;
+    auto itr = m_keyValue.find("upgrade");
+    return itr == m_keyValue.end() ? emptyString : itr->second;
 }

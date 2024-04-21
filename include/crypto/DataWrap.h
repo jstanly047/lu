@@ -18,6 +18,7 @@ namespace lu::crypto
         std::size_t getCapacity() const { return m_length; }
         bool append(const void* data, std::size_t length);
         auto getDataLength() const { return m_offset; }
+        void clear() noexcept;
 
     private:
         

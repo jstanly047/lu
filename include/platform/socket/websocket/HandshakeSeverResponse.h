@@ -12,6 +12,7 @@ namespace lu::platform::socket::websocket
     public:
         HandshakeSeverResponse(const lu::platform::socket::BaseSocket& baseSocket);
         bool readServerResponse(const char* request, unsigned int length, const std::string& key);
+        const std::string& getUpgrade() const;
 
     private:
         const BaseSocket& m_baseSocket;

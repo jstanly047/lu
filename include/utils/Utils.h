@@ -82,5 +82,6 @@ namespace lu::utils
 
         static bool readDataSocket(int socketId,struct iovec* dataBufferVec, int numOfVBuffers, ssize_t &readCount);
         static std::string &toLower(std::string &str);
+        static uint32_t generateRandomUint32();
     };
 }

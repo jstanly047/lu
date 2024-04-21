@@ -26,7 +26,7 @@ namespace
     }
 }
 
-Frame::Frame(const unsigned int& maxAllowedMessageSize) : m_maxAllowedMessageSize(maxAllowedMessageSize)
+Frame::Frame(const unsigned int& maxAllowedMessageSize) : m_maxAllowedMessageSize(maxAllowedMessageSize), m_message(maxAllowedMessageSize)
 {
 }
 
@@ -289,6 +289,7 @@ void Frame::reset()
     m_rsv2 = false;
     m_rsv3 = false;
     m_opCode = ReservedC;
+    m_isFragmented = false;
     m_length = 0;
     //m_payload.clear();
     m_isValid = false;
@@ -355,4 +356,15 @@ lu::crypto::DataWrap Frame::getFrameHeader(OpCode opCode,
     }
 
     return header;
+}
+
+bool Frame::append(const void* data)
+{
+    if (m_length + m_message.getDataLength() > m_message.getCapacity())
+    {
+        return false;
+    }
+
+    m_message.append(data, m_length);
+    return true;
 }
