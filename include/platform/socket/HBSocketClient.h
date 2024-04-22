@@ -147,7 +147,7 @@ namespace lu::platform::socket
 
         int send(void *buffer, ssize_t size)
         {
-            m_socket.send(buffer, size);
+            return m_socket.send(buffer, size);
         }
 
         BaseSocket &getBaseSocket() { return m_socket; }
