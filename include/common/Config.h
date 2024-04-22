@@ -5,6 +5,7 @@
 #include <variant>
 #include <string_view>
 #include <ctime>
+#include <filesystem>
 #include <glog/logging.h>
 
 namespace lu::common
@@ -55,14 +56,21 @@ namespace lu::common
         using ConfigSet = std::set<Config, ConfigComparator> ;
 
     public:
-        Configurations(const Configurations&) = delete;
-        Configurations operator=(const Configurations&) = delete;
-        Configurations(Configurations&&) = delete;
-        Configurations& operator=(Configurations&&) = delete;
+        //Configurations(const Configurations&) = delete;
+        //Configurations operator=(const Configurations&) = delete;
+        //Configurations(Configurations&&) = delete;
+        //Configurations& operator=(Configurations&&) = delete;
 
+        static Configurations getFromFile(const std::filesystem::path& root, const std::string& fileName);
         static bool loadFromFile(const std::string& fileName);
         template <typename T>
-        static const T& getValue(const std::string& group, const std::string& configName);
+        static const T& getValue(const std::string& group, const std::string& configName)
+        {
+            return getConfigurations().get<T>(group, configName);
+        }
+
+        template <typename T>
+        const T& get(const std::string& group, const std::string& configName) const;
 
     private:
         Configurations(){}

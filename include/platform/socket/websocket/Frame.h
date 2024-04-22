@@ -105,6 +105,11 @@ namespace lu::platform::socket::websocket
 
                 while (isDone == false)
                 {
+                    if (socketData.getDataLeftToRead() == 0U)
+                    {
+                        return socketData.readOffset;
+                    }
+
                     readFrame(socketData);
 
                     if (m_processingState != Done)

@@ -83,7 +83,7 @@ void Frame::readFrame(SocketData &socketData)
 
 Frame::ProcessingState Frame::readFrameHeader(SocketData& socketData)
 {
-    if (socketData.length >= 2)
+    if (socketData.getDataLeftToRead() >= 2)
     {
         
         // FIN, RSV1-3, Opcode

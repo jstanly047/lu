@@ -18,12 +18,12 @@ namespace lu::platform::thread
         //MOCK_METHOD(void, onStartComplete, (), (override));
         MOCK_METHOD(void, onExit, (), (override));
         MOCK_METHOD(void, onTimer, (const lu::platform::FDTimer<IConnectionThreadCallback>&), (override));
-        MOCK_METHOD(void, onConnection, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&)), (override));
-        MOCK_METHOD(void, onConnection, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String, lu::platform::socket::SSLSocket>&)), (override));
-        MOCK_METHOD(void, onClientClose, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&)), (override));
-        MOCK_METHOD(void, onClientClose, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String, lu::platform::socket::SSLSocket>&)), (override));
-        MOCK_METHOD(void, onData, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String>&), void* ), (override));
-        MOCK_METHOD(void, onData, ((lu::platform::socket::DataSocket<IConnectionThreadCallback, lu::platform::socket::data_handler::String, lu::platform::socket::SSLSocket>&), void* ), (override));
+        MOCK_METHOD(void, onConnection, ((IConnectionThreadCallback::DataSocketType&)), (override));
+        MOCK_METHOD(void, onConnection, ((IConnectionThreadCallback::SSLDataSocketType&)), (override));
+        MOCK_METHOD(void, onClientClose, ((IConnectionThreadCallback::DataSocketType&)), (override));
+        MOCK_METHOD(void, onClientClose, ((IConnectionThreadCallback::SSLDataSocketType&)), (override));
+        MOCK_METHOD(void, onData, ((IConnectionThreadCallback::DataSocketType&), void* ), (override));
+        MOCK_METHOD(void, onData, ((IConnectionThreadCallback::SSLDataSocketType&), void* ), (override));
         MOCK_METHOD(void, onAppMsg, (void*, lu::platform::thread::channel::ChannelID), (override));
     };
 }

@@ -74,6 +74,7 @@
         "future": "cpp",
         "coroutine": "cpp",
         "span": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "codecvt": "cpp"
     }
 }

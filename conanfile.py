@@ -89,6 +89,7 @@ class snapafwRecipe(ConanFile):
         #copy(self, "*.h", os.path.join(self.source_folder, "include/thread"), os.path.join(self.package_folder, "include/thread"), keep_path=True)
         #copy(self, "*.h", os.path.join(self.source_folder, "include/queue"), os.path.join(self.package_folder, "include/queue"), keep_path=True)
         copy(self, "*.h", os.path.join(self.source_folder, "include/crypto"), os.path.join(self.package_folder, "include/crypto"), keep_path=True)
+        copy(self, "*.h", os.path.join(self.source_folder, "include/restapi"), os.path.join(self.package_folder, "include/restapi"), keep_path=True)
         copy(self, "*.a", self.build_folder, os.path.join(self.package_folder, "lib"), keep_path=True)
 
     def package_info(self):

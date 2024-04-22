@@ -21,6 +21,14 @@ bool Configurations::loadFromFile(const std::string &fileName)
     return getConfigurations().loadFile(fileName);
 }
 
+Configurations Configurations::getFromFile(const std::filesystem::path& root, const std::string& fileName)
+{
+    auto absPath = root / fileName;
+    Configurations configurations;
+    configurations.loadFile(absPath);
+    return configurations;
+}
+
 bool Configurations::loadFile(const std::string &fileName)
 {
     std::ifstream inputFileRead(fileName, std::ios_base::in);
@@ -84,12 +92,11 @@ bool Configurations::loadFile(const std::string &fileName)
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 template <typename T>
-const T &Configurations::getValue(const std::string &group, const std::string &configName)
+const T &Configurations::get(const std::string &group, const std::string &configName) const
 {
-    auto &configurations = getConfigurations();
-    auto itrGrp = configurations.m_configsByGroup.find(group);
+    auto itrGrp = m_configsByGroup.find(group);
 
-    if (itrGrp != configurations.m_configsByGroup.end())
+    if (itrGrp != m_configsByGroup.end())
     {
         Config config(configName, false);
         auto itrConfig = itrGrp->second.find(config);
@@ -105,14 +112,14 @@ const T &Configurations::getValue(const std::string &group, const std::string &c
     return configSetting;
 }
 
-template const bool& lu::common::Configurations::getValue<bool>(const std::string &group, const std::string &configName);
-template const char& lu::common::Configurations::getValue<char>(const std::string &group, const std::string &configName);
-template const int& lu::common::Configurations::getValue<int>(const std::string &group, const std::string &configName);
-template const unsigned int& lu::common::Configurations::getValue<unsigned int>(const std::string &group, const std::string &configName);
-template const long long& lu::common::Configurations::getValue<long long>(const std::string &group, const std::string &configName);
-template const unsigned long long& lu::common::Configurations::getValue<unsigned long long>(const std::string &group, const std::string &configName);
-template const float& lu::common::Configurations::getValue<float>(const std::string &group, const std::string &configName);
-template const double& lu::common::Configurations::getValue<double>(const std::string &group, const std::string &configName);
-template const std::string& lu::common::Configurations::getValue<std::string>(const std::string &group, const std::string &configName);
-template const std::time_t& lu::common::Configurations::getValue<std::time_t>(const std::string &group, const std::string &configName);
+template const bool& lu::common::Configurations::get<bool>(const std::string &group, const std::string &configName) const;
+template const char& lu::common::Configurations::get<char>(const std::string &group, const std::string &configName) const;
+template const int& lu::common::Configurations::get<int>(const std::string &group, const std::string &configName) const;
+template const unsigned int& lu::common::Configurations::get<unsigned int>(const std::string &group, const std::string &configName) const;
+template const long long& lu::common::Configurations::get<long long>(const std::string &group, const std::string &configName) const;
+template const unsigned long long& lu::common::Configurations::get<unsigned long long>(const std::string &group, const std::string &configName) const;
+template const float& lu::common::Configurations::get<float>(const std::string &group, const std::string &configName) const;
+template const double& lu::common::Configurations::get<double>(const std::string &group, const std::string &configName) const;
+template const std::string& lu::common::Configurations::get<std::string>(const std::string &group, const std::string &configName) const;
+template const std::time_t& lu::common::Configurations::get<std::time_t>(const std::string &group, const std::string &configName) const;
 

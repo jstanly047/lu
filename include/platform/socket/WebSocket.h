@@ -142,6 +142,7 @@ namespace lu::platform::socket
         int stop(ShutSide shutSide) { return m_baseSocket.stop(shutSide); }
         void setCustomObjectPtr(CustomObjectPtrType * ptr) { m_customObjectPtr = ptr; }
         CustomObjectPtrType* getCustomObjectPtr() const { return m_customObjectPtr; }
+        bool isWebSocket() const { return true;  }
 
     private:
         inline void readMessages()

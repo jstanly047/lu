@@ -2,9 +2,8 @@
 
 using namespace snap::restapi;
 
-Request::Request(Method method, const std::string &resource) : m_method(method), m_resource(resource)
+Request::Request(Method method) : m_method(method)
 {
-
 }
 
 void Request::append(const std::string &key, const std::string &value)

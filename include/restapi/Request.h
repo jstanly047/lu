@@ -16,8 +16,9 @@ namespace snap::restapi
     class Request
     {
     public:
-        Request(Method, const std::string&);
+        Request(Method);
         void append(const std::string&, const std::string&);
+        void setResource(const std::string& resource) { m_resource = resource; }
 
         void append(const std::string& key, auto value)
         {
