@@ -21,27 +21,9 @@
 
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-    class ClientThread;
-
-    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-    class ConnectionThread;
-
-    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
-    class ServerSingleThread;
-
     template <lu::common::NonPtrClassOrStruct DataSocketCallback, unsigned int MaxMessageSize, typename CustomObjectPtrType=void>
     class WebSocket : public lu::platform::IFDEventHandler
     {
-        template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ClientThread;
-
-        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ConnectionThread;
-
-        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ServerSingleThread;
-        
         enum struct SocketStatus
         {
             Connecting,
@@ -113,9 +95,9 @@ namespace lu::platform::socket
             return true;
         }
 
-        int sendMsg(void *buffer, ssize_t size, bool isBinary = true)
+        int sendMsg(void *buffer, ssize_t size,  websocket::Frame::OpCode firstOpCode =  websocket::Frame::OpCode::Binary)
         {
-            return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, isBinary, m_mustMask);
+            return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, firstOpCode, m_mustMask);
         }
 
         int send(void *buffer, ssize_t size)

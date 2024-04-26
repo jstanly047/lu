@@ -11,10 +11,19 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <random>
+#include <sstream>
 
 
 using namespace lu::utils;
 //constexpr size_t MAX_TIME_STRING_SIZE = 64;
+
+std::string Utils::getString(double value)
+{
+    std::ostringstream out;
+    out.precision(8);
+    out << std::fixed << value;
+    return out.str();
+}
 
 std::time_t Utils::getUTCDateTime(const std::string &dateTimeStr, const std::string& format)
 {

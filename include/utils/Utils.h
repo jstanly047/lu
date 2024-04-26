@@ -72,6 +72,8 @@ namespace lu::utils
             return retVal;
         }
 
+        static std::string getString(double value);
+
         static std::time_t getUTCDateTime(const std::string& dateTimeStr, const std::string& format="%Y%m%d%H%M%S");
         static std::time_t getDateTime(const std::string& dateTimeStr, const std::string& format="%Y%m%d%H%M%S");
 

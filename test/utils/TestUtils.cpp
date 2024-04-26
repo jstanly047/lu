@@ -9,6 +9,11 @@ class TestUtils : public ::testing::Test
 {
 };
 
+TEST_F(TestUtils, getString)
+{
+    double testValue = 1.432;
+    ASSERT_EQ(lu::utils::Utils::getString(testValue), "1.43200000");
+}
 
 TEST_F(TestUtils, stringToEpocUTC)
 {

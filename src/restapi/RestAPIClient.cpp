@@ -78,8 +78,6 @@ std::string RestAPIClient::getResponse(Request &request)
         curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, chunk);
     }
 
-    
-
     auto res = ::curl_easy_perform(m_curl);
 
     if (res != CURLE_OK)

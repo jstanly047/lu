@@ -207,7 +207,8 @@ namespace lu::platform::socket::websocket
             {
                 case websocket::Frame::Ping:
                 {
-                    controlDB.onPing(dataSocket);
+                    std::span payload(socketData.data + socketData.readOffset, m_length);
+                    controlDB.onPing(dataSocket, payload);
                     break;
                 }
                 case websocket::Frame::Pong:
@@ -278,10 +279,8 @@ namespace lu::platform::socket::websocket
         }
 
         template <typename DataSocket>
-        static int sendMsg(void *buffer, ssize_t size, int MaxMessageSize, DataSocket& dataSocket, bool isBinary, bool mask)
+        static int sendMsg(void *buffer, ssize_t size, int MaxMessageSize, DataSocket& dataSocket, websocket::Frame::OpCode firstOpCode, bool mask)
         {
-            auto firstOpCode = isBinary ? websocket::Frame::OpCode::Binary : websocket::Frame::OpCode::Text;
-
             int numFrames = size / MaxMessageSize;
             auto sizeLeft = size % MaxMessageSize;
 

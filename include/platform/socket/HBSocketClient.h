@@ -8,6 +8,7 @@
 #include <common/Defs.h>
 #include <platform/IFDEventHandler.h>
 #include <platform/Defs.h>
+#include <platform/socket/Defs.h>
 #include <utils/Utils.h>
 
 #include <sys/socket.h>
@@ -17,36 +18,22 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <cstring>
-#include <string>
-#include <map>
-#include <span>
 #include <random>
 
 #include <glog/logging.h>
 
 namespace lu::platform::socket
 {
-    
     template <lu::common::NonPtrClassOrStruct DataSocketCallback, unsigned int MaxMessageSize, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct SocketType=BaseSocket, typename CustomObjectPtrType=void>
     class HBSocketClient : public lu::platform::IFDEventHandler
-    {
-        template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ClientThread;
-
-        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ConnectionThread;
-
-        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ServerSingleThread;
-        
+    {   
         enum struct SocketStatus : char
         {
             Connecting = 'C',
             ConnectedAsWebSocket = 'T',
             ConnectedAsTCP = 'W',
             Closing ='X'
-        };
+    };
 
     public:
         // both constants are taken from the default settings of Apache
@@ -119,7 +106,7 @@ namespace lu::platform::socket
             return true;
         }
 
-        int sendMsg(void *buffer, ssize_t size, bool isBinary = true)
+        int sendMsg(void *buffer, ssize_t size,  websocket::Frame::OpCode firstOpCode =  websocket::Frame::OpCode::Binary)
         {
             if (m_socketStatus == SocketStatus::ConnectedAsTCP)
             {
@@ -127,7 +114,7 @@ namespace lu::platform::socket
             }
             else if (m_socketStatus == SocketStatus::ConnectedAsWebSocket)
             {
-                return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, isBinary, true);
+                return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, firstOpCode, true);
             }
 
             return 0;
@@ -154,10 +141,10 @@ namespace lu::platform::socket
         SocketType &getSocket() { return m_socket; }
         const std::string &getIP() const { return m_socket.getIP(); }
         int getPort() const { return m_socket.getPort(); }
-
         int stop(ShutSide shutSide) { return m_socket.stop(shutSide); }
         void setCustomObjectPtr(CustomObjectPtrType * ptr) { m_customObjectPtr = ptr; }
         CustomObjectPtrType* getCustomObjectPtr() const { return m_customObjectPtr; }
+        bool isWebSocket() const { return m_socketStatus == SocketStatus::ConnectedAsWebSocket;  }
 
     private:
         inline void readMessages()
@@ -186,8 +173,11 @@ namespace lu::platform::socket
                     this->stop(ShutdownReadWrite);
                 }
             }
-
-            
+            else
+            {
+                LOG(ERROR) << "Unknown protocol " << (char) m_socketStatus << " [" <<  m_socket.getIP() << "]";
+                this->stop(ShutdownReadWrite);
+            }
         }
 
         inline void readRawTCPMessages()
@@ -302,8 +292,6 @@ namespace lu::platform::socket
 
             return true;
         }
-
-        
 
         uint32_t generateRandomUint32()
         {

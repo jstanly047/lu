@@ -22,27 +22,9 @@
 
 namespace lu::platform::socket
 {
-    template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-    class ClientThread;
-
-    template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-    class ConnectionThread;
-
-    template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
-    class ServerSingleThread;
-
     template <lu::common::NonPtrClassOrStruct DataSocketCallback, unsigned int MaxMessageSize, lu::common::NonPtrClassOrStruct DataHandler, lu::common::NonPtrClassOrStruct SocketType=BaseSocket, typename CustomObjectPtrType=void>
-    class HybridDataSocket : public lu::platform::IFDEventHandler
+    class HBDataSocket : public lu::platform::IFDEventHandler
     {
-        template<lu::common::NonPtrClassOrStruct ClientThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ClientThread;
-
-        template<lu::common::NonPtrClassOrStruct ConnectionThreadCallback,  lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ConnectionThread;
-
-        template<lu::common::NonPtrClassOrStruct ServerThreadCallback, lu::common::NonPtrClassOrStruct DataSocketType>
-        friend class ServerSingleThread;
-        
         enum struct SocketStatus : char
         {
             Connecting = 'C',
@@ -60,12 +42,12 @@ namespace lu::platform::socket
         static constexpr auto RESOURCE = "/comms";
         static constexpr auto BUFFER_SIZE = std::max((const unsigned int) ((float)MaxMessageSize * 1.25F), RECV_BUFFER_SIZE);
 
-        HybridDataSocket(const HybridDataSocket &) = delete;
-        HybridDataSocket &operator=(const HybridDataSocket &) = delete;
-        HybridDataSocket(HybridDataSocket &&other) = delete;
-        HybridDataSocket &operator=(HybridDataSocket &&other) = delete;
+        HBDataSocket(const HBDataSocket &) = delete;
+        HBDataSocket &operator=(const HBDataSocket &) = delete;
+        HBDataSocket(HBDataSocket &&other) = delete;
+        HBDataSocket &operator=(HBDataSocket &&other) = delete;
 
-        HybridDataSocket(DataSocketCallback &dataSocketCallback, SocketType &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
+        HBDataSocket(DataSocketCallback &dataSocketCallback, SocketType &&baseSocket) : IFDEventHandler(IFDEventHandler::DataSocket),
                                                                                       m_socket(std::move(baseSocket)),
                                                                                       m_dataSocketCallback(dataSocketCallback),
                                                                                       m_dataHandler(m_buffer.data()),
@@ -77,7 +59,7 @@ namespace lu::platform::socket
         {
         }
 
-        virtual ~HybridDataSocket() {}
+        virtual ~HBDataSocket() {}
 
         bool Receive()
         {
@@ -115,15 +97,15 @@ namespace lu::platform::socket
             return true;
         }
 
-        int sendMsg(void *buffer, ssize_t size, bool isBinary = true)
+        int sendMsg(void *buffer, ssize_t size, websocket::Frame::OpCode firstOpCode =  websocket::Frame::OpCode::Binary)
         {
             if (m_socketStatus == SocketStatus::ConnectedAsTCP)
             {
-                send(buffer, size);
+                return send(buffer, size);
             }
             else if (m_socketStatus == SocketStatus::ConnectedAsWebSocket)
             {
-                return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, isBinary, m_mustMask);
+                return websocket::Frame::sendMsg(buffer, size, MaxMessageSize, *this, firstOpCode, m_mustMask);
             }
 
             return 0;
