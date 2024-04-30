@@ -106,27 +106,24 @@ bool HandshakeSeverResponse::readServerResponse(const char *request, unsigned in
 
     itr = m_keyValue.find("sec-websocket-protocol");
 
-    if (itr == m_keyValue.end() || itr->second.empty())
+    if (itr != m_keyValue.end() && itr->second.empty() == false)
     {
-        LOG(ERROR) << "Sec-Websocket-Protocol missing!! Request [" << dataStringView << "] from [" << m_baseSocket.getIP() << "]";
-        return false;
-    }
+        static std::string valueDelimeter = ", ";
+        lu::utils::DelimiterTextParser protocolsParse(itr->second, valueDelimeter);
+        auto value = protocolsParse.next();
 
-    static std::string valueDelimeter = ", ";
-    lu::utils::DelimiterTextParser protocolsParse(itr->second, valueDelimeter);
-    auto value = protocolsParse.next();
-
-    try
-    {
-        while (value.empty() == false)
+        try
         {
-            m_protocols.emplace_back(value);
-            value = protocolsParse.next();
-        };
-    }
-    catch(const std::exception& e)
-    {
-        
+            while (value.empty() == false)
+            {
+                m_protocols.emplace_back(value);
+                value = protocolsParse.next();
+            };
+        }
+        catch(const std::exception& e)
+        {
+            
+        }
     }
 
     itr = m_keyValue.find("sec-websocket-accept");

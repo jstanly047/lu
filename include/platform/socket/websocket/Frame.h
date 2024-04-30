@@ -122,6 +122,7 @@ namespace lu::platform::socket::websocket
                         if (isControlFrame())
                         {
                             isDone = processControlFrame(socketData, cb, dataSocket);
+                            socketData.readOffset += m_length;
                         }
                         else
                         {
@@ -239,17 +240,10 @@ namespace lu::platform::socket::websocket
                         }
                         else
                         {
-                            /*if (m_frame.getPayloadLength() > 2U)
+                            if (m_length > 2U)
                             {
-                                auto toUtf16 = QStringDecoder(QStringDecoder::Utf8,
-                                                            QStringDecoder::Flag::Stateless | QStringDecoder::Flag::ConvertInvalidToNull);
-                                closeReason = toUtf16(QByteArrayView(payload).sliced(2));
-                                if (toUtf16.hasError())
-                                {
-                                    closeCode = websocket::Frame::CloseCode::CloseCodeWrongDatatype;
-                                    LOG(ERROR) << "Invalid UTF-8 code encountered [" << m_baseSocket.getIP() << "]";
-                                }
-                            }*/
+                                LOG(INFO) << "Close reason. " << std::string_view(reinterpret_cast<char*>(socketData.data) + socketData.readOffset, m_length);
+                            }
                         }
                     }
 
