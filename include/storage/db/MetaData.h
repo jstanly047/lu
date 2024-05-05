@@ -136,7 +136,7 @@ namespace lu::storage::db                                                       
         constexpr const char* getInsertSQL()                                            \
         {                                                                               \
             return CONCAT_REC("INSERT INTO " , CONV_TO_STRING(TABLE_NAME) ,             \
-            "(" , CREAT_STRING_LIST(",", "\"", "\"", __VA_ARGS__ ) ,                    \
+            "(" , CREAT_STRING_LIST(",", "`", "`", __VA_ARGS__ ) ,                      \
             ") VALUES (" , CREAT_BIND_LIST(__VA_ARGS__)  , ")");      \
         }                                                                               \
                                                                                         \

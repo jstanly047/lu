@@ -9,8 +9,6 @@
 #include <openssl/bio.h>
 #include <cassert>
 
-#include <glog/logging.h>
-
 using namespace lu::crypto;
 
 template<HashAlgo Algo>
@@ -22,14 +20,12 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
 
     if (::EVP_DigestSignInit(rsaSignCtx, NULL, HashTraits<Algo>::HASH_FUNCTION()(), NULL, m_privateKey)<=0) 
     {
-        //LOG(ERROR) << "Signing failed in EVP_DigestSignInit!";
         ::EVP_MD_CTX_destroy(rsaSignCtx);
         return std::string();
     }
 
     if (::EVP_DigestSignUpdate(rsaSignCtx, dataWithSalt.data(), dataWithSalt.length()) <= 0) 
     {
-        //LOG(ERROR) << "Signing failed in EVP_DigestSignUpdate!";
         ::EVP_MD_CTX_destroy(rsaSignCtx);
         return std::string();
     }
@@ -38,7 +34,6 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
 
     if (::EVP_DigestSignFinal(rsaSignCtx, nullptr, &encMessageLength) <= 0) 
     {
-        //LOG(ERROR) << "Signing failed in EVP_DigestSignFinal!";
         ::EVP_MD_CTX_destroy(rsaSignCtx);
         return std::string();
     }
@@ -47,7 +42,6 @@ std::string RSAPrivateKey::getBase64Signature(const std::string &data, const std
 
     if (::EVP_DigestSignFinal(rsaSignCtx, dataWrap.getData(), &encMessageLength) <= 0) 
     {
-        //LOG(ERROR) << "Signing failed in EVP_DigestSignFinal!";
         ::EVP_MD_CTX_destroy(rsaSignCtx);
         return std::string();
     }
@@ -62,7 +56,6 @@ bool RSAPrivateKey::load(const std::string& filePath)
 
     if (keyFile == nullptr) 
     {
-        //LOG(ERROR) << "Can not open RSA Private key file " << filePath.c_str();
         return false;
     }
 

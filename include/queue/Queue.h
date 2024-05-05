@@ -4,6 +4,7 @@
 #include <common/Defs.h>
 #include <atomic>
 #include <cassert>
+#include <condition_variable>
 
 namespace lu::queue
 {
@@ -402,6 +403,54 @@ namespace lu::queue
             while(!this->try_pop(element))
             {
                 lu::common::spinLoopPause();
+            }
+
+            return element;
+        }
+    };
+
+    template<class Queue>
+    struct MPSCQueue : Queue 
+    {
+        using T = typename Queue::value_type;
+        std::atomic<bool> m_consumerWait = false;
+        std::mutex m_mutex;
+        std::condition_variable m_cv;
+
+        void push(T element) noexcept 
+        {
+            while(!this->try_push(element))
+            {
+                lu::common::spinLoopPause();
+            }
+
+            if (m_consumerWait.load(std::memory_order_acq_rel) == true)
+            {
+                {
+                    std::lock_guard lk(m_mutex);
+                    m_consumerWait = false;
+                }
+                m_cv.notify_one();
+            }
+        }
+
+        T pop() noexcept 
+        {
+            int count = 0;
+            T element;
+
+            while(!this->try_pop(element))
+            {
+                lu::common::spinLoopPause();
+
+                if (count == 1000)
+                {
+                    m_consumerWait = true;
+                    std::unique_lock<std::mutex> lock(m_mutex);
+                    m_cv.wait(lock, [&] { return m_consumerWait == false; });
+                }
+
+                count++;
             }
 
             return element;

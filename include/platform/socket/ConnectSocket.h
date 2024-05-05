@@ -105,9 +105,19 @@ namespace lu::platform::socket
 
                 ::SSL_set_fd(ssl, fd);
 
+                if (::SSL_set_tlsext_host_name(ssl, m_host.c_str()) != 1)
+                {
+                    LOG(ERROR) << "SSL cannot set hot name [" <<m_host << ":" << m_service << "]";
+                    ::ERR_print_errors_fp(stderr);
+                    ::close(fd);
+                    ::SSL_free(ssl);
+                    return false;
+                }
+
                 if (::SSL_connect(ssl) <= 0)
                 {
                     LOG(ERROR) << "Error performing TLS handshake [" <<m_host << ":" << m_service << "]";
+                    ::ERR_print_errors_fp(stderr);
                     ::close(fd);
                     ::SSL_free(ssl);
                     return false;

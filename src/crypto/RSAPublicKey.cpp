@@ -9,7 +9,6 @@
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
-#include <glog/logging.h>
 
 using namespace lu::crypto;
 
@@ -24,14 +23,12 @@ bool RSAPublicKey::verifyBase64Signature(const std::string& data, const std::str
 
     if (::EVP_DigestVerifyInit(rsaVerifyCtx, NULL, HashTraits<Algo>::HASH_FUNCTION()(), NULL, m_publicKey) <= 0) 
     {
-        //LOG(ERROR) << "Signature verification failed at EVP_DigestVerifyInit [" << signature << "]";
         ::EVP_MD_CTX_destroy(rsaVerifyCtx);
         return false;
     }
 
     if (::EVP_DigestVerifyUpdate(rsaVerifyCtx, dataWithSalt.data(), dataWithSalt.length()) <= 0) 
     {
-        //LOG(ERROR) << "Signature verification failed at EVP_DigestVerifyUpdate [" << signature << "]";
         ::EVP_MD_CTX_destroy(rsaVerifyCtx);
         return false;
     }
@@ -46,7 +43,6 @@ bool RSAPublicKey::load(const std::string& filePath)
     BIO *keyFile = ::BIO_new_file(filePath.c_str(), "r");
     if (keyFile == nullptr) 
     {
-        //LOG(ERROR) << "Can not open RSA Public key file " << filePath;
         return false;
     }
 
@@ -61,7 +57,6 @@ bool RSAPublicKey::read(const std::string& publickey)
     BIO* keyBio = ::BIO_new_mem_buf((void*)publickey.data(), -1);
     if (keyBio == nullptr) 
     {
-        //LOG(ERROR) << "Can not open RSA Public key file " << filePath;
         return false;
     }
 

@@ -67,6 +67,7 @@ target_include_directories(luSocketDataHandler PUBLIC ${PROJ_INC_DIR})
 file(GLOB LU_WEBSOCKET_SRC  ./src/platform/socket/websocket/*.cpp)
 add_library(luWebsocket STATIC ${LU_WEBSOCKET_SRC} )
 target_include_directories(luWebsocket PUBLIC ${PROJ_INC_DIR})
+target_link_libraries(luWebsocket utils)
 
 file(GLOB LU_SOCKET_SRC  ./src/platform/socket/*.cpp)
 add_library(luSocket STATIC ${LU_SOCKET_SRC})

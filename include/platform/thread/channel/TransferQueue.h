@@ -11,7 +11,7 @@ namespace lu::queue
     class AtomicQueue2;
 
     template<class Queue>
-    struct RetryDecorator;
+    struct MPSCQueue;
 }
 
 namespace lu::platform::thread::channel
@@ -23,5 +23,5 @@ namespace lu::platform::thread::channel
         void * data;
     };
 
-    using TransferQueue = lu::queue::RetryDecorator<lu::queue::AtomicQueue2<ChannelData, 10000u, true, true, false, false> >;
+    using TransferQueue = lu::queue::MPSCQueue<lu::queue::AtomicQueue2<ChannelData, 10000u, true, true, false, false> >;
 }

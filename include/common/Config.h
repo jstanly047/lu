@@ -6,7 +6,6 @@
 #include <string_view>
 #include <ctime>
 #include <filesystem>
-#include <glog/logging.h>
 
 namespace lu::common
 {
