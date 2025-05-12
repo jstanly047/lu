@@ -1,0 +1,32 @@
+ABI - Application Binary Interface is can be considered as API for hardeware instruction. 
+     ABI compatablity is more importend when we try to link 3rd party SO or static libs.
+EBO - Empty Block Optimization - if base class is empty then the size will be zero when derived class is created.
+      This will be not applied when ther Multiple instance of the same empty base in a hierarchy (ex: struct EMpty, struct A: Empty, struct B: Empty, struct C : A, B )
+
+=========Header only ABI break================================================
+template <typename First, typename Second>
+struct pair {
+    First first;
+    Second second;
+
+    pair(First const& f, Second const& s)
+        : first(f), second(s)
+    {}
+
+    ~pair() = default;
+};
+
+let say you create pair<int, int>..in this case First and Secodn become trivial so it will be passed to regiter when you pass as parameter.
+* What Makes a Struct Eligible?
+  According to the ABI (Application Binary Interface), a struct like pair<int, int>:
+  1.Has no virtual functions or inheritance.
+  2.Has trivial constructor and destructor.
+  3.Has no padding or complex members.
+  4. Has size that fits in a couple of general-purpose or floating-point registers (e.g., ≤ 2×8 bytes on x86-64).
+* What Happens If Not Trivial?
+  As soon as the struct has:
+    A user-defined destructor (even if empty),
+    A virtual function,
+    Or anything else that makes it non-trivial,
+
+So what take away...eventhough this header only lib it will cause ABI break if you dont recompile your SO libs.
